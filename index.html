@@ -364,20 +364,60 @@ function setGPS(on, label) {
   });
 }
 
+// Rolling buffer for position smoothing — averages last N readings
+// to reduce GPS jitter at short distances
+var GPS_BUF_SIZE = 5;
+var gpsLatBuf = [];
+var gpsLngBuf = [];
+
+function pushGPS(lat, lng, accuracy) {
+  // Weight by accuracy — more accurate readings count more
+  // Use inverse accuracy as weight (lower accuracy value = better fix)
+  var weight = accuracy ? Math.max(1, Math.round(50 / accuracy)) : 1;
+  for (var w = 0; w < weight; w++) {
+    gpsLatBuf.push(lat);
+    gpsLngBuf.push(lng);
+  }
+  // Keep buffer trimmed
+  while (gpsLatBuf.length > GPS_BUF_SIZE) { gpsLatBuf.shift(); gpsLngBuf.shift(); }
+
+  // Smoothed average
+  var sumLat = 0, sumLng = 0;
+  for (var i = 0; i < gpsLatBuf.length; i++) { sumLat += gpsLatBuf[i]; sumLng += gpsLngBuf[i]; }
+  S.lat = sumLat / gpsLatBuf.length;
+  S.lng = sumLng / gpsLngBuf.length;
+
+  var accStr = accuracy ? ' ±' + Math.round(accuracy) + 'm' : '';
+  setGPS(true, 'GPS Active' + accStr);
+  drawBar();
+  renderCompass();
+}
+
 function startGPS() {
   if (!navigator.geolocation) { setGPS(false, 'Not supported'); return; }
   setGPS(false, 'Requesting…');
+
+  // watchPosition fires on movement — primary source
   navigator.geolocation.watchPosition(
-    function(pos) {
-      S.lat = pos.coords.latitude;
-      S.lng = pos.coords.longitude;
-      setGPS(true, 'GPS Active');
-      drawBar();
-      renderCompass();
-    },
+    function(pos) { pushGPS(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy); },
     function() { setGPS(false, 'Unavailable'); },
-    { enableHighAccuracy: true, maximumAge: 3000, timeout: 15000 }
+    { enableHighAccuracy: true, maximumAge: 2000, timeout: 15000 }
   );
+
+  // Also poll every 3 seconds — keeps position fresh when standing still
+  // and catches cases where watchPosition stalls on some mobile browsers
+  function pollGPS() {
+    navigator.geolocation.getCurrentPosition(
+      function(pos) { pushGPS(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy); },
+      function() {}, // silent fail — watchPosition is the fallback
+      { enableHighAccuracy: true, maximumAge: 0, timeout: 8000 }
+    );
+  }
+  // First poll after 2s (let watchPosition settle first), then every 3s
+  setTimeout(function() {
+    pollGPS();
+    setInterval(pollGPS, 3000);
+  }, 2000);
 }
 
 // ═══════════════════════════════════════════════════
