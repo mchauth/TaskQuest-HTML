@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>TaskQuest</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0a0a0f;--bg2:#0f0f1a;--bg3:#141428;
+    --border:#2a2a4a;--border2:#3a3a6a;
+    --gold:#c9a84c;--gold2:#e8cc7a;--gold-dim:#7a6030;
+    --amber:#e8891a;--green:#4caf7a;--green-dim:#2a6045;
+    --red:#cf4444;--text:#d4cfc8;--text-dim:#7a7870;--text-bright:#f0ebe0;
+    --radius:4px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{background:var(--bg);color:var(--text);font-family:'Crimson Pro',serif;font-size:17px;min-height:100vh;overflow-x:hidden}
+  body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.4}
+  #app{position:relative;z-index:1;max-width:480px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+
+/* HEADER */
+header{padding:14px 20px 10px;border-bottom:1px solid var(–border);background:linear-gradient(180deg,#0f0f1e,transparent);position:sticky;top:0;z-index:10;backdrop-filter:blur(8px)}
+.header-top{display:flex;align-items:center;justify-content:space-between}
+.logo{font-family:‘Cinzel’,serif;font-size:20px;font-weight:700;color:var(–gold);letter-spacing:.08em;text-shadow:0 0 20px rgba(201,168,76,.4)}
+.xp-bar-wrap{margin-top:8px}
+.xp-label{display:flex;justify-content:space-between;font-size:11px;color:var(–text-dim);font-family:‘Cinzel’,serif;letter-spacing:.05em;margin-bottom:4px}
+.xp-bar{height:3px;background:var(–bg3);border-radius:2px;overflow:hidden}
+.xp-fill{height:100%;background:linear-gradient(90deg,var(–gold-dim),var(–gold2));border-radius:2px;transition:width .6s ease}
+.level-badge{font-family:‘Cinzel’,serif;font-size:12px;color:var(–gold);background:rgba(201,168,76,.1);border:1px solid var(–gold-dim);padding:3px 10px;border-radius:2px;letter-spacing:.06em}
+
+/* NAV */
+nav{display:flex;border-bottom:1px solid var(–border);background:var(–bg2)}
+nav button{flex:1;padding:11px 6px;background:none;border:none;color:var(–text-dim);font-family:‘Cinzel’,serif;font-size:10px;letter-spacing:.08em;cursor:pointer;transition:all .2s;border-bottom:2px solid transparent;text-transform:uppercase}
+nav button.active{color:var(–gold);border-bottom-color:var(–gold);background:rgba(201,168,76,.05)}
+nav button:hover:not(.active){color:var(–text);background:rgba(255,255,255,.03)}
+
+/* SCREENS */
+.screen{display:none;flex:1;flex-direction:column;padding:16px 20px 30px;gap:14px;animation:fadeIn .25s ease}
+.screen.active{display:flex}
+@keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.section-title{font-family:‘Cinzel’,serif;font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(–text-dim);padding-bottom:7px;border-bottom:1px solid var(–border)}
+
+/* ── BEARING BAR ── */
+.bearing-section{background:var(–bg3);border:1px solid var(–border2);border-radius:var(–radius);overflow:hidden}
+.bearing-tape-wrap{position:relative;height:72px;overflow:hidden;background:#0c0c1c;border-bottom:1px solid var(–border)}
+/* fade edges */
+.bfade{position:absolute;top:0;bottom:0;width:56px;z-index:2;pointer-events:none}
+.bfade-l{left:0;background:linear-gradient(90deg,#0c0c1c,transparent)}
+.bfade-r{right:0;background:linear-gradient(270deg,#0c0c1c,transparent)}
+/* quest marker */
+.qmarker{position:absolute;bottom:0;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;pointer-events:none;z-index:5}
+.qmarker-arrow{width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-bottom:13px solid var(–green);filter:drop-shadow(0 0 6px rgba(76,175,122,.9))}
+.qmarker-line{width:2px;height:34px;background:linear-gradient(180deg,var(–green),transparent)}
+/* info row */
+.bearing-info{display:flex;align-items:center;justify-content:space-between;padding:10px 16px}
+.bearing-hdg{font-family:‘Cinzel’,serif;font-size:22px;color:var(–text-bright);letter-spacing:.04em}
+.bearing-hdg span{font-size:13px;color:var(–text-dim);margin-left:3px}
+.bearing-qi{text-align:right;font-family:‘Cinzel’,serif;font-size:11px;color:var(–green);letter-spacing:.05em;line-height:1.5}
+.bearing-qi.dim{color:var(–text-dim);font-style:italic;font-family:‘Crimson Pro’,serif;font-size:13px;letter-spacing:0}
+
+/* GPS */
+.gps-row{display:flex;align-items:center;gap:6px;font-family:‘Cinzel’,serif;font-size:10px;letter-spacing:.06em;color:var(–text-dim)}
+.gps-dot{width:6px;height:6px;border-radius:50%;background:var(–red);flex-shrink:0}
+.gps-dot.on{background:var(–green);box-shadow:0 0 5px var(–green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* FOCUSED QUEST CARD */
+.fqcard{background:var(–bg3);border:1px solid var(–border2);border-radius:var(–radius);padding:14px 16px;position:relative;overflow:hidden}
+.fqcard::before{content:’’;position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(–gold),transparent)}
+.fq-title{font-family:‘Cinzel’,serif;font-size:15px;color:var(–text-bright);margin-bottom:5px}
+.fq-meta{display:flex;gap:10px;flex-wrap:wrap;font-size:13px;color:var(–text-dim)}
+.xp-pill{background:rgba(201,168,76,.1);border:1px solid var(–gold-dim);color:var(–gold);font-family:‘Cinzel’,serif;font-size:11px;padding:2px 8px;border-radius:2px;letter-spacing:.06em}
+.complete-btn{width:100%;margin-top:12px;padding:11px;background:linear-gradient(135deg,var(–green-dim),#1a4a30);border:1px solid var(–green);border-radius:var(–radius);color:var(–green);font-family:‘Cinzel’,serif;font-size:12px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .2s}
+.complete-btn:hover:not(:disabled){background:linear-gradient(135deg,#2a6a40,#1e5535);box-shadow:0 0 15px rgba(76,175,122,.3)}
+.complete-btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* QUEST LIST */
+.quest-list{display:flex;flex-direction:column;gap:10px}
+.qi{background:var(–bg3);border:1px solid var(–border);border-radius:var(–radius);padding:13px 15px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.qi:hover{border-color:var(–border2);background:#161628}
+.qi.focused{border-color:var(–gold-dim);background:#161620}
+.qi.focused::after{content:’’;position:absolute;left:0;top:0;bottom:0;width:3px;background:var(–gold)}
+.qi-hdr{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.qi-title{font-family:‘Cinzel’,serif;font-size:13px;color:var(–text-bright)}
+.qi-body{font-size:13px;color:var(–text-dim);margin-top:3px}
+.qi-foot{display:flex;gap:6px;margin-top:7px;flex-wrap:wrap}
+.tag{font-size:10px;font-family:‘Cinzel’,serif;letter-spacing:.05em;padding:2px 7px;border-radius:2px;border:1px solid var(–border2);color:var(–text-dim);background:none}
+.tag.active{border-color:var(–green-dim);color:var(–green);background:rgba(76,175,122,.06)}
+.tag.completed{border-color:var(–gold-dim);color:var(–gold);background:rgba(201,168,76,.06)}
+.empty{text-align:center;padding:36px 20px;color:var(–text-dim);font-style:italic}
+.empty .ei{font-size:36px;margin-bottom:10px;opacity:.4}
+.empty p{font-size:15px;line-height:1.6}
+
+/* CREATE FORM */
+.fg{display:flex;flex-direction:column;gap:5px}
+label{font-family:‘Cinzel’,serif;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(–text-dim)}
+input,textarea,select{background:var(–bg3);border:1px solid var(–border);border-radius:var(–radius);color:var(–text-bright);font-family:‘Crimson Pro’,serif;font-size:16px;padding:10px 12px;width:100%;transition:border-color .2s;outline:none;-webkit-appearance:none}
+input:focus,textarea:focus,select:focus{border-color:var(–gold-dim);box-shadow:0 0 0 2px rgba(201,168,76,.1)}
+input::placeholder,textarea::placeholder{color:var(–text-dim)}
+textarea{resize:vertical;min-height:70px}
+select option{background:var(–bg3)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+/* coords row */
+.coords-row{display:flex;gap:8px;align-items:center}
+.coords-row input{flex:1;min-width:0}
+.locate-btn{flex-shrink:0;padding:0 14px;height:44px;background:var(–bg3);border:1px solid var(–gold-dim);border-radius:var(–radius);color:var(–gold);font-family:‘Cinzel’,serif;font-size:11px;letter-spacing:.06em;cursor:pointer;white-space:nowrap;transition:all .2s;display:flex;align-items:center;gap:5px}
+.locate-btn:hover:not(:disabled){background:rgba(201,168,76,.12);border-color:var(–gold)}
+.locate-btn:disabled{opacity:.5;cursor:not-allowed}
+.chint{font-size:12px;color:var(–text-dim);font-style:italic;margin-top:2px}
+.cok{font-size:12px;color:var(–green);font-family:‘Cinzel’,serif;letter-spacing:.03em;margin-top:2px}
+.submit-btn{width:100%;padding:13px;background:linear-gradient(135deg,#2a2010,#1a1508);border:1px solid var(–gold-dim);border-radius:var(–radius);color:var(–gold2);font-family:‘Cinzel’,serif;font-size:13px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:all .2s;margin-top:4px}
+.submit-btn:hover{background:linear-gradient(135deg,#3a2e18,#2a200c);box-shadow:0 0 20px rgba(201,168,76,.2);border-color:var(–gold)}
+
+/* PROFILE */
+.prof-hero{text-align:center;padding:16px 0 8px}
+.avatar{width:72px;height:72px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#2a2040,#0f0f1a);border:2px solid var(–gold-dim);margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:32px;box-shadow:0 0 20px rgba(201,168,76,.15)}
+.prof-name{font-family:‘Cinzel’,serif;font-size:20px;color:var(–text-bright)}
+.prof-title{font-style:italic;color:var(–text-dim);font-size:14px;margin-top:3px}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sc{background:var(–bg3);border:1px solid var(–border);border-radius:var(–radius);padding:13px;text-align:center}
+.sv{font-family:‘Cinzel’,serif;font-size:26px;color:var(–gold2)}
+.sl{font-family:‘Cinzel’,serif;font-size:9px;letter-spacing:.1em;color:var(–text-dim);text-transform:uppercase;margin-top:3px}
+hr{border:none;border-top:1px solid var(–border)}
+
+/* TOAST */
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(16px);background:var(–bg3);border:1px solid var(–gold-dim);color:var(–gold2);font-family:‘Cinzel’,serif;font-size:12px;letter-spacing:.08em;padding:9px 18px;border-radius:3px;opacity:0;transition:all .3s;z-index:100;pointer-events:none;white-space:nowrap;max-width:88vw;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.5)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.success{border-color:var(–green);color:var(–green)}
+.toast.error{border-color:var(–red);color:var(–red)}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(–bg)}::-webkit-scrollbar-thumb{background:var(–border2);border-radius:2px}
+</style>
+
+</head>
+<body>
+<div id="app">
+
+<header>
+  <div class="header-top">
+    <div class="logo">⚔ TaskQuest</div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="gps-row"><div class="gps-dot" id="gpsDot"></div><span id="gpsLabel">No GPS</span></div>
+      <div class="level-badge" id="levelBadge">LVL 1</div>
+    </div>
+  </div>
+  <div class="xp-bar-wrap">
+    <div class="xp-label"><span>Experience</span><span id="xpLabel">0 XP</span></div>
+    <div class="xp-bar"><div class="xp-fill" id="xpFill" style="width:0%"></div></div>
+  </div>
+</header>
+
+<nav>
+  <button class="active" onclick="showScreen('compass',this)">⊙ Compass</button>
+  <button onclick="showScreen('quests',this)">⚑ Quests</button>
+  <button onclick="showScreen('create',this)">✦ Create</button>
+  <button onclick="showScreen('profile',this)">◈ Profile</button>
+</nav>
+
+<!-- COMPASS -->
+
+<div class="screen active" id="screen-compass">
+
+  <div class="bearing-section">
+    <div class="bearing-tape-wrap" id="btWrap">
+      <div class="bfade bfade-l"></div>
+      <div class="bfade bfade-r"></div>
+      <canvas id="btCanvas" style="position:absolute;top:0;left:0"></canvas>
+      <div class="qmarker" id="qmarker" style="display:none">
+        <div class="qmarker-arrow"></div>
+        <div class="qmarker-line"></div>
+      </div>
+    </div>
+    <div class="bearing-info">
+      <div>
+        <div class="bearing-hdg" id="bHdg">0°<span id="bCard">N</span></div>
+        <div class="gps-row" style="margin-top:4px"><div class="gps-dot" id="gpsDot2"></div><span id="gpsLabel2">Waiting for GPS…</span></div>
+      </div>
+      <div class="bearing-qi dim" id="bQI">No quest selected</div>
+    </div>
+  </div>
+
+  <div class="fqcard" id="fqCard" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start">
+      <div class="fq-title" id="fqTitle"></div>
+      <div class="xp-pill" id="fqXp"></div>
+    </div>
+    <div class="fq-meta" style="margin-top:6px">
+      <span>📍 <span id="fqLoc"></span></span>
+      <span id="fqRad"></span>
+    </div>
+    <button class="complete-btn" id="completeBtn" onclick="completeQuest()">Complete Quest</button>
+  </div>
+
+  <div class="section-title">Active Quests</div>
+  <div class="quest-list" id="cQList"></div>
+</div>
+
+<!-- QUESTS -->
+
+<div class="screen" id="screen-quests">
+  <div class="section-title">All Quests</div>
+  <div id="qFilter" style="display:flex;gap:8px;flex-wrap:wrap">
+    <button class="tag active" onclick="filterQ('active',this)">Active</button>
+    <button class="tag" onclick="filterQ('completed',this)">Completed</button>
+    <button class="tag" onclick="filterQ('all',this)">All</button>
+  </div>
+  <div class="quest-list" id="aQList"></div>
+</div>
+
+<!-- CREATE -->
+
+<div class="screen" id="screen-create">
+  <div class="section-title">Forge New Quest</div>
+
+  <div class="fg">
+    <label>Quest Title *</label>
+    <input type="text" id="nTitle" placeholder="Name your quest…" maxlength="60">
+  </div>
+
+  <div class="fg">
+    <label>Description</label>
+    <textarea id="nDesc" placeholder="What must be done…"></textarea>
+  </div>
+
+  <div class="fg">
+    <label>Location Name</label>
+    <input type="text" id="nLocName" placeholder="e.g. Home, Park, Office…">
+  </div>
+
+  <div class="fg">
+    <label>Coordinates * <span style="font-weight:300;text-transform:none;font-family:'Crimson Pro',serif;letter-spacing:0;font-size:12px">— tap Locate or type lat, lng</span></label>
+    <div class="coords-row">
+      <input type="text" id="nCoords" inputmode="decimal" placeholder="36.2508, -86.7109" oninput="onCI()">
+      <button class="locate-btn" id="locBtn" onclick="locateMe()">📍 Locate</button>
+    </div>
+    <div id="cFb" class="chint">Enter decimal coordinates: latitude, longitude</div>
+  </div>
+
+  <div class="form-row">
+    <div class="fg">
+      <label>XP Reward</label>
+      <select id="nXp">
+        <option value="10">10 XP — Minor</option>
+        <option value="25" selected>25 XP — Standard</option>
+        <option value="50">50 XP — Major</option>
+        <option value="100">100 XP — Epic</option>
+      </select>
+    </div>
+    <div class="fg">
+      <label>Completion Radius</label>
+      <select id="nRad">
+        <option value="20">20m — Precise</option>
+        <option value="50" selected>50m — Normal</option>
+        <option value="100">100m — Generous</option>
+        <option value="250">250m — Broad</option>
+      </select>
+    </div>
+  </div>
+
+<button class="submit-btn" onclick="createQuest()">⚔ Forge Quest</button>
+
+</div>
+
+<!-- PROFILE -->
+
+<div class="screen" id="screen-profile">
+  <div class="prof-hero">
+    <div class="avatar">🧙</div>
+    <div class="prof-name">Adventurer</div>
+    <div class="prof-title" id="pTitle">Novice Quester</div>
+  </div>
+  <div class="stats-grid">
+    <div class="sc"><div class="sv" id="sLvl">1</div><div class="sl">Level</div></div>
+    <div class="sc"><div class="sv" id="sXp">0</div><div class="sl">Total XP</div></div>
+    <div class="sc"><div class="sv" id="sDone">0</div><div class="sl">Completed</div></div>
+    <div class="sc"><div class="sv" id="sAct">0</div><div class="sl">Active</div></div>
+  </div>
+  <hr>
+  <div class="section-title">Danger Zone</div>
+  <button onclick="resetData()" style="width:100%;padding:11px;background:rgba(207,68,68,.08);border:1px solid #6a2a2a;border-radius:4px;color:#cf6464;font-family:'Cinzel',serif;font-size:11px;letter-spacing:.08em;cursor:pointer">Reset All Data</button>
+</div>
+
+</div><!-- #app -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ══════════ STATE ══════════ */
+const S = {
+  quests:[],
+  profile:{totalXp:0,level:1,completed:0},
+  focusedId:null,
+  lat:null, lng:null,
+  heading:0,
+  gpsOn:false
+};
+let qFilter='active';
+
+/* ══════════ PERSIST ══════════ */
+function save(){try{localStorage.setItem('tq_q',JSON.stringify(S.quests));localStorage.setItem('tq_p',JSON.stringify(S.profile))}catch(e){}}
+function load(){try{const q=localStorage.getItem('tq_q'),p=localStorage.getItem('tq_p');if(q)S.quests=JSON.parse(q);if(p)S.profile=JSON.parse(p)}catch(e){}}
+
+/* ══════════ TOAST ══════════ */
+let tTimer;
+function toast(msg,type=''){const el=document.getElementById('toast');el.textContent=msg;el.className='toast show '+type;clearTimeout(tTimer);tTimer=setTimeout(()=>el.className='toast',3200)}
+
+/* ══════════ SCREENS ══════════ */
+function showScreen(id,btn){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('active');
+  if(btn)btn.classList.add('active');
+  if(id==='compass')renderCompass();
+  if(id==='quests')renderAllQ();
+  if(id==='profile')renderProfile();
+}
+
+/* ══════════ GPS STATUS ══════════ */
+function setGPS(on,lbl){
+  S.gpsOn=on;
+  ['gpsDot','gpsDot2'].forEach(id=>{const e=document.getElementById(id);if(e)e.className='gps-dot'+(on?' on':'')});
+  ['gpsLabel','gpsLabel2'].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=lbl});
+}
+
+/* ══════════ START GPS ══════════ */
+function startGPS(){
+  if(!navigator.geolocation){setGPS(false,'No geolocation');return}
+  setGPS(false,'Requesting…');
+  navigator.geolocation.watchPosition(
+    p=>{S.lat=p.coords.latitude;S.lng=p.coords.longitude;setGPS(true,'GPS Active');drawBar();renderCompass()},
+    ()=>setGPS(false,'GPS unavailable'),
+    {enableHighAccuracy:true,maximumAge:3000,timeout:15000}
+  );
+}
+
+/* ══════════ ORIENTATION ══════════ */
+function startOrientation(){
+  const h=e=>{
+    let v=0;
+    if(typeof e.webkitCompassHeading==='number')v=e.webkitCompassHeading;
+    else if(e.alpha!=null)v=(360-e.alpha)%360;
+    S.heading=v;drawBar();
+  };
+  if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission==='function'){
+    window._oh=h; // stored; triggered on user gesture
+  }else{
+    window.addEventListener('deviceorientation',h,true);
+  }
+}
+
+function reqOrient(){
+  if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission==='function'){
+    DeviceOrientationEvent.requestPermission().then(r=>{if(r==='granted'&&window._oh)window.addEventListener('deviceorientation',window._oh,true)}).catch(()=>{});
+  }
+}
+
+/* ══════════ LOCATE ME ══════════ */
+function locateMe(){
+  const btn=document.getElementById('locBtn');
+  const fb=document.getElementById('cFb');
+  btn.disabled=true;
+  btn.innerHTML='⏳';
+  fb.className='chint';
+  fb.textContent='Getting your location…';
+  reqOrient(); // ask for compass permission on same gesture
+
+  if(!navigator.geolocation){
+    fb.textContent='Geolocation not supported in this browser';
+    btn.disabled=false;btn.innerHTML='📍 Locate';return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    pos=>{
+      const lat=pos.coords.latitude.toFixed(6);
+      const lng=pos.coords.longitude.toFixed(6);
+      document.getElementById('nCoords').value=lat+', '+lng;
+      fb.className='cok';fb.textContent='✓ Location captured';
+      btn.disabled=false;btn.innerHTML='📍 Locate';
+      toast('Location captured!','success');
+      onCI();
+    },
+    err=>{
+      let m='Could not get location';
+      if(err.code===1)m='Permission denied — enable location in browser settings';
+      else if(err.code===2)m='Position unavailable — try again';
+      else if(err.code===3)m='Request timed out — try again';
+      fb.className='chint';fb.textContent=m;
+      btn.disabled=false;btn.innerHTML='📍 Locate';
+      toast(m,'error');
+    },
+    {enableHighAccuracy:true,timeout:15000,maximumAge:0}
+  );
+}
+
+/* Validate coords as user types/pastes */
+function onCI(){
+  const v=document.getElementById('nCoords').value.trim();
+  const fb=document.getElementById('cFb');
+  if(!v){fb.className='chint';fb.textContent='Enter decimal coordinates: latitude, longitude';return}
+  const p=v.split(/[\s,]+/).filter(Boolean);
+  if(p.length>=2){
+    const la=parseFloat(p[0]),lo=parseFloat(p[1]);
+    if(!isNaN(la)&&!isNaN(lo)&&la>=-90&&la<=90&&lo>=-180&&lo<=180){
+      fb.className='cok';fb.textContent='✓ '+la.toFixed(5)+', '+lo.toFixed(5);return;
+    }
+  }
+  fb.className='chint';fb.textContent='Format: latitude, longitude  (e.g. 36.2508, -86.7109)';
+}
+
+/* ══════════ MATH ══════════ */
+const R2D=180/Math.PI,D2R=Math.PI/180;
+function dist(la1,lo1,la2,lo2){
+  const R=6371000,dLa=(la2-la1)*D2R,dLo=(lo2-lo1)*D2R;
+  const a=Math.sin(dLa/2)**2+Math.cos(la1*D2R)*Math.cos(la2*D2R)*Math.sin(dLo/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+function bearing(la1,lo1,la2,lo2){
+  const y=Math.sin((lo2-lo1)*D2R)*Math.cos(la2*D2R);
+  const x=Math.cos(la1*D2R)*Math.sin(la2*D2R)-Math.sin(la1*D2R)*Math.cos(la2*D2R)*Math.cos((lo2-lo1)*D2R);
+  return(Math.atan2(y,x)*R2D+360)%360;
+}
+function fmtD(m){return m>=1000?(m/1000).toFixed(1)+' km':Math.round(m)+' m'}
+function card(h){return['N','NE','E','SE','S','SW','W','NW'][Math.round(((h%360)+360)%360/45)%8]}
+
+/* ══════════ XP/LEVEL ══════════ */
+function xpForLvl(l){return l<=1?0:Math.floor(100*Math.pow(l-1,1.2))}
+function lvlFromXp(x){let l=1;while(xpForLvl(l+1)<=x)l++;return l}
+function updateHeader(){
+  const p=S.profile,l=lvlFromXp(p.totalXp);p.level=l;
+  const lo=xpForLvl(l),hi=xpForLvl(l+1);
+  const pct=hi>lo?(p.totalXp-lo)/(hi-lo)*100:100;
+  document.getElementById('levelBadge').textContent='LVL '+l;
+  document.getElementById('xpLabel').textContent=p.totalXp+' XP';
+  document.getElementById('xpFill').style.width=pct.toFixed(1)+'%';
+}
+
+/* ══════════ BEARING BAR (canvas) ══════════ */
+function drawBar(){
+  const wrap=document.getElementById('btWrap');
+  const canvas=document.getElementById('btCanvas');
+  const W=wrap.clientWidth,H=wrap.clientHeight;
+  if(!W)return;
+  const dpr=devicePixelRatio||1;
+  canvas.width=W*dpr;canvas.height=H*dpr;
+  canvas.style.width=W+'px';canvas.style.height=H+'px';
+  const ctx=canvas.getContext('2d');
+  ctx.scale(dpr,dpr);
+
+  const hdg=S.heading,cx=W/2,PPD=3.6;
+
+  /* background */
+  const bg=ctx.createLinearGradient(0,0,0,H);
+  bg.addColorStop(0,'#0c0c1c');bg.addColorStop(1,'#111122');
+  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+
+  /* ticks */
+  const vis=W/PPD,s0=hdg-vis/2-6,s1=hdg+vis/2+6;
+  const CARD={0:'N',45:'NE',90:'E',135:'SE',180:'S',225:'SW',270:'W',315:'NW',360:'N'};
+
+  for(let rd=Math.floor(s0);rd<=Math.ceil(s1);rd++){
+    const dg=((rd%360)+360)%360;
+    const x=cx+(rd-hdg)*PPD;
+    const maj=dg%45===0,mid=!maj&&dg%15===0,min=!maj&&!mid&&dg%5===0;
+    if(!maj&&!mid&&!min)continue;
+    let th,col,lw;
+    if(maj){th=22;col='#6a6880';lw=1.5}
+    else if(mid){th=13;col='#323250';lw=1}
+    else{th=7;col='#222240';lw=0.8}
+    ctx.strokeStyle=col;ctx.lineWidth=lw;
+    ctx.beginPath();ctx.moveTo(x,H-4);ctx.lineTo(x,H-4-th);ctx.stroke();
+    if(maj){
+      const lbl=CARD[dg]||(dg+'°');
+      const isN=['N','S','E','W'].includes(lbl);
+      ctx.fillStyle=isN?'#c9a84c':'#4a4860';
+      ctx.font=(isN?'600 11px':'9px')+" 'Cinzel',serif";
+      ctx.textAlign='center';
+      ctx.fillText(lbl,x,H-4-th-5);
+    }
+  }
+
+  /* center line */
+  ctx.strokeStyle='#c9a84c';ctx.lineWidth=2;
+  ctx.shadowColor='#c9a84c';ctx.shadowBlur=10;
+  ctx.beginPath();ctx.moveTo(cx,0);ctx.lineTo(cx,H);ctx.stroke();
+  ctx.shadowBlur=0;
+
+  /* triangle pointer */
+  ctx.fillStyle='#c9a84c';ctx.shadowColor='#c9a84c';ctx.shadowBlur=6;
+  ctx.beginPath();ctx.moveTo(cx-6,0);ctx.lineTo(cx+6,0);ctx.lineTo(cx,11);ctx.closePath();ctx.fill();
+  ctx.shadowBlur=0;
+
+  /* heading text */
+  document.getElementById('bHdg').innerHTML=Math.round(hdg)+'°<span>'+card(hdg)+'</span>';
+
+  /* quest marker */
+  const fq=S.quests.find(q=>q.id===S.focusedId&&q.status==='active');
+  const mkr=document.getElementById('qmarker');
+  const qi=document.getElementById('bQI');
+  const cb=document.getElementById('completeBtn');
+
+  if(!fq||S.lat===null){
+    mkr.style.display='none';
+    qi.className='bearing-qi dim';
+    qi.textContent=S.lat===null?'Waiting for GPS…':'No quest selected';
+    if(cb)cb.disabled=true;
+    return;
+  }
+
+  const br=bearing(S.lat,S.lng,fq.latitude,fq.longitude);
+  const d=dist(S.lat,S.lng,fq.latitude,fq.longitude);
+  let rel=br-hdg;
+  while(rel>180)rel-=360;while(rel<-180)rel+=360;
+  const mx=cx+rel*PPD;
+  const onScr=mx>12&&mx<W-12;
+
+  if(onScr){
+    mkr.style.display='flex';mkr.style.left=mx+'px';
+  }else{
+    mkr.style.display='none';
+    /* edge chevron */
+    const ex=mx<cx?20:W-20,arrow=rel<0?'◂':'▸';
+    ctx.fillStyle='rgba(76,175,122,.85)';
+    ctx.font='16px sans-serif';ctx.textAlign='center';
+    ctx.fillText(arrow,ex,H/2+5);
+  }
+
+  const canDo=d<=fq.completionRadius;
+  qi.className='bearing-qi';
+  qi.innerHTML=fq.title+'<br>'+fmtD(d)+' · '+Math.round(br)+'°';
+  if(cb){cb.disabled=!canDo;cb.textContent=canDo?'✓ Complete Quest':'Complete Quest ('+fmtD(d)+' away)'}
+}
+
+/* ══════════ CREATE QUEST ══════════ */
+function createQuest(){
+  const title=document.getElementById('nTitle').value.trim();
+  const raw=document.getElementById('nCoords').value.trim();
+  if(!title){toast('Quest title is required','error');return}
+  if(!raw){toast('Coordinates are required — tap Locate or type them','error');return}
+  const p=raw.split(/[\s,]+/).filter(Boolean);
+  if(p.length<2){toast('Format: latitude, longitude','error');return}
+  const la=parseFloat(p[0]),lo=parseFloat(p[1]);
+  if(isNaN(la)||isNaN(lo)){toast('Invalid coordinates','error');return}
+  if(la<-90||la>90){toast('Latitude must be between -90 and 90','error');return}
+  if(lo<-180||lo>180){toast('Longitude must be between -180 and 180','error');return}
+
+  const q={
+    id:Date.now().toString(),title,
+    description:document.getElementById('nDesc').value.trim(),
+    locationName:document.getElementById('nLocName').value.trim(),
+    latitude:la,longitude:lo,
+    xpReward:parseInt(document.getElementById('nXp').value),
+    completionRadius:parseInt(document.getElementById('nRad').value),
+    status:'active',createdAt:Date.now()
+  };
+  S.quests.unshift(q);S.focusedId=q.id;save();
+
+  ['nTitle','nDesc','nLocName','nCoords'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('cFb').className='chint';
+  document.getElementById('cFb').textContent='Enter decimal coordinates: latitude, longitude';
+
+  toast('Quest forged! ⚔','success');
+  showScreen('compass',document.querySelector('nav button'));
+  updateHeader();
+}
+
+/* ══════════ COMPLETE QUEST ══════════ */
+function completeQuest(){
+  const q=S.quests.find(x=>x.id===S.focusedId);if(!q)return;
+  if(S.lat!==null){
+    const d=dist(S.lat,S.lng,q.latitude,q.longitude);
+    if(d>q.completionRadius){toast('Too far! '+fmtD(d)+' away (need ≤'+q.completionRadius+'m)','error');return}
+  }
+  q.status='completed';q.completedAt=Date.now();
+  S.profile.totalXp+=q.xpReward;
+  S.profile.completed=(S.profile.completed||0)+1;
+  const nl=lvlFromXp(S.profile.totalXp),up=nl>S.profile.level;
+  S.profile.level=nl;S.focusedId=null;
+  save();updateHeader();
+  toast(up?'⬆ Level Up! Now Level '+nl+'!':'✓ Complete! +'+q.xpReward+' XP','success');
+  renderCompass();
+}
+
+/* ══════════ COMPASS SCREEN ══════════ */
+function renderCompass(){
+  const active=S.quests.filter(q=>q.status==='active');
+  const list=document.getElementById('cQList');
+  const card=document.getElementById('fqCard');
+
+  if(S.focusedId&&!active.find(q=>q.id===S.focusedId))S.focusedId=null;
+  if(!S.focusedId&&active.length>0){
+    if(S.lat!==null){
+      let best=active[0],bd=Infinity;
+      active.forEach(q=>{const d=dist(S.lat,S.lng,q.latitude,q.longitude);if(d<bd){bd=d;best=q}});
+      S.focusedId=best.id;
+    }else S.focusedId=active[0].id;
+  }
+
+  const fq=active.find(q=>q.id===S.focusedId);
+  if(fq){
+    card.style.display='block';
+    document.getElementById('fqTitle').textContent=fq.title;
+    document.getElementById('fqXp').textContent=fq.xpReward+' XP';
+    document.getElementById('fqLoc').textContent=fq.locationName||fq.latitude.toFixed(4)+', '+fq.longitude.toFixed(4);
+    document.getElementById('fqRad').textContent='⊙ '+fq.completionRadius+'m radius';
+  }else card.style.display='none';
+
+  if(active.length===0){
+    list.innerHTML='<div class="empty"><div class="ei">🗺</div><p>No active quests.<br>Create one to begin.</p></div>';
+  }else{
+    list.innerHTML=active.map(q=>{
+      const f=q.id===S.focusedId;
+      const ds=S.lat!==null?'<span class="tag">'+fmtD(dist(S.lat,S.lng,q.latitude,q.longitude))+'</span>':'';
+      return`<div class="qi${f?' focused':''}" onclick="focusQ('${q.id}')">
+        <div class="qi-hdr"><div class="qi-title">${q.title}</div><div class="xp-pill">${q.xpReward} XP</div></div>
+        ${q.locationName?`<div class="qi-body">📍 ${q.locationName}</div>`:''}
+        <div class="qi-foot">${ds}<span class="tag">${q.completionRadius}m</span></div>
+      </div>`;
+    }).join('');
+  }
+  drawBar();
+}
+
+function focusQ(id){S.focusedId=id;renderCompass()}
+
+/* ══════════ ALL QUESTS ══════════ */
+function filterQ(f,btn){
+  qFilter=f;
+  document.querySelectorAll('#qFilter .tag').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');renderAllQ();
+}
+function renderAllQ(){
+  const list=document.getElementById('aQList');
+  const qs=qFilter==='all'?S.quests:S.quests.filter(q=>q.status===qFilter);
+  if(!qs.length){list.innerHTML='<div class="empty"><div class="ei">📜</div><p>No quests here yet.</p></div>';return}
+  list.innerHTML=qs.map(q=>{
+    const d=new Date(q.createdAt).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    return`<div class="qi">
+      <div class="qi-hdr"><div class="qi-title">${q.title}</div><div class="xp-pill">${q.xpReward} XP</div></div>
+      ${q.description?`<div class="qi-body">${q.description}</div>`:''}
+      ${q.locationName?`<div class="qi-body" style="margin-top:2px">📍 ${q.locationName}</div>`:''}
+      <div class="qi-foot">
+        <span class="tag ${q.status}">${q.status}</span>
+        <span class="tag">${d}</span>
+        ${q.status==='active'?`<button class="tag" style="cursor:pointer;border-color:#6a2a2a;color:#cf6464" onclick="delQ('${q.id}',event)">✕ Abandon</button>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function delQ(id,e){
+  e.stopPropagation();
+  if(!confirm('Abandon this quest?'))return;
+  S.quests=S.quests.filter(q=>q.id!==id);
+  if(S.focusedId===id)S.focusedId=null;
+  save();renderAllQ();renderCompass();toast('Quest abandoned');
+}
+
+/* ══════════ PROFILE ══════════ */
+const TITLES=['Novice Quester','Wayfarer','Pathfinder','Journeyman','Adventurer','Veteran','Champion','Legend','Mythic Hero','Transcendent'];
+function renderProfile(){
+  const p=S.profile,l=lvlFromXp(p.totalXp),a=S.quests.filter(q=>q.status==='active').length;
+  document.getElementById('sLvl').textContent=l;
+  document.getElementById('sXp').textContent=p.totalXp;
+  document.getElementById('sDone').textContent=p.completed||0;
+  document.getElementById('sAct').textContent=a;
+  document.getElementById('pTitle').textContent=TITLES[Math.min(l-1,TITLES.length-1)];
+}
+
+function resetData(){
+  if(!confirm('Reset ALL data? This cannot be undone.'))return;
+  S.quests=[];S.profile={totalXp:0,level:1,completed:0};S.focusedId=null;
+  save();updateHeader();renderProfile();renderCompass();toast('Data reset');
+}
+
+/* ══════════ INIT ══════════ */
+load();updateHeader();renderCompass();startGPS();startOrientation();
+window.addEventListener('resize',drawBar);
+</script>
+
+</body>
+</html>
