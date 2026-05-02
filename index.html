@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>TaskQuest</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
 :root {
   --bg:#0a0a0f; --bg2:#0f0f1a; --bg3:#141428;
@@ -115,6 +116,7 @@ select option{background:var(--bg3)}
 .cok{font-size:12px;color:var(--green);font-family:'Cinzel',serif;letter-spacing:.03em;margin-top:2px}
 .submit-btn{width:100%;padding:13px;background:linear-gradient(135deg,#2a2010,#1a1508);border:1px solid var(--gold-dim);border-radius:var(--r);color:var(--gold2);font-family:'Cinzel',serif;font-size:13px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:all .2s;margin-top:4px}
 .submit-btn:hover{background:linear-gradient(135deg,#3a2e18,#2a200c);box-shadow:0 0 20px rgba(201,168,76,.2);border-color:var(--gold)}
+.submit-btn:disabled{opacity:.5;cursor:not-allowed}
 
 /* PROFILE */
 .prof-hero{text-align:center;padding:16px 0 8px}
@@ -133,18 +135,63 @@ hr{border:none;border-top:1px solid var(--border)}
 .toast.success{border-color:var(--green);color:var(--green)}
 .toast.error{border-color:var(--red);color:var(--red)}
 ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+/* AUTH SCREEN */
+#authScreen{position:fixed;inset:0;z-index:200;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px}
+#authScreen::before{content:'';position:fixed;inset:0;pointer-events:none;opacity:.35;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.05'/%3E%3C/svg%3E")}
+.auth-box{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r);padding:32px 28px;width:100%;max-width:380px;position:relative;z-index:1;display:flex;flex-direction:column;gap:16px}
+.auth-logo{font-family:'Cinzel',serif;font-size:26px;font-weight:700;color:var(--gold);letter-spacing:.1em;text-shadow:0 0 20px rgba(201,168,76,.4);text-align:center;margin-bottom:2px}
+.auth-title{font-family:'Cinzel',serif;font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--text-dim);text-align:center}
+.auth-error{font-family:'Cinzel',serif;font-size:11px;letter-spacing:.04em;min-height:16px;text-align:center;color:var(--red)}
+.auth-error.ok{color:var(--green)}
+.auth-submit{width:100%;padding:13px;background:linear-gradient(135deg,#2a2010,#1a1508);border:1px solid var(--gold-dim);border-radius:var(--r);color:var(--gold2);font-family:'Cinzel',serif;font-size:13px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:all .2s}
+.auth-submit:hover:not(:disabled){background:linear-gradient(135deg,#3a2e18,#2a200c);box-shadow:0 0 20px rgba(201,168,76,.2);border-color:var(--gold)}
+.auth-submit:disabled{opacity:.5;cursor:not-allowed}
+.auth-sep{text-align:center;font-size:12px;color:var(--text-dim);font-style:italic}
+.auth-toggle{background:none;border:none;color:var(--text-dim);font-family:'Cinzel',serif;font-size:10px;letter-spacing:.08em;cursor:pointer;text-align:center;padding:4px;text-decoration:underline;text-underline-offset:3px;width:100%}
+.auth-toggle:hover{color:var(--gold)}
+.logout-btn{background:none;border:1px solid var(--border);border-radius:2px;color:var(--text-dim);font-family:'Cinzel',serif;font-size:9px;letter-spacing:.08em;padding:3px 8px;cursor:pointer;transition:all .2s}
+.logout-btn:hover{border-color:var(--red);color:#cf6464}
 </style>
 </head>
 <body>
-<div id="app">
+
+<!-- AUTH SCREEN -->
+<div id="authScreen">
+  <div class="auth-box">
+    <div>
+      <div class="auth-logo">⚔ TaskQuest</div>
+      <div class="auth-title" id="authTitle">Enter the Realm</div>
+    </div>
+    <div class="fg" id="authUserRow" style="display:none">
+      <label>Adventurer Name</label>
+      <input type="text" id="authUsername" placeholder="Choose your name…" maxlength="30" autocomplete="username">
+    </div>
+    <div class="fg">
+      <label>Email</label>
+      <input type="email" id="authEmail" placeholder="your@email.com" autocomplete="email">
+    </div>
+    <div class="fg">
+      <label>Password</label>
+      <input type="password" id="authPassword" placeholder="Password" autocomplete="current-password">
+    </div>
+    <div class="auth-error" id="authError"></div>
+    <button class="auth-submit" id="authSubmit" onclick="doAuth()">Sign In</button>
+    <div class="auth-sep">— or —</div>
+    <button class="auth-toggle" id="authToggle" onclick="toggleAuth()">Create an account</button>
+  </div>
+</div>
+
+<div id="app" style="display:none">
 
 <!-- HEADER -->
 <header>
   <div class="hrow">
     <div class="logo">⚔ TaskQuest</div>
-    <div style="display:flex;align-items:center;gap:10px">
+    <div style="display:flex;align-items:center;gap:8px">
       <div class="gps-row"><div class="gdot" id="gpsDot"></div><span id="gpsLbl">No GPS</span></div>
       <div class="lvl-badge" id="lvlBadge">LVL 1</div>
+      <button class="logout-btn" onclick="doLogout()">Exit</button>
     </div>
   </div>
   <div class="xp-wrap">
@@ -245,34 +292,24 @@ hr{border:none;border-top:1px solid var(--border)}
     </div>
     <div id="coordFb" class="chint">Enter decimal coordinates: latitude, longitude</div>
   </div>
-  <div class="form-row">
-    <div class="fg">
-      <label>XP Reward</label>
-      <select id="nXp">
-        <option value="10">10 XP — Minor</option>
-        <option value="25" selected>25 XP — Standard</option>
-        <option value="50">50 XP — Major</option>
-        <option value="100">100 XP — Epic</option>
-      </select>
-    </div>
-    <div class="fg">
-      <label>Completion Radius</label>
-      <select id="nRad">
-        <option value="20">20m — Precise</option>
-        <option value="50" selected>50m — Normal</option>
-        <option value="100">100m — Generous</option>
-        <option value="250">250m — Broad</option>
-      </select>
-    </div>
+  <div class="chint" style="margin-top:-4px">✦ XP reward is calculated automatically from the distance to this location</div>
+  <div class="fg">
+    <label>Completion Radius</label>
+    <select id="nRad">
+      <option value="20">20m — Precise</option>
+      <option value="50" selected>50m — Normal</option>
+      <option value="100">100m — Generous</option>
+      <option value="250">250m — Broad</option>
+    </select>
   </div>
-  <button class="submit-btn" onclick="createQuest()">⚔ Forge Quest</button>
+  <button class="submit-btn" id="forgeBtn" onclick="createQuest()">⚔ Forge Quest</button>
 </div>
 
 <!-- ══ PROFILE SCREEN ══ -->
 <div class="screen" id="screen-profile">
   <div class="prof-hero">
     <div class="avatar">🧙</div>
-    <div class="prof-name">Adventurer</div>
+    <div class="prof-name" id="profName">Adventurer</div>
     <div class="prof-ttl" id="profTtl">Novice Quester</div>
   </div>
   <div class="stats-grid">
@@ -291,11 +328,22 @@ hr{border:none;border-top:1px solid var(--border)}
 
 <script>
 // ═══════════════════════════════════════════════════
-//  STATE  (single object, no redeclarations)
+//  SUPABASE
+// ═══════════════════════════════════════════════════
+var SUPA_URL = 'https://meoljhvhrbdzegjdquqh.supabase.co';
+var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1lb2xqaHZocmJkemVnamRxdXFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1OTQ4NTAsImV4cCI6MjA5MzE3MDg1MH0.15xSl5TrEqjQ4bsPXjnz4xsA4Gv7kdef3DGzIaUeRXg';
+var sb = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+var currentUser = null;
+var allQuests   = [];   // all user quests — for the Quests list screen
+var isSignup    = false;
+
+// ═══════════════════════════════════════════════════
+//  STATE
 // ═══════════════════════════════════════════════════
 var S = {
-  quests: [],
-  profile: { totalXp: 0, level: 1, completed: 0 },
+  quests: [],           // compass quests from get_compass_quests RPC
+  profile: { totalXp: 0, level: 1, completed: 0, username: '' },
   focusedId: null,
   lat: null,
   lng: null,
@@ -306,22 +354,156 @@ var S = {
 var qFilter = 'active';
 
 // ═══════════════════════════════════════════════════
-//  PERSIST
+//  MAP DB ROW → LOCAL QUEST OBJECT
 // ═══════════════════════════════════════════════════
-function save() {
-  try {
-    localStorage.setItem('tq_q', JSON.stringify(S.quests));
-    localStorage.setItem('tq_p', JSON.stringify(S.profile));
-  } catch(e) {}
+function mapQuest(row) {
+  return {
+    id:               row.id,
+    title:            row.title            || '',
+    description:      row.description      || '',
+    locationName:     row.location_name    || '',
+    latitude:         parseFloat(row.latitude)  || 0,
+    longitude:        parseFloat(row.longitude) || 0,
+    xpReward:         row.xp_value         || 0,
+    completionRadius: row.completion_radius || 50,
+    status:           row.status || (row.completed_at ? 'completed' : 'active'),
+    createdAt:        row.created_at  ? new Date(row.created_at).getTime()  : Date.now(),
+    completedAt:      row.completed_at ? new Date(row.completed_at).getTime() : null
+  };
 }
 
-function loadData() {
-  try {
-    var q = localStorage.getItem('tq_q');
-    var p = localStorage.getItem('tq_p');
-    if (q) S.quests = JSON.parse(q);
-    if (p) S.profile = JSON.parse(p);
-  } catch(e) {}
+// ═══════════════════════════════════════════════════
+//  SUPABASE DATA FUNCTIONS
+// ═══════════════════════════════════════════════════
+function syncProfile() {
+  if (!currentUser) return;
+  sb.from('profiles')
+    .select('username,level,total_xp,tasks_completed')
+    .eq('id', currentUser.id)
+    .single()
+    .then(function(res) {
+      if (res.error || !res.data) return;
+      var d = res.data;
+      S.profile.totalXp   = d.total_xp       || 0;
+      S.profile.level     = d.level           || 1;
+      S.profile.completed = d.tasks_completed || 0;
+      S.profile.username  = d.username        || '';
+      updateHeader();
+      renderProfile();
+    });
+}
+
+function loadAllQuests() {
+  if (!currentUser) return;
+  sb.from('quests')
+    .select('*')
+    .eq('creator_id', currentUser.id)
+    .order('created_at', { ascending: false })
+    .then(function(res) {
+      if (res.error) return;
+      allQuests = (res.data || []).map(mapQuest);
+      renderAllQ();
+    });
+}
+
+function refreshCompassQuests() {
+  if (!currentUser || S.lat === null) return;
+  sb.rpc('get_compass_quests', { lat: S.lat, lng: S.lng, heading: S.heading })
+    .then(function(res) {
+      if (res.error) return;
+      S.quests = (res.data || []).map(mapQuest);
+      renderCompass();
+    });
+}
+
+// ═══════════════════════════════════════════════════
+//  AUTH
+// ═══════════════════════════════════════════════════
+function showAuth() {
+  document.getElementById('authScreen').style.display = 'flex';
+  document.getElementById('app').style.display        = 'none';
+}
+
+function showApp() {
+  document.getElementById('authScreen').style.display = 'none';
+  document.getElementById('app').style.display        = 'flex';
+}
+
+function toggleAuth() {
+  isSignup = !isSignup;
+  document.getElementById('authTitle').textContent  = isSignup ? 'Begin Your Journey' : 'Enter the Realm';
+  document.getElementById('authSubmit').textContent = isSignup ? 'Create Account'     : 'Sign In';
+  document.getElementById('authToggle').textContent = isSignup ? 'Already have an account? Sign in' : 'Create an account';
+  document.getElementById('authUserRow').style.display = isSignup ? 'flex' : 'none';
+  document.getElementById('authPassword').autocomplete = isSignup ? 'new-password' : 'current-password';
+  document.getElementById('authError').textContent = '';
+  document.getElementById('authError').className   = 'auth-error';
+}
+
+function doAuth() {
+  var email    = document.getElementById('authEmail').value.trim();
+  var password = document.getElementById('authPassword').value;
+  var username = document.getElementById('authUsername').value.trim();
+  var errEl    = document.getElementById('authError');
+  var btn      = document.getElementById('authSubmit');
+
+  errEl.textContent = '';
+  errEl.className   = 'auth-error';
+
+  if (!email || !password) { errEl.textContent = 'Email and password required'; return; }
+  if (isSignup && !username) { errEl.textContent = 'Choose an adventurer name'; return; }
+
+  btn.disabled    = true;
+  btn.textContent = isSignup ? 'Creating…' : 'Signing in…';
+
+  var promise = isSignup
+    ? sb.auth.signUp({ email: email, password: password, options: { data: { username: username } } })
+    : sb.auth.signInWithPassword({ email: email, password: password });
+
+  promise.then(function(res) {
+    btn.disabled    = false;
+    btn.textContent = isSignup ? 'Create Account' : 'Sign In';
+
+    if (res.error) {
+      errEl.textContent = res.error.message;
+      return;
+    }
+
+    // Email confirmation required (no session yet)
+    if (isSignup && res.data && res.data.user && !res.data.session) {
+      errEl.className   = 'auth-error ok';
+      errEl.textContent = '✓ Check your email to confirm your account!';
+      return;
+    }
+
+    var session = res.data && res.data.session;
+    currentUser = session ? session.user : (res.data && res.data.user);
+    if (currentUser) onAuthed();
+  }).catch(function(err) {
+    btn.disabled    = false;
+    btn.textContent = isSignup ? 'Create Account' : 'Sign In';
+    errEl.textContent = err.message || 'Authentication failed';
+  });
+}
+
+function doLogout() {
+  sb.auth.signOut().then(function() {
+    currentUser    = null;
+    S.quests       = [];
+    allQuests      = [];
+    S.profile      = { totalXp: 0, level: 1, completed: 0, username: '' };
+    S.focusedId    = null;
+    showAuth();
+  });
+}
+
+function onAuthed() {
+  showApp();
+  syncProfile();
+  loadAllQuests();
+  refreshCompassQuests();
+  updateHeader();
+  renderCompass();
 }
 
 // ═══════════════════════════════════════════════════
@@ -345,8 +527,8 @@ function showScreen(id, btn) {
   document.querySelectorAll('nav button').forEach(function(b) { b.classList.remove('active'); });
   document.getElementById('screen-' + id).classList.add('active');
   if (btn) btn.classList.add('active');
-  if (id === 'compass') renderCompass();
-  if (id === 'quests')  renderAllQ();
+  if (id === 'compass') { refreshCompassQuests(); renderCompass(); }
+  if (id === 'quests')  { loadAllQuests(); renderAllQ(); }
   if (id === 'profile') renderProfile();
 }
 
@@ -586,7 +768,7 @@ function updateHeader() {
 }
 
 // ═══════════════════════════════════════════════════
-//  BEARING BAR (canvas)
+//  BEARING BAR (canvas) — unchanged
 // ═══════════════════════════════════════════════════
 function drawBar() {
   var wrap   = document.getElementById('btWrap');
@@ -733,8 +915,10 @@ function drawBar() {
 //  CREATE QUEST
 // ═══════════════════════════════════════════════════
 function createQuest() {
-  var title = document.getElementById('nTitle').value.trim();
-  var raw   = document.getElementById('nCoords').value.trim();
+  if (!currentUser) { toast('Not signed in', 'error'); return; }
+
+  var title   = document.getElementById('nTitle').value.trim();
+  var raw     = document.getElementById('nCoords').value.trim();
 
   if (!title) { toast('Quest title is required', 'error'); return; }
   if (!raw)   { toast('Coordinates required — tap Locate or type them', 'error'); return; }
@@ -746,67 +930,139 @@ function createQuest() {
   if (la < -90  || la > 90)     { toast('Latitude must be -90 to 90', 'error'); return; }
   if (lo < -180 || lo > 180)    { toast('Longitude must be -180 to 180', 'error'); return; }
 
-  var q = {
-    id: Date.now().toString(),
-    title: title,
-    description:  document.getElementById('nDesc').value.trim(),
-    locationName: document.getElementById('nLocName').value.trim(),
-    latitude:  la,
-    longitude: lo,
-    xpReward:         parseInt(document.getElementById('nXp').value),
-    completionRadius: parseInt(document.getElementById('nRad').value),
-    status: 'active',
-    createdAt: Date.now()
-  };
+  var desc    = document.getElementById('nDesc').value.trim();
+  var locName = document.getElementById('nLocName').value.trim();
+  var rad     = parseInt(document.getElementById('nRad').value);
 
-  S.quests.unshift(q);
-  S.focusedId = q.id;
-  save();
+  // Distance from current position to quest location (fallback 500m if no GPS)
+  var distMeters = (S.lat !== null) ? distM(S.lat, S.lng, la, lo) : 500;
 
-  // Clear form
-  ['nTitle','nDesc','nLocName','nCoords'].forEach(function(id) {
-    document.getElementById(id).value = '';
-  });
-  document.getElementById('coordFb').className   = 'chint';
-  document.getElementById('coordFb').textContent = 'Enter decimal coordinates: latitude, longitude';
+  var btn = document.getElementById('forgeBtn');
+  btn.disabled    = true;
+  btn.textContent = '⏳ Forging…';
 
-  toast('Quest forged! ⚔', 'success');
-  showScreen('compass', document.querySelector('nav button'));
-  updateHeader();
+  // Get XP from server, then insert the quest
+  sb.rpc('calculate_xp_for_distance', { distance_meters: Math.round(distMeters) })
+    .then(function(xpRes) {
+      var raw = xpRes.data;
+      var xpVal = 25; // fallback
+      if (!xpRes.error && raw !== null && raw !== undefined) {
+        if (typeof raw === 'number') xpVal = raw;
+        else if (Array.isArray(raw) && raw.length > 0) xpVal = Number(raw[0]) || 25;
+      }
+
+      return sb.from('quests').insert({
+        creator_id:        currentUser.id,
+        title:             title,
+        description:       desc,
+        location_name:     locName,
+        latitude:          la,
+        longitude:         lo,
+        xp_value:          xpVal,
+        completion_radius: rad,
+        status:            'active'
+      }).select().single();
+    })
+    .then(function(res) {
+      btn.disabled    = false;
+      btn.textContent = '⚔ Forge Quest';
+
+      if (res.error) { toast('Error: ' + res.error.message, 'error'); return; }
+
+      var newQ = mapQuest(res.data);
+      S.quests.unshift(newQ);
+      allQuests.unshift(newQ);
+      S.focusedId = newQ.id;
+
+      // Clear form
+      ['nTitle','nDesc','nLocName','nCoords'].forEach(function(id) {
+        document.getElementById(id).value = '';
+      });
+      document.getElementById('coordFb').className   = 'chint';
+      document.getElementById('coordFb').textContent = 'Enter decimal coordinates: latitude, longitude';
+
+      toast('Quest forged! ⚔ (' + newQ.xpReward + ' XP)', 'success');
+      showScreen('compass', document.querySelector('nav button'));
+      updateHeader();
+    })
+    .catch(function() {
+      btn.disabled    = false;
+      btn.textContent = '⚔ Forge Quest';
+      toast('Failed to forge quest', 'error');
+    });
 }
 
 // ═══════════════════════════════════════════════════
 //  COMPLETE QUEST
 // ═══════════════════════════════════════════════════
 function completeQuest() {
-  var q = null;
+  if (!currentUser) return;
+
+  var fq = null;
   for (var i = 0; i < S.quests.length; i++) {
-    if (S.quests[i].id === S.focusedId) { q = S.quests[i]; break; }
+    if (S.quests[i].id === S.focusedId) { fq = S.quests[i]; break; }
   }
-  if (!q) return;
+  if (!fq) return;
 
   if (S.lat !== null) {
-    var d = distM(S.lat, S.lng, q.latitude, q.longitude);
-    if (d > q.completionRadius) {
-      toast('Too far! ' + fmtD(d) + ' away (need ≤' + q.completionRadius + 'm)', 'error');
+    var d = distM(S.lat, S.lng, fq.latitude, fq.longitude);
+    if (d > fq.completionRadius) {
+      toast('Too far! ' + fmtD(d) + ' away (need ≤' + fq.completionRadius + 'm)', 'error');
       return;
     }
   }
 
-  q.status = 'completed';
-  q.completedAt = Date.now();
-  S.profile.totalXp  += q.xpReward;
-  S.profile.completed = (S.profile.completed || 0) + 1;
+  var btn = document.getElementById('completeBtn');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Completing…'; }
 
-  var newLvl  = lvlFromXp(S.profile.totalXp);
-  var levelUp = newLvl > S.profile.level;
-  S.profile.level = newLvl;
-  S.focusedId = null;
+  sb.rpc('complete_quest', { quest_id: fq.id, lat: S.lat, lng: S.lng })
+    .then(function(res) {
+      if (btn) btn.textContent = 'Complete Quest';
 
-  save();
-  updateHeader();
-  toast(levelUp ? '⬆ Level Up! Now Level ' + newLvl + '!' : '✓ Complete! +' + q.xpReward + ' XP', 'success');
-  renderCompass();
+      if (res.error) {
+        if (btn) btn.disabled = false;
+        toast('Error: ' + res.error.message, 'error');
+        return;
+      }
+
+      var data      = Array.isArray(res.data) ? res.data[0] : res.data;
+      var xpEarned  = data && data.xp_earned    != null ? data.xp_earned    : fq.xpReward;
+      var newLevel  = data && data.new_level     != null ? data.new_level    : S.profile.level;
+      var leveledUp = data && data.leveled_up    != null ? data.leveled_up   : false;
+      var newTotalXp= data && data.new_total_xp  != null ? data.new_total_xp : (S.profile.totalXp + xpEarned);
+
+      // Update local profile state immediately
+      S.profile.totalXp   = newTotalXp;
+      S.profile.level     = newLevel;
+      S.profile.completed = (S.profile.completed || 0) + 1;
+
+      // Remove from compass quests; mark completed in allQuests
+      S.quests = S.quests.filter(function(q) { return q.id !== fq.id; });
+      for (var j = 0; j < allQuests.length; j++) {
+        if (allQuests[j].id === fq.id) {
+          allQuests[j].status      = 'completed';
+          allQuests[j].completedAt = Date.now();
+          break;
+        }
+      }
+
+      S.focusedId = null;
+      updateHeader();
+      renderCompass();
+
+      if (leveledUp) {
+        toast('⬆ Level Up! Now Level ' + newLevel + '!', 'success');
+      } else {
+        toast('✓ Complete! +' + xpEarned + ' XP', 'success');
+      }
+
+      // Sync profile from server in background
+      syncProfile();
+    })
+    .catch(function() {
+      if (btn) { btn.disabled = false; btn.textContent = 'Complete Quest'; }
+      toast('Failed to complete quest', 'error');
+    });
 }
 
 // ═══════════════════════════════════════════════════
@@ -882,7 +1138,7 @@ function filterQ(f, btn) {
 
 function renderAllQ() {
   var list = document.getElementById('aQList');
-  var qs   = qFilter === 'all' ? S.quests : S.quests.filter(function(q) { return q.status === qFilter; });
+  var qs   = qFilter === 'all' ? allQuests : allQuests.filter(function(q) { return q.status === qFilter; });
   if (!qs.length) {
     list.innerHTML = '<div class="empty"><div class="ei">📜</div><p>No quests here yet.</p></div>';
     return;
@@ -902,12 +1158,15 @@ function renderAllQ() {
 function delQ(id, e) {
   e.stopPropagation();
   if (!confirm('Abandon this quest?')) return;
-  S.quests = S.quests.filter(function(q) { return q.id !== id; });
-  if (S.focusedId === id) S.focusedId = null;
-  save();
-  renderAllQ();
-  renderCompass();
-  toast('Quest abandoned');
+  sb.from('quests').delete().eq('id', id).then(function(res) {
+    if (res.error) { toast('Failed to abandon quest', 'error'); return; }
+    S.quests  = S.quests.filter(function(q)  { return q.id !== id; });
+    allQuests = allQuests.filter(function(q) { return q.id !== id; });
+    if (S.focusedId === id) S.focusedId = null;
+    renderAllQ();
+    renderCompass();
+    toast('Quest abandoned');
+  });
 }
 
 // ═══════════════════════════════════════════════════
@@ -917,35 +1176,62 @@ var TITLES = ['Novice Quester','Wayfarer','Pathfinder','Journeyman','Adventurer'
 
 function renderProfile() {
   var p = S.profile, l = lvlFromXp(p.totalXp);
-  var a = S.quests.filter(function(q) { return q.status === 'active'; }).length;
+  var a = allQuests.filter(function(q) { return q.status === 'active'; }).length;
   document.getElementById('sLvl').textContent  = l;
   document.getElementById('sXp').textContent   = p.totalXp;
   document.getElementById('sDone').textContent = p.completed || 0;
   document.getElementById('sAct').textContent  = a;
-  document.getElementById('profTtl').textContent = TITLES[Math.min(l - 1, TITLES.length - 1)];
+  document.getElementById('profTtl').textContent  = TITLES[Math.min(l - 1, TITLES.length - 1)];
+  if (p.username) document.getElementById('profName').textContent = p.username;
 }
 
 function resetData() {
-  if (!confirm('Reset ALL data? Cannot be undone.')) return;
-  S.quests = [];
-  S.profile = { totalXp: 0, level: 1, completed: 0 };
-  S.focusedId = null;
-  save();
-  updateHeader();
-  renderProfile();
-  renderCompass();
-  toast('Data reset');
+  if (!currentUser) return;
+  if (!confirm('Delete ALL your quests? This cannot be undone.')) return;
+  sb.from('quests').delete().eq('creator_id', currentUser.id).then(function(res) {
+    if (res.error) { toast('Error resetting data', 'error'); return; }
+    S.quests    = [];
+    allQuests   = [];
+    S.focusedId = null;
+    updateHeader();
+    renderProfile();
+    renderCompass();
+    toast('All quests deleted');
+  });
 }
 
 // ═══════════════════════════════════════════════════
 //  INIT
 // ═══════════════════════════════════════════════════
-loadData();
-updateHeader();
-renderCompass();
 startGPS();
 startOrientation();
 window.addEventListener('resize', drawBar);
+
+// Check for existing session (handles page reload)
+sb.auth.getSession().then(function(res) {
+  var session = res.data && res.data.session;
+  if (session) {
+    currentUser = session.user;
+    onAuthed();
+  } else {
+    showAuth();
+  }
+});
+
+// Handle sign-out from another tab
+sb.auth.onAuthStateChange(function(event, session) {
+  if (event === 'SIGNED_OUT') {
+    currentUser = null;
+    showAuth();
+  }
+});
+
+// Refresh compass quests every 15s while on compass screen
+setInterval(function() {
+  if (currentUser && document.getElementById('screen-compass').classList.contains('active')) {
+    refreshCompassQuests();
+  }
+}, 15000);
 </script>
 </body>
 </html>
