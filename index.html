@@ -152,6 +152,22 @@ hr{border:none;border-top:1px solid var(--border)}
 .auth-toggle:hover{color:var(--gold)}
 .logout-btn{background:none;border:1px solid var(--border);border-radius:2px;color:var(--text-dim);font-family:'Cinzel',serif;font-size:9px;letter-spacing:.08em;padding:3px 8px;cursor:pointer;transition:all .2s}
 .logout-btn:hover{border-color:var(--red);color:#cf6464}
+/* AVATAR SYSTEM */
+.avatar-sprite{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
+.avatar-row{display:flex;gap:10px;overflow-x:auto;padding:4px 0;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+.avatar-slot{flex-shrink:0;width:56px;height:56px;border:2px solid var(--border);border-radius:var(--r);cursor:pointer;display:flex;align-items:center;justify-content:center;position:relative;transition:border-color .2s;background:var(--bg3)}
+.avatar-slot.selected{border-color:var(--gold);box-shadow:0 0 10px rgba(201,168,76,.3)}
+.avatar-slot.locked{opacity:.4;cursor:default}
+.avatar-slot.locked::after{content:'🔒';position:absolute;bottom:2px;right:2px;font-size:9px}
+#unlockModal{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;padding:24px}
+#unlockModal.open{display:flex}
+.unlock-box{background:var(--bg2);border:1px solid var(--gold);border-radius:var(--r);padding:32px 28px;max-width:320px;width:100%;text-align:center}
+.unlock-box::before{content:'';display:block;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:-32px -28px 28px}
+.unlock-label{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.25em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:8px}
+.unlock-name{font-family:'Cinzel',serif;font-size:22px;color:var(--gold2);margin-bottom:6px}
+.unlock-desc{font-family:'Crimson Pro',serif;font-size:14px;color:var(--text-dim);font-style:italic;margin-bottom:22px;line-height:1.5}
+.unlock-btn{width:100%;padding:12px;background:linear-gradient(135deg,#2a2010,#1a1508);border:1px solid var(--gold-dim);border-radius:var(--r);color:var(--gold2);font-family:'Cinzel',serif;font-size:12px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .2s}
+.unlock-btn:hover{background:linear-gradient(135deg,#3a2e18,#2a200c);border-color:var(--gold)}
 </style>
 </head>
 <body>
@@ -187,7 +203,10 @@ hr{border:none;border-top:1px solid var(--border)}
 <!-- HEADER -->
 <header>
   <div class="hrow">
-    <div class="logo">⚔ TaskQuest</div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div class="logo">⚔ TaskQuest</div>
+      <div id="headerAvatar" style="width:24px;height:24px;image-rendering:pixelated;flex-shrink:0"></div>
+    </div>
     <div style="display:flex;align-items:center;gap:8px">
       <div class="gps-row"><div class="gdot" id="gpsDot"></div><span id="gpsLbl">No GPS</span></div>
       <div class="lvl-badge" id="lvlBadge">LVL 1</div>
@@ -308,11 +327,13 @@ hr{border:none;border-top:1px solid var(--border)}
 <!-- ══ PROFILE SCREEN ══ -->
 <div class="screen" id="screen-profile">
   <div class="prof-hero">
-    <div class="avatar">🧙</div>
+    <div id="profAvatarLarge" style="width:96px;height:96px;margin:0 auto 12px;image-rendering:pixelated"></div>
     <div class="prof-name" id="profName">Adventurer</div>
     <div class="prof-ttl" id="profTtl">Novice Quester</div>
   </div>
-  <div class="stats-grid">
+  <div class="sec-title">Avatar Collection</div>
+  <div class="avatar-row" id="avatarRow"></div>
+  <div class="stats-grid" style="margin-top:16px">
     <div class="sc"><div class="sv" id="sLvl">1</div><div class="sl">Level</div></div>
     <div class="sc"><div class="sv" id="sXp">0</div><div class="sl">Total XP</div></div>
     <div class="sc"><div class="sv" id="sDone">0</div><div class="sl">Completed</div></div>
@@ -323,6 +344,16 @@ hr{border:none;border-top:1px solid var(--border)}
   <button onclick="resetData()" style="width:100%;padding:11px;background:rgba(207,68,68,.08);border:1px solid #6a2a2a;border-radius:4px;color:#cf6464;font-family:'Cinzel',serif;font-size:11px;letter-spacing:.08em;cursor:pointer">Reset All Data</button>
 </div>
 
+<!-- UNLOCK MODAL -->
+<div id="unlockModal">
+  <div class="unlock-box">
+    <div id="unlockSprite" style="width:96px;height:96px;margin:0 auto 20px;image-rendering:pixelated"></div>
+    <div class="unlock-label">New Avatar Unlocked</div>
+    <div class="unlock-name" id="unlockName"></div>
+    <div class="unlock-desc" id="unlockDesc"></div>
+    <button class="unlock-btn" onclick="closeUnlockModal()">Equip &amp; Continue ✦</button>
+  </div>
+</div>
 </div><!-- #app -->
 <div class="toast" id="toast"></div>
 
@@ -348,7 +379,10 @@ var S = {
   lat: null,
   lng: null,
   heading: 0,
-  compassReady: false
+  compassReady: false,
+  avatarItems:       [],
+  unlockedAvatarIds: [],
+  selectedAvatarId:  null
 };
 
 var qFilter = 'active';
@@ -504,6 +538,7 @@ function onAuthed() {
   refreshCompassQuests();
   updateHeader();
   renderCompass();
+  loadAvatarData();
 }
 
 // ═══════════════════════════════════════════════════
@@ -1058,6 +1093,15 @@ function completeQuest() {
 
       // Sync profile from server in background
       syncProfile();
+
+      // Handle avatar unlocks
+      var newItems = (data && data.unlocked_items) ? data.unlocked_items : [];
+      if (newItems.length > 0) {
+        newItems.forEach(function(itemId) {
+          if (S.unlockedAvatarIds.indexOf(itemId) < 0) S.unlockedAvatarIds.push(itemId);
+        });
+        showUnlockModal(newItems);
+      }
     })
     .catch(function() {
       if (btn) { btn.disabled = false; btn.textContent = 'Complete Quest'; }
@@ -1181,8 +1225,43 @@ function renderProfile() {
   document.getElementById('sXp').textContent   = p.totalXp;
   document.getElementById('sDone').textContent = p.completed || 0;
   document.getElementById('sAct').textContent  = a;
-  document.getElementById('profTtl').textContent  = TITLES[Math.min(l - 1, TITLES.length - 1)];
+  document.getElementById('profTtl').textContent = TITLES[Math.min(l - 1, TITLES.length - 1)];
   if (p.username) document.getElementById('profName').textContent = p.username;
+
+  // Large avatar
+  var largeEl = document.getElementById('profAvatarLarge');
+  if (largeEl) {
+    var selItem = null;
+    for (var i = 0; i < S.avatarItems.length; i++) {
+      if (S.avatarItems[i].id === S.selectedAvatarId) { selItem = S.avatarItems[i]; break; }
+    }
+    if (!selItem && S.avatarItems.length) {
+      for (var k = 0; k < S.avatarItems.length; k++) {
+        if (S.avatarItems[k].is_default) { selItem = S.avatarItems[k]; break; }
+      }
+    }
+    largeEl.innerHTML = selItem ? spriteHTML(selItem.name.toLowerCase(), 96) : spriteHTML('wanderer', 96);
+  }
+
+  // Avatar collection row
+  var row = document.getElementById('avatarRow');
+  if (!row) return;
+  if (!S.avatarItems.length) {
+    row.innerHTML = '<div style="color:var(--text-dim);font-style:italic;font-size:13px;padding:8px 0">Complete quests to unlock avatars</div>';
+    return;
+  }
+  row.innerHTML = S.avatarItems.map(function(item) {
+    var unlocked = S.unlockedAvatarIds.indexOf(item.id) >= 0 || item.is_default;
+    var selected = item.id === S.selectedAvatarId;
+    var cls = 'avatar-slot' + (selected ? ' selected' : '') + (unlocked ? '' : ' locked');
+    var onclick = unlocked ? 'equipAvatar(\'' + item.id + '\')' : '';
+    var title = unlocked ? item.name : (item.description || 'Complete quests to unlock');
+    return '<div class="' + cls + '" onclick="' + onclick + '" title="' + title + '">' +
+      spriteHTML(item.name.toLowerCase(), 40) +
+      '</div>';
+  }).join('');
+
+  updateHeaderAvatar();
 }
 
 function resetData() {
@@ -1198,6 +1277,266 @@ function resetData() {
     renderCompass();
     toast('All quests deleted');
   });
+}
+
+// ═══════════════════════════════════════════════════
+//  PIXEL ART SPRITES
+// ═══════════════════════════════════════════════════
+var SPRITES = {
+  'wanderer': {
+    p: ['#111111','#4466cc','#e8c890','#884422','#aaccff'],
+    d: '0000000000000000' +
+       '0000001100000000' +
+       '0000012210000000' +
+       '0000013310000000' +
+       '0000013310000000' +
+       '0000122221000000' +
+       '0001222222100000' +
+       '0012222222214000' +
+       '0012252222214000' +
+       '0012222222214000' +
+       '0012222222214000' +
+       '0001222221004000' +
+       '0000122210000000' +
+       '0000122210000000' +
+       '0000011100000000' +
+       '0000000000000000'
+  },
+  'scout': {
+    p: ['#111111','#3a7a2a','#e8c890','#884422','#d4a040'],
+    d: '0000055000000000' +
+       '0000155510000000' +
+       '0000153310000000' +
+       '0000133310000000' +
+       '0000111110000000' +
+       '0001223322100000' +
+       '0012222222210000' +
+       '0012222222210000' +
+       '0012244422210000' +
+       '0012222222210000' +
+       '0001222222100000' +
+       '0001221122100000' +
+       '0000120012000000' +
+       '0000120012000000' +
+       '0000140014000000' +
+       '0000000000000000'
+  },
+  'ranger': {
+    p: ['#111111','#1a5520','#e8c890','#3a1a0a','#88bb22'],
+    d: '0000011110000000' +
+       '0000122221000000' +
+       '0000123321000000' +
+       '0000123321000000' +
+       '0000122221000000' +
+       '0001222222100000' +
+       '0012222222210000' +
+       '0012222222210400' +
+       '0012252252210400' +
+       '0012222222210400' +
+       '0001222222100400' +
+       '0001221122100000' +
+       '0000140014000000' +
+       '0000140014000000' +
+       '0000140014000000' +
+       '0000110011000000'
+  },
+  'paladin': {
+    p: ['#111111','#c0c8d8','#e8c890','#d4a030'],
+    d: '0000111111000000' +
+       '0001222222100000' +
+       '0001233332100000' +
+       '0001233332100000' +
+       '0000122221000000' +
+       '0001222222100000' +
+       '0012242242210000' +
+       '0122224422221000' +
+       '0122222222221000' +
+       '0122222222221000' +
+       '0012222222210000' +
+       '0012211112210000' +
+       '0001220022100000' +
+       '0001220022100000' +
+       '0001210012100000' +
+       '0000000000000000'
+  },
+  'legend': {
+    p: ['#111111','#d4a030','#e8c890','#9955cc'],
+    d: '0000202020000000' +
+       '0001222222100000' +
+       '0001333310000000' +
+       '0001333310000000' +
+       '0001222210000000' +
+       '0014244244100000' +
+       '0144444444410000' +
+       '0144422224410000' +
+       '0144422224410000' +
+       '0144444444410000' +
+       '0014444444100000' +
+       '0014444444100000' +
+       '0001440044100000' +
+       '0001440044100000' +
+       '0001110011100000' +
+       '0000000000000000'
+  },
+  'first quest': {
+    p: ['#111111','#cc3344','#e8c890','#d4a030'],
+    d: '0000004400000000' +
+       '0000044440000000' +
+       '0000012210000000' +
+       '0000013310000000' +
+       '0000013310000000' +
+       '0000111111000000' +
+       '0001222222100000' +
+       '0012222222210000' +
+       '0012244422210000' +
+       '0012222222210000' +
+       '0001222222100000' +
+       '0001222222100000' +
+       '0000122210000000' +
+       '0000122210000000' +
+       '0000144410000000' +
+       '0000000000000000'
+  },
+  'pathfinder': {
+    p: ['#111111','#7a5030','#e8c890','#4a7a30','#d4a030'],
+    d: '0000022200000000' +
+       '0000122210000000' +
+       '0000013310000000' +
+       '0000013310000000' +
+       '0000111110000000' +
+       '0001443344100000' +
+       '0014224422410000' +
+       '0014224422415500' +
+       '0014224422415500' +
+       '0014222222410000' +
+       '0001444444100000' +
+       '0001221122100000' +
+       '0000120012000000' +
+       '0000120012000000' +
+       '0000110011000000' +
+       '0000000000000000'
+  },
+  'centurion': {
+    p: ['#111111','#c0c8c0','#e8c890','#cc3333','#d4a030'],
+    d: '0000044400000000' +
+       '0000044400000000' +
+       '0000122210000000' +
+       '0000123210000000' +
+       '0000122210000000' +
+       '0001222221000000' +
+       '0012522225210000' +
+       '0012222222100000' +
+       '0012255522100000' +
+       '0001444441000000' +
+       '0001444441000000' +
+       '0001444441000000' +
+       '0001220022100000' +
+       '0001220022100000' +
+       '0001110011100000' +
+       '0000000000000000'
+  }
+};
+
+function spriteHTML(key, sizePx) {
+  var s = SPRITES[key] || SPRITES['wanderer'] || null;
+  if (!s) return '<div style="width:' + (sizePx||48) + 'px;height:' + (sizePx||48) + 'px;background:#1a1a2e;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:' + Math.round((sizePx||48)*0.6) + 'px">🧙</div>';
+  var sz = sizePx || 48;
+  var cell = sz / 16;
+  var parts = ['<svg xmlns="http://www.w3.org/2000/svg" width="' + sz + '" height="' + sz + '" viewBox="0 0 ' + sz + ' ' + sz + '" style="image-rendering:pixelated;image-rendering:crisp-edges;display:block">'];
+  for (var i = 0; i < 256; i++) {
+    var c = parseInt(s.d[i], 10);
+    if (!c) continue;
+    parts.push('<rect x="' + Math.round((i % 16) * cell) + '" y="' + Math.round(Math.floor(i / 16) * cell) + '" width="' + Math.ceil(cell) + '" height="' + Math.ceil(cell) + '" fill="' + s.p[c - 1] + '"/>');
+  }
+  parts.push('</svg>');
+  return parts.join('');
+}
+
+// ═══════════════════════════════════════════════════
+//  AVATAR DATA
+// ═══════════════════════════════════════════════════
+function loadAvatarData() {
+  if (!currentUser) return;
+  sb.from('avatar_items').select('*').order('sort_order').then(function(res) {
+    if (!res.error) { S.avatarItems = res.data || []; renderProfile(); }
+  });
+  sb.from('unlocked_items').select('item_id').eq('user_id', currentUser.id).then(function(res) {
+    if (!res.error) {
+      S.unlockedAvatarIds = (res.data || []).map(function(r) { return r.item_id; });
+      renderProfile();
+    }
+  });
+  var saved = localStorage.getItem('tq_avatar');
+  if (saved) S.selectedAvatarId = saved;
+  sb.from('profiles').select('avatar_item_id').eq('id', currentUser.id).single().then(function(res) {
+    if (!res.error && res.data && res.data.avatar_item_id) {
+      S.selectedAvatarId = res.data.avatar_item_id;
+      localStorage.setItem('tq_avatar', S.selectedAvatarId);
+    }
+    renderProfile();
+  }).catch(function() { renderProfile(); });
+}
+
+function equipAvatar(itemId) {
+  S.selectedAvatarId = itemId;
+  localStorage.setItem('tq_avatar', itemId);
+  sb.from('profiles').update({ avatar_item_id: itemId }).eq('id', currentUser.id).then(function(){}).catch(function(){});
+  renderProfile();
+  updateHeaderAvatar();
+}
+
+function updateHeaderAvatar() {
+  var el = document.getElementById('headerAvatar');
+  if (!el) return;
+  var key = null;
+  for (var i = 0; i < S.avatarItems.length; i++) {
+    if (S.avatarItems[i].id === S.selectedAvatarId) { key = S.avatarItems[i].name.toLowerCase(); break; }
+  }
+  if (!key && S.avatarItems.length) {
+    for (var j = 0; j < S.avatarItems.length; j++) {
+      if (S.avatarItems[j].is_default) { key = S.avatarItems[j].name.toLowerCase(); break; }
+    }
+  }
+  el.innerHTML = key ? spriteHTML(key, 24) : '';
+}
+
+// ═══════════════════════════════════════════════════
+//  UNLOCK MODAL
+// ═══════════════════════════════════════════════════
+var unlockQueue = [];
+
+function showUnlockModal(itemIds) {
+  unlockQueue = itemIds.slice();
+  showNextUnlock();
+}
+
+function showNextUnlock() {
+  if (!unlockQueue.length) return;
+  var itemId = unlockQueue.shift();
+  var item = null;
+  for (var i = 0; i < S.avatarItems.length; i++) {
+    if (S.avatarItems[i].id === itemId) { item = S.avatarItems[i]; break; }
+  }
+  if (!item) { showNextUnlock(); return; }
+  document.getElementById('unlockSprite').innerHTML = spriteHTML(item.name.toLowerCase(), 96);
+  document.getElementById('unlockName').textContent  = item.name;
+  document.getElementById('unlockDesc').textContent  = item.description || 'A new avatar has joined your collection.';
+  document.getElementById('unlockModal').classList.add('open');
+  if (!S.selectedAvatarId) S.selectedAvatarId = item.id;
+}
+
+function closeUnlockModal() {
+  document.getElementById('unlockModal').classList.remove('open');
+  var nameEl = document.getElementById('unlockName');
+  if (nameEl) {
+    for (var i = 0; i < S.avatarItems.length; i++) {
+      if (S.avatarItems[i].name === nameEl.textContent) {
+        equipAvatar(S.avatarItems[i].id);
+        break;
+      }
+    }
+  }
+  if (unlockQueue.length) setTimeout(showNextUnlock, 300);
 }
 
 // ═══════════════════════════════════════════════════
