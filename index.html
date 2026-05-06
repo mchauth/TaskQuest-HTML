@@ -967,7 +967,7 @@ function createQuest() {
 
   var desc    = document.getElementById('nDesc').value.trim();
   var locName = document.getElementById('nLocName').value.trim();
-  var rad     = parseInt(document.getElementById('nRad').value);
+  var rad     = parseInt(document.getElementById('nRad').value, 10) || 50;
 
   // Distance from current position to quest location (fallback 500m if no GPS)
   var distMeters = (S.lat !== null) ? distM(S.lat, S.lng, la, lo) : 500;
