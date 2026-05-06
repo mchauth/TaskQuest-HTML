@@ -1050,7 +1050,7 @@ function completeQuest() {
   var btn = document.getElementById('completeBtn');
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Completing…'; }
 
-  sb.rpc('complete_quest', { quest_id: fq.id, lat: S.lat, lng: S.lng })
+  sb.rpc('complete_quest', { target_quest_id: fq.id, completed_latitude: S.lat, completed_longitude: S.lng })
     .then(function(res) {
       if (btn) btn.textContent = 'Complete Quest';
 
