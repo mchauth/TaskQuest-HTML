@@ -399,7 +399,7 @@ function mapQuest(row) {
     latitude:         parseFloat(row.latitude)  || 0,
     longitude:        parseFloat(row.longitude) || 0,
     xpReward:         row.xp_value         || 0,
-    completionRadius: row.completion_radius || 50,
+    completionRadius: row.completion_radius_meters || 50,
     status:           row.status || (row.completed_at ? 'completed' : 'active'),
     createdAt:        row.created_at  ? new Date(row.created_at).getTime()  : Date.now(),
     completedAt:      row.completed_at ? new Date(row.completed_at).getTime() : null
@@ -994,7 +994,7 @@ function createQuest() {
         latitude:          la,
         longitude:         lo,
         xp_value:          xpVal,
-        completion_radius: rad,
+        completion_radius_meters: rad,
         status:            'active'
       }).select().single();
     })
