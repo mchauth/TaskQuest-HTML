@@ -169,6 +169,7 @@ hr{border:none;border-top:1px solid var(--border)}
 .unlock-btn{width:100%;padding:12px;background:linear-gradient(135deg,#2a2010,#1a1508);border:1px solid var(--gold-dim);border-radius:var(--r);color:var(--gold2);font-family:'Cinzel',serif;font-size:12px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .2s}
 .unlock-btn:hover{background:linear-gradient(135deg,#3a2e18,#2a200c);border-color:var(--gold)}
 </style>
+<script src="sprite_spec.js"></script>
 </head>
 <body>
 
@@ -333,6 +334,17 @@ hr{border:none;border-top:1px solid var(--border)}
   </div>
   <div class="sec-title">Avatar Collection</div>
   <div class="avatar-row" id="avatarRow"></div>
+  <div id="customizeSection" style="margin:12px 0;padding:12px;background:#f8f9fa;border-radius:8px;">
+    <div style="font-weight:600;margin-bottom:8px;font-size:14px;">✨ Customize</div>
+    <div style="margin-bottom:8px;">
+      <div style="font-size:12px;color:#666;margin-bottom:4px;">Hair Color</div>
+      <div id="hairSwatches" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+    </div>
+    <div>
+      <div style="font-size:12px;color:#666;margin-bottom:4px;">Skin Tone</div>
+      <div id="skinSwatches" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+    </div>
+  </div>
   <div class="stats-grid" style="margin-top:16px">
     <div class="sc"><div class="sv" id="sLvl">1</div><div class="sl">Level</div></div>
     <div class="sc"><div class="sv" id="sXp">0</div><div class="sl">Total XP</div></div>
@@ -382,7 +394,8 @@ var S = {
   compassReady: false,
   avatarItems:       [],
   unlockedAvatarIds: [],
-  selectedAvatarId:  null
+  selectedAvatarId:  null,
+  customization: { hair: 'brown', skin: 'medium' }
 };
 
 var qFilter = 'active';
@@ -1240,7 +1253,8 @@ function renderProfile() {
         if (S.avatarItems[k].is_default) { selItem = S.avatarItems[k]; break; }
       }
     }
-    largeEl.innerHTML = selItem ? spriteHTML(selItem.name.toLowerCase(), 96) : spriteHTML('wanderer', 96);
+    largeEl.innerHTML = selItem ? spriteHTML(selItem.id, 96, S.customization) : spriteHTML('warrior_t1', 96, S.customization);
+    renderCustomizeUI();
   }
 
   // Avatar collection row
@@ -1257,7 +1271,7 @@ function renderProfile() {
     var onclick = unlocked ? 'equipAvatar(\'' + item.id + '\')' : '';
     var title = unlocked ? item.name : (item.description || 'Complete quests to unlock');
     return '<div class="' + cls + '" onclick="' + onclick + '" title="' + title + '">' +
-      spriteHTML(item.name.toLowerCase(), 40) +
+      spriteHTML(item.id, 40, S.customization) +
       '</div>';
   }).join('');
 
@@ -1282,7 +1296,66 @@ function resetData() {
 // ═══════════════════════════════════════════════════
 //  PIXEL ART SPRITES
 // ═══════════════════════════════════════════════════
-var SPRITES = {
+
+// Palette: maps char → CSS color
+var BASE_PALETTE = {
+  '.': 'transparent',
+  'e': '#1a1a2e',   // outline
+  'h': '#ffffff',   // highlight
+  'n': '#0d0d1a',   // deep shadow
+  'k': '#c8956c', 'K': '#e8b48a', 'j': '#8b5e3c',
+  'b': '#5c3d1e', 'B': '#8b6914', 'r': '#8b2500', 'R': '#c0392b',
+  'y': '#d4a017', 'Y': '#f0c040', 'w': '#e8e8e8', 'W': '#ffffff',
+  'd': '#4a6fa5', 'D': '#6b9fd4', 'u': '#5d4037', 'U': '#795548',
+  'g': '#2e7d32', 'G': '#43a047', 'p': '#6a1b9a', 'P': '#9c27b0',
+  'l': '#bf8040', 'L': '#d4a055', 't': '#546e7a', 'T': '#78909c',
+  'q': '#c0a030', 'Q': '#e8c040',
+  's': '#90a4ae', 'S': '#b0bec5', 'z': '#607d8b', 'Z': '#78909c',
+  'o': '#c8a000', 'O': '#f0c000',
+  'c': '#00bcd4', 'C': '#80deea', 'f': '#e91e63', 'm': '#9c27b0',
+  'E': '#795548',
+};
+
+var HAIR_PALETTES = {
+  brown:  { b: '#5c3d1e', B: '#8b6030' },
+  black:  { b: '#1a1a1a', B: '#333333' },
+  blonde: { b: '#c8960c', B: '#e8c050' },
+  red:    { b: '#8b2500', B: '#c04020' },
+  white:  { b: '#cccccc', B: '#eeeeee' },
+  blue:   { b: '#1565c0', B: '#42a5f5' },
+};
+
+var SKIN_PALETTES = {
+  light:  { k: '#f5cba7', K: '#fde8d8', j: '#d4a070' },
+  medium: { k: '#c8956c', K: '#e8b48a', j: '#8b5e3c' },
+  dark:   { k: '#7d4e2d', K: '#a0673a', j: '#4e2d0e' },
+  cool:   { k: '#b09080', K: '#d4b8a8', j: '#806050' },
+};
+
+function buildPalette(custom) {
+  var p = Object.assign({}, BASE_PALETTE);
+  var hair = HAIR_PALETTES[custom && custom.hair] || HAIR_PALETTES.brown;
+  var skin = SKIN_PALETTES[custom && custom.skin] || SKIN_PALETTES.medium;
+  Object.assign(p, hair, skin);
+  return p;
+}
+
+var CLASS_META = {};
+var SPRITES = {};
+(function() {
+  var spec = window.SPRITE_SPEC || {};
+  Object.keys(spec).forEach(function(cls) {
+    var entry = spec[cls];
+    CLASS_META[cls] = { name: entry.name, tiers: entry.tiers };
+    entry.sprites.forEach(function(grid, ti) {
+      var key = cls + '_t' + (ti + 1);
+      SPRITES[key] = grid;
+    });
+  });
+})();
+
+// ── legacy stubs so old references don't crash ──
+var _SPRITES_LEGACY = {
   'wanderer': {
     p: ['#111111', '#4466cc', '#e8c890', '#884422'],
     d: '0000000000000000' +
@@ -1437,19 +1510,27 @@ var SPRITES = {
   }
 };
 
-function spriteHTML(key, sizePx) {
-  var s = SPRITES[key] || SPRITES['wanderer'] || null;
-  if (!s) return '<div style="width:' + (sizePx||48) + 'px;height:' + (sizePx||48) + 'px;background:#1a1a2e;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:' + Math.round((sizePx||48)*0.6) + 'px">🧙</div>';
-  var sz = sizePx || 48;
-  var cell = sz / 16;
-  var parts = ['<svg xmlns="http://www.w3.org/2000/svg" width="' + sz + '" height="' + sz + '" viewBox="0 0 ' + sz + ' ' + sz + '" style="image-rendering:pixelated;image-rendering:crisp-edges;display:block">'];
-  for (var i = 0; i < 256; i++) {
-    var c = parseInt(s.d[i], 10);
-    if (!c) continue;
-    parts.push('<rect x="' + Math.round((i % 16) * cell) + '" y="' + Math.round(Math.floor(i / 16) * cell) + '" width="' + Math.ceil(cell) + '" height="' + Math.ceil(cell) + '" fill="' + s.p[c - 1] + '"/>');
+function spriteHTML(key, sizePx, custom) {
+  var grid = SPRITES[key];
+  if (!grid) return '';
+  var rows = grid.length;
+  var cols = grid[0].length;
+  var pal = buildPalette(custom || S.customization);
+  var cellW = sizePx / cols;
+  var cellH = sizePx / rows;
+  var rects = [];
+  for (var r = 0; r < rows; r++) {
+    var row = grid[r] || '';
+    for (var c = 0; c < cols; c++) {
+      var ch = row[c] || '.';
+      if (ch === '.') continue;
+      var color = pal[ch] || '#ff00ff';
+      rects.push('<rect x="' + (c * cellW).toFixed(2) + '" y="' + (r * cellH).toFixed(2) +
+        '" width="' + cellW.toFixed(2) + '" height="' + cellH.toFixed(2) +
+        '" fill="' + color + '"/>');
+    }
   }
-  parts.push('</svg>');
-  return parts.join('');
+  return '<svg xmlns="http://www.w3.org/2000/svg" width="' + sizePx + '" height="' + sizePx + '" viewBox="0 0 ' + sizePx + ' ' + sizePx + '" style="image-rendering:pixelated">' + rects.join('') + '</svg>';
 }
 
 // ═══════════════════════════════════════════════════
@@ -1468,10 +1549,13 @@ function loadAvatarData() {
   });
   var saved = localStorage.getItem('tq_avatar');
   if (saved) S.selectedAvatarId = saved;
-  sb.from('profiles').select('avatar_item_id').eq('id', currentUser.id).single().then(function(res) {
-    if (!res.error && res.data && res.data.avatar_item_id) {
-      S.selectedAvatarId = res.data.avatar_item_id;
-      localStorage.setItem('tq_avatar', S.selectedAvatarId);
+  sb.from('profiles').select('avatar_item_id,customization').eq('id', currentUser.id).single().then(function(res) {
+    if (!res.error && res.data) {
+      if (res.data.avatar_item_id) {
+        S.selectedAvatarId = res.data.avatar_item_id;
+        localStorage.setItem('tq_avatar', S.selectedAvatarId);
+      }
+      if (res.data.customization) S.customization = res.data.customization;
     }
     renderProfile();
   }).catch(function() { renderProfile(); });
@@ -1490,14 +1574,14 @@ function updateHeaderAvatar() {
   if (!el) return;
   var key = null;
   for (var i = 0; i < S.avatarItems.length; i++) {
-    if (S.avatarItems[i].id === S.selectedAvatarId) { key = S.avatarItems[i].name.toLowerCase(); break; }
+    if (S.avatarItems[i].id === S.selectedAvatarId) { key = S.avatarItems[i].id; break; }
   }
   if (!key && S.avatarItems.length) {
     for (var j = 0; j < S.avatarItems.length; j++) {
-      if (S.avatarItems[j].is_default) { key = S.avatarItems[j].name.toLowerCase(); break; }
+      if (S.avatarItems[j].is_default) { key = S.avatarItems[j].id; break; }
     }
   }
-  el.innerHTML = key ? spriteHTML(key, 24) : '';
+  el.innerHTML = key ? spriteHTML(key, 24, S.customization) : '';
 }
 
 // ═══════════════════════════════════════════════════
@@ -1518,7 +1602,7 @@ function showNextUnlock() {
     if (S.avatarItems[i].id === itemId) { item = S.avatarItems[i]; break; }
   }
   if (!item) { showNextUnlock(); return; }
-  document.getElementById('unlockSprite').innerHTML = spriteHTML(item.name.toLowerCase(), 96);
+  document.getElementById('unlockSprite').innerHTML = spriteHTML(item.id, 96, S.customization);
   document.getElementById('unlockName').textContent  = item.name;
   document.getElementById('unlockDesc').textContent  = item.description || 'A new avatar has joined your collection.';
   document.getElementById('unlockModal').classList.add('open');
@@ -1537,6 +1621,59 @@ function closeUnlockModal() {
     }
   }
   if (unlockQueue.length) setTimeout(showNextUnlock, 300);
+}
+
+// ═══════════════════════════════════════════════════
+//  AVATAR CUSTOMIZATION
+// ═══════════════════════════════════════════════════
+function renderCustomizeUI() {
+  var hairColors = { brown: '#8b6030', black: '#333', blonde: '#e8c050', red: '#c04020', white: '#ddd', blue: '#42a5f5' };
+  var skinColors = { light: '#f5cba7', medium: '#c8956c', dark: '#7d4e2d', cool: '#b09080' };
+  var hc = S.customization.hair;
+  var sc = S.customization.skin;
+
+  var hairEl = document.getElementById('hairSwatches');
+  if (hairEl) {
+    hairEl.innerHTML = Object.keys(hairColors).map(function(k) {
+      return '<div onclick="setHair(\'' + k + '\')" style="width:28px;height:28px;border-radius:50%;background:' + hairColors[k] + ';cursor:pointer;border:3px solid ' + (k === hc ? '#333' : 'transparent') + ';box-shadow:0 0 0 1px #ccc;" title="' + k + '"></div>';
+    }).join('');
+  }
+
+  var skinEl = document.getElementById('skinSwatches');
+  if (skinEl) {
+    skinEl.innerHTML = Object.keys(skinColors).map(function(k) {
+      return '<div onclick="setSkin(\'' + k + '\')" style="width:28px;height:28px;border-radius:50%;background:' + skinColors[k] + ';cursor:pointer;border:3px solid ' + (k === sc ? '#333' : 'transparent') + ';box-shadow:0 0 0 1px #ccc;" title="' + k + '"></div>';
+    }).join('');
+  }
+}
+
+function setHair(color) {
+  S.customization.hair = color;
+  saveCustomization();
+  refreshAvatarPreview();
+  renderCustomizeUI();
+}
+
+function setSkin(tone) {
+  S.customization.skin = tone;
+  saveCustomization();
+  refreshAvatarPreview();
+  renderCustomizeUI();
+}
+
+function saveCustomization() {
+  if (!currentUser) return;
+  sb.from('profiles').update({ customization: S.customization }).eq('id', currentUser.id).then(function(res) {
+    if (res.error) console.warn('customization save:', res.error.message);
+  });
+}
+
+function refreshAvatarPreview() {
+  var big = document.getElementById('profAvatarLarge');
+  if (big && S.selectedAvatarId) {
+    big.innerHTML = spriteHTML(S.selectedAvatarId, 96, S.customization);
+  }
+  updateHeaderAvatar();
 }
 
 // ═══════════════════════════════════════════════════
