@@ -7,7 +7,10 @@ ALTER TABLE avatar_items ADD COLUMN IF NOT EXISTS sprite_key text;
 -- 2. Add customization column to profiles
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS customization jsonb DEFAULT '{"hair":"brown","skin":"medium"}';
 
--- 3. Seed avatar items for all 6 classes × 5 tiers
+-- 3. Clear stale rows (including any with null sprite_key from failed earlier seeds)
+DELETE FROM avatar_items;
+
+-- 4. Seed avatar items for all 6 classes × 5 tiers
 --    id = gen_random_uuid(), sprite_key = "warrior_t1" etc.
 INSERT INTO avatar_items (id, name, description, item_type, is_default, sort_order, sprite_key)
 VALUES
