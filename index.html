@@ -1253,7 +1253,7 @@ function renderProfile() {
         if (S.avatarItems[k].is_default) { selItem = S.avatarItems[k]; break; }
       }
     }
-    largeEl.innerHTML = selItem ? spriteHTML(selItem.id, 96, S.customization) : spriteHTML('warrior_t1', 96, S.customization);
+    largeEl.innerHTML = selItem ? spriteHTML(selItem.sprite_key || selItem.id, 96, S.customization) : spriteHTML('warrior_t1', 96, S.customization);
     renderCustomizeUI();
   }
 
@@ -1271,7 +1271,7 @@ function renderProfile() {
     var onclick = unlocked ? 'equipAvatar(\'' + item.id + '\')' : '';
     var title = unlocked ? item.name : (item.description || 'Complete quests to unlock');
     return '<div class="' + cls + '" onclick="' + onclick + '" title="' + title + '">' +
-      spriteHTML(item.id, 40, S.customization) +
+      spriteHTML(item.sprite_key || item.id, 40, S.customization) +
       '</div>';
   }).join('');
 
@@ -1574,11 +1574,11 @@ function updateHeaderAvatar() {
   if (!el) return;
   var key = null;
   for (var i = 0; i < S.avatarItems.length; i++) {
-    if (S.avatarItems[i].id === S.selectedAvatarId) { key = S.avatarItems[i].id; break; }
+    if (S.avatarItems[i].id === S.selectedAvatarId) { key = S.avatarItems[i].sprite_key || S.avatarItems[i].id; break; }
   }
   if (!key && S.avatarItems.length) {
     for (var j = 0; j < S.avatarItems.length; j++) {
-      if (S.avatarItems[j].is_default) { key = S.avatarItems[j].id; break; }
+      if (S.avatarItems[j].is_default) { key = S.avatarItems[j].sprite_key || S.avatarItems[j].id; break; }
     }
   }
   el.innerHTML = key ? spriteHTML(key, 24, S.customization) : '';
@@ -1602,7 +1602,7 @@ function showNextUnlock() {
     if (S.avatarItems[i].id === itemId) { item = S.avatarItems[i]; break; }
   }
   if (!item) { showNextUnlock(); return; }
-  document.getElementById('unlockSprite').innerHTML = spriteHTML(item.id, 96, S.customization);
+  document.getElementById('unlockSprite').innerHTML = spriteHTML(item.sprite_key || item.id, 96, S.customization);
   document.getElementById('unlockName').textContent  = item.name;
   document.getElementById('unlockDesc').textContent  = item.description || 'A new avatar has joined your collection.';
   document.getElementById('unlockModal').classList.add('open');
@@ -1671,7 +1671,11 @@ function saveCustomization() {
 function refreshAvatarPreview() {
   var big = document.getElementById('profAvatarLarge');
   if (big && S.selectedAvatarId) {
-    big.innerHTML = spriteHTML(S.selectedAvatarId, 96, S.customization);
+    var spriteKey = null;
+    for (var i = 0; i < S.avatarItems.length; i++) {
+      if (S.avatarItems[i].id === S.selectedAvatarId) { spriteKey = S.avatarItems[i].sprite_key || S.avatarItems[i].id; break; }
+    }
+    if (spriteKey) big.innerHTML = spriteHTML(spriteKey, 96, S.customization);
   }
   updateHeaderAvatar();
 }
