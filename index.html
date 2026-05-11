@@ -503,8 +503,13 @@ function loadAllQuests() {
 }
 
 function refreshCompassQuests() {
-  if (!currentUser || S.lat === null) return;
-  sb.rpc('get_compass_quests', { lat: S.lat, lng: S.lng, heading: S.heading })
+  if (!currentUser) return;
+  // Query active quests directly instead of via RPC (avoids auth/distance filter bugs)
+  sb.from('quests')
+    .select('*')
+    .eq('creator_id', currentUser.id)
+    .eq('status', 'active')
+    .order('created_at', { ascending: false })
     .then(function(res) {
       if (res.error) return;
       S.quests = (res.data || []).map(mapQuest);
