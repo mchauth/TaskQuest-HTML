@@ -650,6 +650,8 @@ var gpsLatBuf = [];
 var gpsLngBuf = [];
 
 function pushGPS(lat, lng, accuracy) {
+  var firstFix = S.lat === null;  // track whether this is the first GPS reading
+
   // Weight by accuracy — more accurate readings count more
   // Use inverse accuracy as weight (lower accuracy value = better fix)
   var weight = accuracy ? Math.max(1, Math.round(50 / accuracy)) : 1;
@@ -665,6 +667,10 @@ function pushGPS(lat, lng, accuracy) {
   for (var i = 0; i < gpsLatBuf.length; i++) { sumLat += gpsLatBuf[i]; sumLng += gpsLngBuf[i]; }
   S.lat = sumLat / gpsLatBuf.length;
   S.lng = sumLng / gpsLngBuf.length;
+
+  // On the first GPS fix, fetch compass quests (login calls refreshCompassQuests too
+  // early — before lat/lng are known — so we retry here as soon as we have a position)
+  if (firstFix) refreshCompassQuests();
 
   var accStr = accuracy ? ' ±' + Math.round(accuracy) + 'm' : '';
   setGPS(true, 'GPS Active' + accStr);
