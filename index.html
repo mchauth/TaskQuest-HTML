@@ -136,6 +136,25 @@ hr{border:none;border-top:1px solid var(--border)}
 .toast.error{border-color:var(--red);color:var(--red)}
 ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
 
+/* ── QUEST SCENE ── */
+.qs-wrap{width:100%;border-radius:var(--r);overflow:hidden;border:1px solid var(--border2);box-shadow:0 0 20px rgba(0,0,0,.5)}
+.qs{position:relative;width:100%;height:180px;overflow:hidden;background:#1a1a2e}
+.qs-layer{position:absolute;top:0;left:0;width:100%;height:100%;background-repeat:repeat-x;background-size:1024px 100%;image-rendering:pixelated}
+.qs-l5{z-index:1}.qs-l4{z-index:2}.qs-l3{z-index:3}.qs-l2{z-index:4}.qs-l1{z-index:5}
+.qs-ground{position:absolute;bottom:0;left:0;right:0;height:32px;z-index:6;background-image:url('sprites/preview_assets/ground.png');background-repeat:repeat-x;background-size:288px 576px;background-position:0 0;image-rendering:pixelated}
+.qs-char-wrap{position:absolute;bottom:28px;left:60px;width:80px;height:64px;z-index:8;transform:scale(2) scaleX(-1);transform-origin:bottom center}
+.qs-char-layer{position:absolute;top:0;left:0;width:80px;height:64px;background-repeat:no-repeat;image-rendering:pixelated;background-size:800px 448px}
+.qs-fire-wrap{position:absolute;bottom:12px;right:40px;width:72px;height:72px;z-index:7}
+#qsFireImg{position:absolute;bottom:0;left:0;width:72px;height:72px;image-rendering:pixelated;display:block}
+.qs-pills{position:absolute;top:8px;left:0;right:0;display:flex;justify-content:space-around;z-index:10;padding:0 12px}
+.qs-pill{background:rgba(0,0,0,.6);border:1px solid rgba(255,200,80,.3);border-radius:20px;padding:3px 10px;font-size:10px;color:#f0e0a0;display:flex;align-items:center;gap:5px;font-family:'Cinzel',serif;letter-spacing:.04em}
+.qs-dot{width:7px;height:7px;border-radius:50%}
+.qs-dot-g{background:#4cff80;box-shadow:0 0 4px #4cff80}
+.qs-dot-y{background:#ffc830;box-shadow:0 0 4px #ffc830}
+.qs-dot-b{background:#60c0ff;box-shadow:0 0 4px #60c0ff}
+.qs-label{position:absolute;bottom:40px;left:36px;background:rgba(0,0,0,.65);color:#f0c060;font-size:9px;padding:2px 7px;border-radius:10px;z-index:9;font-family:'Cinzel',serif;letter-spacing:.04em;animation:qsBreathe 3s ease-in-out infinite alternate}
+@keyframes qsBreathe{from{opacity:.6}to{opacity:1}}
+
 /* AUTH SCREEN */
 #authScreen{position:fixed;inset:0;z-index:200;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px}
 #authScreen::before{content:'';position:fixed;inset:0;pointer-events:none;opacity:.35;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.05'/%3E%3C/svg%3E")}
@@ -279,6 +298,36 @@ hr{border:none;border-top:1px solid var(--border)}
 
 <!-- ══ QUESTS SCREEN ══ -->
 <div class="screen" id="screen-quests">
+
+  <!-- Quest Scene -->
+  <div class="qs-wrap">
+    <div class="qs">
+      <div class="qs-layer qs-l5" id="qsl5"></div>
+      <div class="qs-layer qs-l4" id="qsl4"></div>
+      <div class="qs-layer qs-l3" id="qsl3"></div>
+      <div class="qs-layer qs-l2" id="qsl2"></div>
+      <div class="qs-layer qs-l1" id="qsl1"></div>
+      <div class="qs-pills">
+        <div class="qs-pill"><span class="qs-dot qs-dot-g"></span><span id="qsPillActive">0 Active</span></div>
+        <div class="qs-pill"><span class="qs-dot qs-dot-y"></span><span id="qsPillLevel">Lv 1 Warrior</span></div>
+        <div class="qs-pill"><span class="qs-dot qs-dot-b"></span><span id="qsPillDone">0 Complete</span></div>
+      </div>
+      <div class="qs-ground"></div>
+      <div class="qs-label" id="qsLabel">🏕 Resting by camp</div>
+      <div class="qs-char-wrap" id="qsCharWrap">
+        <div class="qs-char-layer" id="qsBoots"></div>
+        <div class="qs-char-layer" id="qsPants"></div>
+        <div class="qs-char-layer" id="qsShirt"></div>
+        <div class="qs-char-layer" id="qsSkin"></div>
+        <div class="qs-char-layer" id="qsSword"></div>
+        <div class="qs-char-layer" id="qsHair"></div>
+      </div>
+      <div class="qs-fire-wrap">
+        <img id="qsFireImg" src="sprites/preview_assets/anim/fire_f0.png" alt="">
+      </div>
+    </div>
+  </div>
+
   <div class="sec-title">All Quests</div>
   <div id="qFilter" style="display:flex;gap:8px;flex-wrap:wrap">
     <button class="tag active" onclick="filterQ('active',this)">Active</button>
@@ -1194,6 +1243,7 @@ function filterQ(f, btn) {
 }
 
 function renderAllQ() {
+  if (window.refreshScenePills) refreshScenePills();
   var list = document.getElementById('aQList');
   var qs   = qFilter === 'all' ? allQuests : allQuests.filter(function(q) { return q.status === qFilter; });
   if (!qs.length) {
@@ -1712,6 +1762,94 @@ setInterval(function() {
     refreshCompassQuests();
   }
 }, 15000);
+
+// ── QUEST SCENE ANIMATION ──
+(function() {
+  var BG_LAYERS = [1,2,3,4,5].map(function(i){ return 'sprites/preview_assets/bg/layer'+i+'.png'; });
+  var CHAR_LAYERS = {
+    qsBoots:'sprites/preview_assets/char/boots.png',
+    qsPants:'sprites/preview_assets/char/pants.png',
+    qsShirt:'sprites/preview_assets/char/shirt.png',
+    qsSkin: 'sprites/preview_assets/char/skin.png',
+    qsSword:'sprites/preview_assets/char/sword.png',
+    qsHair: 'sprites/preview_assets/char/hair.png',
+  };
+  var ANIM = {
+    idle: { row:0, frames:5, fps:6 },
+    walk: { row:1, frames:8, fps:10 },
+  };
+  var CF_SRCS = Array.from({length:16}, function(_,f){ return 'sprites/preview_assets/anim/fire_f'+f+'.png'; });
+  var CF_FPS = 12;
+
+  var qsAnim = 'idle', qsCharFrame = 0, qsCfFrame = 0;
+  var qsCharLast = 0, qsCfLast = 0;
+  var qsRunning = false;
+
+  function qsInit() {
+    BG_LAYERS.forEach(function(src, i) {
+      var el = document.getElementById('qsl'+(i+1));
+      if (el) el.style.backgroundImage = "url('"+src+"')";
+    });
+    Object.keys(CHAR_LAYERS).forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) el.style.backgroundImage = "url('"+CHAR_LAYERS[id]+"')";
+    });
+    qsSetCharFrame(ANIM.idle, 0);
+    document.getElementById('qsFireImg').src = CF_SRCS[0];
+    if (!qsRunning) { qsRunning = true; requestAnimationFrame(qsLoop); }
+  }
+
+  function qsSetCharFrame(anim, f) {
+    var x = -(f * 80), y = -(anim.row * 64);
+    Object.keys(CHAR_LAYERS).forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) el.style.backgroundPosition = x+'px '+y+'px';
+    });
+  }
+
+  function qsLoop(ts) {
+    var anim = ANIM[qsAnim];
+    if (ts - qsCharLast > 1000 / anim.fps) {
+      qsCharFrame = (qsCharFrame + 1) % anim.frames;
+      qsCharLast = ts;
+      qsSetCharFrame(anim, qsCharFrame);
+    }
+    if (ts - qsCfLast > 1000 / CF_FPS) {
+      qsCfFrame = (qsCfFrame + 1) % 16;
+      qsCfLast = ts;
+      var img = document.getElementById('qsFireImg');
+      if (img) img.src = CF_SRCS[qsCfFrame];
+    }
+    requestAnimationFrame(qsLoop);
+  }
+
+  // Update stat pills with live data
+  window.refreshScenePills = function() {
+    var active = allQuests.filter(function(q){ return q.status==='active'; }).length;
+    var done   = S.profile.completed || 0;
+    var level  = S.profile.level || 1;
+    var el;
+    el = document.getElementById('qsPillActive'); if(el) el.textContent = active+' Active';
+    el = document.getElementById('qsPillLevel');  if(el) el.textContent = 'Lv '+level+' Warrior';
+    el = document.getElementById('qsPillDone');   if(el) el.textContent = done+' Complete';
+    // Switch animation state based on active quests
+    var newAnim = active > 0 ? 'walk' : 'idle';
+    if (newAnim !== qsAnim) {
+      qsAnim = newAnim; qsCharFrame = 0;
+      el = document.getElementById('qsLabel');
+      if(el) el.textContent = active > 0 ? '⚔ On the march' : '🏕 Resting by camp';
+      el = document.getElementById('qs-fire-wrap') || document.querySelector('.qs-fire-wrap');
+      if(el) el.style.display = active > 0 ? 'none' : 'block';
+    }
+  };
+
+  // Init scene when quests tab becomes active
+  var _origShowScreen = window.showScreen;
+  window.showScreen = function(id, btn) {
+    _origShowScreen(id, btn);
+    if (id === 'quests') { qsInit(); refreshScenePills(); }
+  };
+})();
 </script>
 </body>
 </html>
