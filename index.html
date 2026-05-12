@@ -171,6 +171,27 @@ hr{border:none;border-top:1px solid var(--border)}
 .auth-toggle:hover{color:var(--gold)}
 .logout-btn{background:none;border:1px solid var(--border);border-radius:2px;color:var(--text-dim);font-family:'Cinzel',serif;font-size:9px;letter-spacing:.08em;padding:3px 8px;cursor:pointer;transition:all .2s}
 .logout-btn:hover{border-color:var(--red);color:#cf6464}
+/* HOME SCENE */
+.hs-wrap{border-radius:var(--r) var(--r) 0 0;overflow:hidden;border:1px solid var(--border2)}
+.hs{position:relative;width:100%;height:180px;overflow:hidden;background:#1a1a2e}
+.hs-layer{position:absolute;top:0;left:0;width:100%;height:100%;background-repeat:repeat-x;background-size:1024px 100%;image-rendering:pixelated}
+.hs-l5{z-index:1}.hs-l4{z-index:2}.hs-l3{z-index:3}.hs-l2{z-index:4}.hs-l1{z-index:5}
+.hs-ground{position:absolute;bottom:0;left:0;right:0;height:32px;z-index:6;background-image:url('sprites/preview_assets/ground.png');background-repeat:repeat-x;background-size:288px 576px;image-rendering:pixelated}
+.hs-home{position:absolute;bottom:32px;right:16px;z-index:7;image-rendering:pixelated;max-height:140px;object-fit:contain}
+.hs-fire{position:absolute;bottom:32px;right:16px;z-index:7;width:64px;height:64px;image-rendering:pixelated}
+.hs-prop{position:absolute;image-rendering:pixelated;z-index:7}
+.hs-char-wrap{position:absolute;bottom:30px;left:60px;width:80px;height:64px;z-index:8;transform:scale(2) scaleX(-1);transform-origin:bottom center}
+.hs-char-layer{position:absolute;top:0;left:0;width:80px;height:64px;background-repeat:no-repeat;image-rendering:pixelated;background-size:800px 448px}
+.hs-info{position:absolute;top:8px;left:0;right:0;display:flex;justify-content:space-between;z-index:10;padding:0 10px}
+.hs-tier-pill{background:rgba(0,0,0,.65);border:1px solid rgba(255,200,80,.3);border-radius:20px;padding:3px 10px;font-size:9px;color:#f0e0a0;font-family:'Cinzel',serif;letter-spacing:.04em}
+.hs-gold-pill{background:rgba(0,0,0,.65);border:1px solid rgba(201,168,76,.5);border-radius:20px;padding:3px 10px;font-size:9px;color:var(--gold);font-family:'Cinzel',serif}
+.hs-foot{background:var(--bg2);border:1px solid var(--border2);border-top:none;border-radius:0 0 var(--r) var(--r);padding:8px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.hs-next{font-family:'Cinzel',serif;font-size:9px;color:var(--text-dim);letter-spacing:.04em}
+.hs-btn{padding:5px 14px;border-radius:var(--r);border:1px solid var(--gold-dim);background:rgba(201,168,76,.08);color:var(--gold);font-family:'Cinzel',serif;font-size:10px;letter-spacing:.06em;cursor:pointer;transition:all .15s;white-space:nowrap}
+.hs-btn:hover:not(:disabled){border-color:var(--gold);background:rgba(201,168,76,.18)}
+.hs-btn:disabled{opacity:.4;cursor:not-allowed}
+/* Gold badge in header */
+.gold-badge{font-family:'Cinzel',serif;font-size:11px;color:#f0c060;background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.35);padding:3px 8px;border-radius:2px;letter-spacing:.05em}
 /* WARDROBE */
 .ward-section{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;display:flex;flex-direction:column;gap:10px}
 .ward-row{display:flex;align-items:center;gap:10px}
@@ -245,6 +266,7 @@ hr{border:none;border-top:1px solid var(--border)}
     </div>
     <div style="display:flex;align-items:center;gap:8px">
       <div class="gps-row"><div class="gdot" id="gpsDot"></div><span id="gpsLbl">No GPS</span></div>
+      <div class="gold-badge" id="goldBadge">💰 0g</div>
       <div class="lvl-badge" id="lvlBadge">LVL 1</div>
       <button class="logout-btn" onclick="doLogout()">Exit</button>
     </div>
@@ -392,8 +414,43 @@ hr{border:none;border-top:1px solid var(--border)}
 
 <!-- ══ PROFILE SCREEN ══ -->
 <div class="screen" id="screen-profile">
-  <div class="prof-hero">
-    <div id="profAvatarLarge" style="width:96px;height:96px;margin:0 auto 12px;image-rendering:pixelated;position:relative;overflow:hidden"></div>
+  <!-- Home Scene -->
+  <div class="hs-wrap">
+    <div class="hs" id="homeScene">
+      <div class="hs-layer hs-l1" id="hsl1"></div>
+      <div class="hs-layer hs-l2" id="hsl2"></div>
+      <div class="hs-layer hs-l3" id="hsl3"></div>
+      <div class="hs-layer hs-l4" id="hsl4"></div>
+      <div class="hs-layer hs-l5" id="hsl5"></div>
+      <div class="hs-ground"></div>
+      <!-- Home structure + props (set by renderHomeScene) -->
+      <img class="hs-home" id="hsHome" src="" alt="" style="display:none">
+      <img class="hs-fire" id="hsFireImg" src="" alt="" style="display:none">
+      <img class="hs-prop hs-prop1" id="hsProp1" src="" alt="" style="display:none">
+      <img class="hs-prop hs-prop2" id="hsProp2" src="" alt="" style="display:none">
+      <!-- Character -->
+      <div class="hs-char-wrap">
+        <div class="hs-char-layer" id="hsBoots"></div>
+        <div class="hs-char-layer" id="hsPants"></div>
+        <div class="hs-char-layer" id="hsShirt"></div>
+        <div class="hs-char-layer" id="hsSkin"></div>
+        <div class="hs-char-layer" id="hsSword"></div>
+        <div class="hs-char-layer" id="hsHair"></div>
+      </div>
+      <!-- Overlay info -->
+      <div class="hs-info">
+        <div class="hs-tier-pill" id="hsTierName">🏕 Wanderer's Camp</div>
+        <div class="hs-gold-pill" id="hsGoldPill">💰 0g</div>
+      </div>
+    </div>
+    <div class="hs-foot">
+      <div class="hs-next" id="hsNextInfo">Next upgrade: Ranger's Outpost — 150g</div>
+      <button class="hs-btn" id="hsUpgradeBtn" onclick="upgradeHome()">⬆ Upgrade</button>
+    </div>
+  </div>
+  <!-- Name / title below scene -->
+  <div class="prof-hero" style="padding:10px 0 0;background:none;border:none">
+    <div id="profAvatarLarge" style="display:none"></div>
     <div class="prof-name" id="profName">Adventurer</div>
     <div class="prof-ttl" id="profTtl">Novice Quester</div>
   </div>
@@ -439,6 +496,7 @@ hr{border:none;border-top:1px solid var(--border)}
     <div class="sc"><div class="sv" id="sXp">0</div><div class="sl">Total XP</div></div>
     <div class="sc"><div class="sv" id="sDone">0</div><div class="sl">Completed</div></div>
     <div class="sc"><div class="sv" id="sAct">0</div><div class="sl">Active</div></div>
+    <div class="sc"><div class="sv" id="sGold" style="color:var(--gold)">0</div><div class="sl">Gold</div></div>
   </div>
   <hr>
   <div class="sec-title">Danger Zone</div>
@@ -475,7 +533,7 @@ var isSignup    = false;
 // ═══════════════════════════════════════════════════
 var S = {
   quests: [],           // compass quests from get_compass_quests RPC
-  profile: { totalXp: 0, level: 1, completed: 0, username: '' },
+  profile: { totalXp: 0, level: 1, completed: 0, username: '', gold: 0, homeTier: 0 },
   focusedId: null,
   lat: null,
   lng: null,
@@ -514,7 +572,7 @@ function mapQuest(row) {
 function syncProfile() {
   if (!currentUser) return;
   sb.from('profiles')
-    .select('username,level,total_xp,tasks_completed')
+    .select('username,level,total_xp,tasks_completed,gold,home_tier')
     .eq('id', currentUser.id)
     .single()
     .then(function(res) {
@@ -524,6 +582,8 @@ function syncProfile() {
       S.profile.level     = d.level           || 1;
       S.profile.completed = d.tasks_completed || 0;
       S.profile.username  = d.username        || '';
+      S.profile.gold      = d.gold            != null ? d.gold      : (parseInt(localStorage.getItem('tq_gold')) || 0);
+      S.profile.homeTier  = d.home_tier       != null ? d.home_tier : (parseInt(localStorage.getItem('tq_home_tier')) || 0);
       updateHeader();
       renderProfile();
     });
@@ -632,7 +692,7 @@ function doLogout() {
     currentUser    = null;
     S.quests       = [];
     allQuests      = [];
-    S.profile      = { totalXp: 0, level: 1, completed: 0, username: '' };
+    S.profile      = { totalXp: 0, level: 1, completed: 0, username: '', gold: 0, homeTier: 0 };
     S.focusedId    = null;
     showAuth();
   });
@@ -671,8 +731,7 @@ function showScreen(id, btn) {
   if (btn) btn.classList.add('active');
   if (id === 'compass') { refreshCompassQuests(); renderCompass(); }
   if (id === 'quests')  { loadAllQuests(); renderAllQ(); }
-  if (id === 'profile') { renderCustomizeUI(); }
-  if (id === 'profile') renderProfile();
+  if (id === 'profile') { renderCustomizeUI(); renderProfile(); }
 }
 
 // ═══════════════════════════════════════════════════
@@ -911,9 +970,11 @@ function updateHeader() {
   p.level = l;
   var lo = xpForLvl(l), hi = xpForLvl(l + 1);
   var pct = hi > lo ? (p.totalXp - lo) / (hi - lo) * 100 : 100;
-  document.getElementById('lvlBadge').textContent = 'LVL ' + l;
-  document.getElementById('xpLbl').textContent    = p.totalXp + ' XP';
-  document.getElementById('xpFill').style.width   = pct.toFixed(1) + '%';
+  document.getElementById('lvlBadge').textContent  = 'LVL ' + l;
+  document.getElementById('xpLbl').textContent     = p.totalXp + ' XP';
+  document.getElementById('xpFill').style.width    = pct.toFixed(1) + '%';
+  var gb = document.getElementById('goldBadge');
+  if (gb) gb.textContent = '💰 ' + (p.gold || 0) + 'g';
 }
 
 // ═══════════════════════════════════════════════════
@@ -1199,10 +1260,14 @@ function completeQuest() {
       updateHeader();
       renderCompass();
 
+      // Award gold (scaled slightly with XP)
+      var goldEarned = Math.max(10, Math.floor(xpEarned * 0.3));
+      awardGold(goldEarned);
+
       if (leveledUp) {
-        toast('⬆ Level Up! Now Level ' + newLevel + '!', 'success');
+        toast('⬆ Level Up! Now Level ' + newLevel + '! +' + goldEarned + 'g', 'success');
       } else {
-        toast('✓ Complete! +' + xpEarned + ' XP', 'success');
+        toast('✓ Complete! +' + xpEarned + ' XP  +' + goldEarned + 'g', 'success');
       }
 
       // Sync profile from server in background
@@ -1329,6 +1394,205 @@ function delQ(id, e) {
 }
 
 // ═══════════════════════════════════════════════════
+//  HOME SCENE
+// ═══════════════════════════════════════════════════
+var HOME_TIERS = [
+  {
+    name: "Wanderer's Camp",
+    home: null,   // no structure — just tent handled as fire-position asset
+    tent: 'sprites/preview_assets/home/home_t0_tent.png',
+    fire: true,
+    props: [],
+    cost: 0
+  },
+  {
+    name: "Ranger's Outpost",
+    home: 'sprites/preview_assets/home/home_t1_camp_tent.png',
+    tent: null,
+    fire: false,
+    props: [
+      { src: 'sprites/preview_assets/home/prop_cooking.png', right: 108, bottom: 32, height: 48 },
+      { src: 'sprites/preview_assets/home/prop_logs.png',    right:  68, bottom: 32, height: 36 },
+    ],
+    cost: 150
+  },
+  {
+    name: 'Stone Cottage',
+    home: 'sprites/preview_assets/home/home_t3_house.png',
+    tent: null,
+    fire: false,
+    props: [
+      { src: 'sprites/preview_assets/home/prop_barrel.png', right: 178, bottom: 32, height: 28 },
+      { src: 'sprites/preview_assets/home/prop_logs.png',   right: 148, bottom: 32, height: 30 },
+    ],
+    cost: 500
+  },
+  {
+    name: 'Fortified Estate',
+    home: 'sprites/preview_assets/home/home_t3_house.png',
+    tent: null,
+    fire: false,
+    props: [
+      { src: 'sprites/preview_assets/home/prop_tall_tree.png',   right: 188, bottom: 32, height: 90 },
+      { src: 'sprites/preview_assets/home/prop_flower_pot.png',  right: 160, bottom: 32, height: 40 },
+    ],
+    cost: 1500
+  }
+];
+
+var HS_CF_SRCS = Array.from({length:16}, function(_,f){ return 'sprites/preview_assets/anim/fire_f'+f+'.png'; });
+var hsCfFrame = 0, hsCfLast = 0, hsCharFrame = 0, hsCharLast = 0, hsSceneRunning = false;
+var HS_BG = [1,2,3,4,5].map(function(i){ return 'sprites/preview_assets/bg/layer'+i+'.png'; });
+var HS_CHAR_IDS = { boots:'hsBoots', pants:'hsPants', shirt:'hsShirt', skin:'hsSkin', sword:'hsSword', hair:'hsHair' };
+var HS_ANIM = { idle:{row:0,frames:5,fps:6}, walk:{row:1,frames:8,fps:10} };
+
+function renderHomeScene() {
+  var tier  = S.profile.homeTier || 0;
+  var gold  = S.profile.gold || 0;
+  var t     = HOME_TIERS[tier] || HOME_TIERS[0];
+  var next  = HOME_TIERS[tier + 1] || null;
+
+  // BG layers
+  HS_BG.forEach(function(src, i) {
+    var el = document.getElementById('hsl' + (i + 1));
+    if (el) el.style.backgroundImage = "url('" + src + "')";
+  });
+
+  // Character layers
+  var layers = getCharLayers();
+  Object.keys(HS_CHAR_IDS).forEach(function(k) {
+    var el = document.getElementById(HS_CHAR_IDS[k]);
+    if (el) el.style.backgroundImage = "url('" + layers[k] + "')";
+  });
+
+  // Home structure
+  var homeEl = document.getElementById('hsHome');
+  if (homeEl) {
+    if (t.home) {
+      homeEl.src = t.home;
+      homeEl.style.display = 'block';
+      homeEl.style.maxHeight = tier >= 2 ? '148px' : '100px';
+    } else if (t.tent) {
+      homeEl.src = t.tent;
+      homeEl.style.display = 'block';
+      homeEl.style.maxHeight = '108px';
+    } else {
+      homeEl.style.display = 'none';
+    }
+  }
+
+  // Campfire (tier 0 only)
+  var fireEl = document.getElementById('hsFireImg');
+  if (fireEl) fireEl.style.display = t.fire ? 'block' : 'none';
+
+  // Props
+  var propEls = [document.getElementById('hsProp1'), document.getElementById('hsProp2')];
+  propEls.forEach(function(el, i) {
+    if (!el) return;
+    var p = t.props && t.props[i];
+    if (p) {
+      el.src = p.src;
+      el.style.display = 'block';
+      el.style.right   = p.right  + 'px';
+      el.style.bottom  = p.bottom + 'px';
+      el.style.height  = p.height + 'px';
+      el.style.width   = 'auto';
+    } else {
+      el.style.display = 'none';
+    }
+  });
+
+  // Overlay pills
+  var tierPill = document.getElementById('hsTierName');
+  if (tierPill) tierPill.textContent = t.name;
+  var goldPill = document.getElementById('hsGoldPill');
+  if (goldPill) goldPill.textContent = '💰 ' + gold + 'g';
+
+  // Upgrade bar
+  var nextInfo = document.getElementById('hsNextInfo');
+  var upgradeBtn = document.getElementById('hsUpgradeBtn');
+  if (next) {
+    var canAfford = gold >= next.cost;
+    if (nextInfo) nextInfo.textContent = 'Next: ' + next.name + ' — ' + next.cost + 'g';
+    if (upgradeBtn) { upgradeBtn.disabled = !canAfford; upgradeBtn.style.display = ''; }
+  } else {
+    if (nextInfo) nextInfo.textContent = '⭐ Fully upgraded!';
+    if (upgradeBtn) upgradeBtn.style.display = 'none';
+  }
+
+  // Start animation loop if not running
+  if (!hsSceneRunning) {
+    hsSceneRunning = true;
+    requestAnimationFrame(hsLoop);
+  }
+  hsSetCharFrame(HS_ANIM.idle, 0);
+}
+
+function hsSetCharFrame(anim, f) {
+  var x = -(f * 80), y = -(anim.row * 64);
+  Object.values(HS_CHAR_IDS).forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.style.backgroundPosition = x + 'px ' + y + 'px';
+  });
+}
+
+function hsLoop(ts) {
+  var anim = HS_ANIM.idle;
+  if (ts - hsCharLast > 1000 / anim.fps) {
+    hsCharFrame = (hsCharFrame + 1) % anim.frames;
+    hsCharLast = ts;
+    hsSetCharFrame(anim, hsCharFrame);
+  }
+  // Campfire anim (tier 0)
+  var fireEl = document.getElementById('hsFireImg');
+  if (fireEl && fireEl.style.display !== 'none') {
+    if (ts - hsCfLast > 1000 / 12) {
+      hsCfFrame = (hsCfFrame + 1) % 16;
+      hsCfLast = ts;
+      fireEl.src = HS_CF_SRCS[hsCfFrame];
+    }
+  }
+  requestAnimationFrame(hsLoop);
+}
+
+function upgradeHome() {
+  var tier = S.profile.homeTier || 0;
+  var next = HOME_TIERS[tier + 1];
+  if (!next) return;
+  if ((S.profile.gold || 0) < next.cost) {
+    toast('Not enough gold! Need ' + next.cost + 'g', 'error');
+    return;
+  }
+  S.profile.gold -= next.cost;
+  S.profile.homeTier = tier + 1;
+  // Persist locally
+  localStorage.setItem('tq_gold', S.profile.gold);
+  localStorage.setItem('tq_home_tier', S.profile.homeTier);
+  // Push to Supabase if columns exist
+  if (currentUser) {
+    sb.from('profiles')
+      .update({ gold: S.profile.gold, home_tier: S.profile.homeTier })
+      .eq('id', currentUser.id)
+      .then(function(){}).catch(function(){});
+  }
+  updateHeader();
+  renderHomeScene();
+  toast('🏠 Upgraded to ' + HOME_TIERS[S.profile.homeTier].name + '!', 'success');
+}
+
+function awardGold(amount) {
+  S.profile.gold = (S.profile.gold || 0) + amount;
+  localStorage.setItem('tq_gold', S.profile.gold);
+  if (currentUser) {
+    sb.from('profiles')
+      .update({ gold: S.profile.gold })
+      .eq('id', currentUser.id)
+      .then(function(){}).catch(function(){});
+  }
+  updateHeader();
+}
+
+// ═══════════════════════════════════════════════════
 //  PROFILE SCREEN
 // ═══════════════════════════════════════════════════
 var TITLES = ['Novice Quester','Wayfarer','Pathfinder','Journeyman','Adventurer','Veteran','Champion','Legend','Mythic Hero','Transcendent'];
@@ -1340,11 +1604,12 @@ function renderProfile() {
   document.getElementById('sXp').textContent   = p.totalXp;
   document.getElementById('sDone').textContent = p.completed || 0;
   document.getElementById('sAct').textContent  = a;
+  var sgEl = document.getElementById('sGold'); if (sgEl) sgEl.textContent = p.gold || 0;
   document.getElementById('profTtl').textContent = TITLES[Math.min(l - 1, TITLES.length - 1)];
   if (p.username) document.getElementById('profName').textContent = p.username;
 
-  // Large avatar — CSS sprite layer preview (matches quest scene)
-  refreshAvatarPreview();
+  // Home scene (replaces standalone avatar)
+  renderHomeScene();
   renderCustomizeUI();
 
   // Avatar collection row
@@ -1747,9 +2012,17 @@ function getCharLayers() {
 function setCustom(key, val) {
   S.customization[key] = val;
   saveCustomization();
-  refreshAvatarPreview();
   renderCustomizeUI();
-  refreshSceneLayers();
+  refreshSceneLayers();  // quest scene
+  refreshHomeLayers();   // home scene
+}
+
+function refreshHomeLayers() {
+  var layers = getCharLayers();
+  Object.keys(HS_CHAR_IDS).forEach(function(k) {
+    var el = document.getElementById(HS_CHAR_IDS[k]);
+    if (el) el.style.backgroundImage = "url('" + layers[k] + "')";
+  });
 }
 
 function renderCustomizeUI() {
