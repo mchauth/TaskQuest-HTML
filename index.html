@@ -171,6 +171,19 @@ hr{border:none;border-top:1px solid var(--border)}
 .auth-toggle:hover{color:var(--gold)}
 .logout-btn{background:none;border:1px solid var(--border);border-radius:2px;color:var(--text-dim);font-family:'Cinzel',serif;font-size:9px;letter-spacing:.08em;padding:3px 8px;cursor:pointer;transition:all .2s}
 .logout-btn:hover{border-color:var(--red);color:#cf6464}
+/* WARDROBE */
+.ward-section{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.ward-row{display:flex;align-items:center;gap:10px}
+.ward-label{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);min-width:44px}
+.ward-opts{display:flex;gap:6px;flex-wrap:wrap}
+.ward-swatch{width:30px;height:30px;border-radius:4px;border:2px solid transparent;cursor:pointer;transition:border-color .15s;position:relative}
+.ward-swatch.active{border-color:var(--gold)!important;box-shadow:0 0 6px rgba(201,168,76,.4)}
+.ward-swatch:hover{border-color:var(--border2)}
+.ward-chip{padding:5px 12px;border-radius:4px;border:1px solid var(--border2);cursor:pointer;font-family:'Cinzel',serif;font-size:10px;letter-spacing:.06em;color:var(--text-dim);background:var(--bg);transition:all .15s}
+.ward-chip.active{border-color:var(--gold);color:var(--gold);background:rgba(201,168,76,.08)}
+.ward-chip:hover{border-color:var(--border2);color:var(--text)}
+.ward-hair-swatch{width:30px;height:30px;border-radius:50%;border:2px solid transparent;cursor:pointer;overflow:hidden;background:var(--bg);display:flex;align-items:center;justify-content:center;transition:border-color .15s}
+.ward-hair-swatch.active{border-color:var(--gold)!important;box-shadow:0 0 6px rgba(201,168,76,.4)}
 /* AVATAR SYSTEM */
 .avatar-sprite{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
 .avatar-row{display:flex;gap:10px;overflow-x:auto;padding:4px 0;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
@@ -383,15 +396,39 @@ hr{border:none;border-top:1px solid var(--border)}
   </div>
   <div class="sec-title">Avatar Collection</div>
   <div class="avatar-row" id="avatarRow"></div>
-  <div id="customizeSection" style="margin:12px 0;padding:12px;background:#f8f9fa;border-radius:8px;">
-    <div style="font-weight:600;margin-bottom:8px;font-size:14px;">✨ Customize</div>
-    <div style="margin-bottom:8px;">
-      <div style="font-size:12px;color:#666;margin-bottom:4px;">Hair Color</div>
-      <div id="hairSwatches" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+  <div id="customizeSection">
+    <div class="sec-title" style="margin-top:4px">Character</div>
+    <div class="ward-section">
+      <div class="ward-row">
+        <div class="ward-label">Gender</div>
+        <div class="ward-opts">
+          <div class="ward-chip" id="genderM" onclick="setCustom('gender','m')">♂ Male</div>
+          <div class="ward-chip" id="genderF" onclick="setCustom('gender','f')">♀ Female</div>
+        </div>
+      </div>
+      <div class="ward-row">
+        <div class="ward-label">Skin</div>
+        <div class="ward-opts" id="skinOpts"></div>
+      </div>
+      <div class="ward-row">
+        <div class="ward-label">Hair</div>
+        <div class="ward-opts" id="hairOpts"></div>
+      </div>
     </div>
-    <div>
-      <div style="font-size:12px;color:#666;margin-bottom:4px;">Skin Tone</div>
-      <div id="skinSwatches" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+    <div class="sec-title" style="margin-top:14px">⚔ Warrior Wardrobe</div>
+    <div class="ward-section">
+      <div class="ward-row">
+        <div class="ward-label">Shirt</div>
+        <div class="ward-opts" id="shirtOpts"></div>
+      </div>
+      <div class="ward-row">
+        <div class="ward-label">Pants</div>
+        <div class="ward-opts" id="pantsOpts"></div>
+      </div>
+      <div class="ward-row">
+        <div class="ward-label">Boots</div>
+        <div class="ward-opts" id="bootsOpts"></div>
+      </div>
     </div>
   </div>
   <div class="stats-grid" style="margin-top:16px">
@@ -444,7 +481,7 @@ var S = {
   avatarItems:       [],
   unlockedAvatarIds: [],
   selectedAvatarId:  null,
-  customization: { hair: 'brown', skin: 'medium' }
+  customization: { hair: 'brown', skin: 'medium', gender: 'm', skinNum: 1, hairNum: 1, shirt: 'default', pants: 'default', boots: 'boots', charClass: 'warrior' }
 };
 
 var qFilter = 'active';
@@ -631,6 +668,7 @@ function showScreen(id, btn) {
   if (btn) btn.classList.add('active');
   if (id === 'compass') { refreshCompassQuests(); renderCompass(); }
   if (id === 'quests')  { loadAllQuests(); renderAllQ(); }
+  if (id === 'profile') { renderCustomizeUI(); }
   if (id === 'profile') renderProfile();
 }
 
@@ -1685,41 +1723,92 @@ function closeUnlockModal() {
 }
 
 // ═══════════════════════════════════════════════════
-//  AVATAR CUSTOMIZATION
+//  AVATAR CUSTOMIZATION — WARDROBE
 // ═══════════════════════════════════════════════════
+var SKIN_COLORS = ['#dea99f','#cc8b7e','#a2675a','#875548','#5b3138'];
+var HAIR_COLORS = ['#3a2010','#8b5c2a','#d4a838','#c04020','#e8e0d0'];
+var SHIRT_COLORS = { default:'#7a5030', blue:'#3060a0', green:'#3a7040', orange:'#c05020', purple:'#6040a0' };
+var PANTS_COLORS = { default:'#503820', blue:'#2050a0', green:'#2a6030', orange:'#a04018', purple:'#502888' };
+var BOOTS_LABELS = { boots:'Boots', shoes:'Shoes' };
+
+function getCharLayers() {
+  var c   = S.customization;
+  var g   = c.gender || 'm';
+  var sn  = c.skinNum || 1;
+  var hn  = c.hairNum || 1;
+  var sh  = c.shirt   || 'default';
+  var pa  = c.pants   || 'default';
+  var bo  = c.boots   || 'boots';
+  var cls = c.charClass || 'warrior';
+  var p   = 'sprites/preview_assets/char/';
+  // Female only has boots (no shoes variant), fall back gracefully
+  var bootsFile = (g === 'f' && bo === 'shoes') ? 'warrior_boots_f' : cls+'_'+bo+'_'+g;
+  return {
+    boots: p + bootsFile + '.png',
+    pants: p + cls + '_pants_' + pa + '_' + g + '.png',
+    shirt: p + cls + '_shirt_' + sh + '_' + g + '.png',
+    skin:  p + 'skin_' + g + sn + '.png',
+    sword: p + 'sword_' + g + '.png',
+    hair:  p + 'hair_' + g + hn + '.png',
+  };
+}
+
+function setCustom(key, val) {
+  S.customization[key] = val;
+  saveCustomization();
+  refreshAvatarPreview();
+  renderCustomizeUI();
+  refreshSceneLayers();
+}
+
 function renderCustomizeUI() {
-  var hairColors = { brown: '#8b6030', black: '#333', blonde: '#e8c050', red: '#c04020', white: '#ddd', blue: '#42a5f5' };
-  var skinColors = { light: '#f5cba7', medium: '#c8956c', dark: '#7d4e2d', cool: '#b09080' };
-  var hc = S.customization.hair;
-  var sc = S.customization.skin;
+  var c = S.customization;
 
-  var hairEl = document.getElementById('hairSwatches');
-  if (hairEl) {
-    hairEl.innerHTML = Object.keys(hairColors).map(function(k) {
-      return '<div onclick="setHair(\'' + k + '\')" style="width:28px;height:28px;border-radius:50%;background:' + hairColors[k] + ';cursor:pointer;border:3px solid ' + (k === hc ? '#333' : 'transparent') + ';box-shadow:0 0 0 1px #ccc;" title="' + k + '"></div>';
-    }).join('');
-  }
+  // Gender
+  var gm = document.getElementById('genderM'); if(gm) gm.className = 'ward-chip' + (c.gender !== 'f' ? ' active' : '');
+  var gf = document.getElementById('genderF'); if(gf) gf.className = 'ward-chip' + (c.gender === 'f' ? ' active' : '');
 
-  var skinEl = document.getElementById('skinSwatches');
-  if (skinEl) {
-    skinEl.innerHTML = Object.keys(skinColors).map(function(k) {
-      return '<div onclick="setSkin(\'' + k + '\')" style="width:28px;height:28px;border-radius:50%;background:' + skinColors[k] + ';cursor:pointer;border:3px solid ' + (k === sc ? '#333' : 'transparent') + ';box-shadow:0 0 0 1px #ccc;" title="' + k + '"></div>';
-    }).join('');
-  }
+  // Skin swatches (1–5)
+  var skinEl = document.getElementById('skinOpts');
+  if (skinEl) skinEl.innerHTML = SKIN_COLORS.map(function(col, i) {
+    var n = i + 1;
+    return '<div class="ward-swatch' + ((c.skinNum||1) === n ? ' active' : '') + '" onclick="setCustom(\'skinNum\',' + n + ')" style="background:' + col + '" title="Skin ' + n + '"></div>';
+  }).join('');
+
+  // Hair swatches (1–5)
+  var hairEl = document.getElementById('hairOpts');
+  if (hairEl) hairEl.innerHTML = HAIR_COLORS.map(function(col, i) {
+    var n = i + 1;
+    return '<div class="ward-swatch' + ((c.hairNum||1) === n ? ' active' : '') + '" onclick="setCustom(\'hairNum\',' + n + ')" style="background:' + col + ';border-radius:50%" title="Hair ' + n + '"></div>';
+  }).join('');
+
+  // Shirt
+  var shirtEl = document.getElementById('shirtOpts');
+  if (shirtEl) shirtEl.innerHTML = Object.keys(SHIRT_COLORS).map(function(k) {
+    return '<div class="ward-swatch' + ((c.shirt||'default') === k ? ' active' : '') + '" onclick="setCustom(\'shirt\',\'' + k + '\')" style="background:' + SHIRT_COLORS[k] + '" title="' + k + '"></div>';
+  }).join('');
+
+  // Pants
+  var pantsEl = document.getElementById('pantsOpts');
+  if (pantsEl) pantsEl.innerHTML = Object.keys(PANTS_COLORS).map(function(k) {
+    return '<div class="ward-swatch' + ((c.pants||'default') === k ? ' active' : '') + '" onclick="setCustom(\'pants\',\'' + k + '\')" style="background:' + PANTS_COLORS[k] + '" title="' + k + '"></div>';
+  }).join('');
+
+  // Boots
+  var bootsEl = document.getElementById('bootsOpts');
+  if (bootsEl) bootsEl.innerHTML = Object.keys(BOOTS_LABELS).map(function(k) {
+    return '<div class="ward-chip' + ((c.boots||'boots') === k ? ' active' : '') + '" onclick="setCustom(\'boots\',\'' + k + '\')">' + BOOTS_LABELS[k] + '</div>';
+  }).join('');
 }
 
-function setHair(color) {
-  S.customization.hair = color;
-  saveCustomization();
-  refreshAvatarPreview();
-  renderCustomizeUI();
-}
-
-function setSkin(tone) {
-  S.customization.skin = tone;
-  saveCustomization();
-  refreshAvatarPreview();
-  renderCustomizeUI();
+// Refresh the quest scene character layers after customization change
+function refreshSceneLayers() {
+  var layers = getCharLayers();
+  var idMap = { boots:'qsBoots', pants:'qsPants', shirt:'qsShirt', skin:'qsSkin', sword:'qsSword', hair:'qsHair' };
+  Object.keys(idMap).forEach(function(k) {
+    var el = document.getElementById(idMap[k]);
+    if (el) el.style.backgroundImage = "url('" + layers[k] + "')";
+  });
 }
 
 function saveCustomization() {
@@ -1777,14 +1866,7 @@ setInterval(function() {
 // ── QUEST SCENE ANIMATION ──
 (function() {
   var BG_LAYERS = [1,2,3,4,5].map(function(i){ return 'sprites/preview_assets/bg/layer'+i+'.png'; });
-  var CHAR_LAYERS = {
-    qsBoots:'sprites/preview_assets/char/boots.png',
-    qsPants:'sprites/preview_assets/char/pants.png',
-    qsShirt:'sprites/preview_assets/char/shirt.png',
-    qsSkin: 'sprites/preview_assets/char/skin.png',
-    qsSword:'sprites/preview_assets/char/sword.png',
-    qsHair: 'sprites/preview_assets/char/hair.png',
-  };
+  var CHAR_IDS = { boots:'qsBoots', pants:'qsPants', shirt:'qsShirt', skin:'qsSkin', sword:'qsSword', hair:'qsHair' };
   var ANIM = {
     idle: { row:0, frames:5, fps:6 },
     walk: { row:1, frames:8, fps:10 },
@@ -1801,9 +1883,10 @@ setInterval(function() {
       var el = document.getElementById('qsl'+(i+1));
       if (el) el.style.backgroundImage = "url('"+src+"')";
     });
-    Object.keys(CHAR_LAYERS).forEach(function(id) {
-      var el = document.getElementById(id);
-      if (el) el.style.backgroundImage = "url('"+CHAR_LAYERS[id]+"')";
+    var layers = getCharLayers();
+    Object.keys(CHAR_IDS).forEach(function(k) {
+      var el = document.getElementById(CHAR_IDS[k]);
+      if (el) el.style.backgroundImage = "url('"+layers[k]+"')";
     });
     qsSetCharFrame(ANIM.idle, 0);
     document.getElementById('qsFireImg').src = CF_SRCS[0];
@@ -1812,7 +1895,7 @@ setInterval(function() {
 
   function qsSetCharFrame(anim, f) {
     var x = -(f * 80), y = -(anim.row * 64);
-    Object.keys(CHAR_LAYERS).forEach(function(id) {
+    Object.values(CHAR_IDS).forEach(function(id) {
       var el = document.getElementById(id);
       if (el) el.style.backgroundPosition = x+'px '+y+'px';
     });
