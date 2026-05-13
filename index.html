@@ -171,6 +171,26 @@ hr{border:none;border-top:1px solid var(--border)}
 .auth-toggle:hover{color:var(--gold)}
 .logout-btn{background:none;border:1px solid var(--border);border-radius:2px;color:var(--text-dim);font-family:'Cinzel',serif;font-size:9px;letter-spacing:.08em;padding:3px 8px;cursor:pointer;transition:all .2s}
 .logout-btn:hover{border-color:var(--red);color:#cf6464}
+/* FORGE / BACK BUTTONS */
+.forge-btn{width:100%;padding:11px;background:linear-gradient(135deg,rgba(201,168,76,.12),rgba(201,168,76,.06));border:1px solid var(--gold-dim);border-radius:var(--r);color:var(--gold2);font-family:'Cinzel',serif;font-size:12px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .2s}
+.forge-btn:hover{background:linear-gradient(135deg,rgba(201,168,76,.22),rgba(201,168,76,.1));border-color:var(--gold)}
+.back-btn{background:none;border:none;color:var(--text-dim);font-family:'Cinzel',serif;font-size:11px;letter-spacing:.05em;cursor:pointer;padding:0 0 4px;display:flex;align-items:center;gap:4px;transition:color .15s}
+.back-btn:hover{color:var(--gold)}
+/* HABITS */
+.habit-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:13px 15px;position:relative;overflow:hidden;transition:border-color .2s}
+.habit-card.checked{border-color:var(--green-dim);background:#0e1a12}
+.habit-card.checked::after{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--green)}
+.habit-hdr{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.habit-name{font-family:'Cinzel',serif;font-size:13px;color:var(--text-bright)}
+.habit-check{flex-shrink:0;padding:5px 12px;border-radius:var(--r);border:1px solid var(--green-dim);background:rgba(76,175,122,.06);color:var(--green);font-family:'Cinzel',serif;font-size:10px;letter-spacing:.06em;cursor:pointer;transition:all .2s}
+.habit-check:hover:not(:disabled){background:rgba(76,175,122,.15);border-color:var(--green)}
+.habit-check:disabled{opacity:.45;cursor:not-allowed;border-color:var(--border);color:var(--text-dim)}
+.habit-check.done{background:rgba(76,175,122,.12);border-color:var(--green);color:var(--green)}
+.habit-meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:5px;font-size:12px;color:var(--text-dim);align-items:center}
+.habit-streak{color:var(--gold);font-family:'Cinzel',serif;font-size:11px}
+.habit-rewards{display:flex;gap:6px}
+.habit-del{position:absolute;top:8px;right:8px;background:none;border:none;color:var(--border2);font-size:14px;cursor:pointer;padding:2px 5px;transition:color .15s;line-height:1}
+.habit-del:hover{color:var(--red)}
 /* HOME SCENE */
 .hs-wrap{border-radius:var(--r) var(--r) 0 0;overflow:hidden;border:1px solid var(--border2)}
 .hs{position:relative;width:100%;height:180px;overflow:hidden;background:#1a1a2e}
@@ -281,7 +301,7 @@ hr{border:none;border-top:1px solid var(--border)}
 <nav>
   <button class="active" onclick="showScreen('compass',this)">⊙ Compass</button>
   <button onclick="showScreen('quests',this)">⚑ Quests</button>
-  <button onclick="showScreen('create',this)">✦ Create</button>
+  <button onclick="showScreen('habits',this)">🔥 Habits</button>
   <button onclick="showScreen('profile',this)">◈ Profile</button>
 </nav>
 
@@ -330,6 +350,7 @@ hr{border:none;border-top:1px solid var(--border)}
     <button class="complete-btn" id="completeBtn" onclick="completeQuest()">Complete Quest</button>
   </div>
 
+  <button class="forge-btn" onclick="showScreen('create',null)">⚔ Forge New Quest</button>
   <div class="sec-title">Active Quests</div>
   <div class="qlist" id="cQList"></div>
 </div>
@@ -377,6 +398,7 @@ hr{border:none;border-top:1px solid var(--border)}
 
 <!-- ══ CREATE SCREEN ══ -->
 <div class="screen" id="screen-create">
+  <button class="back-btn" onclick="showScreen('compass',null)">← Back</button>
   <div class="sec-title">Forge New Quest</div>
 
   <div class="fg">
@@ -410,6 +432,45 @@ hr{border:none;border-top:1px solid var(--border)}
     </select>
   </div>
   <button class="submit-btn" id="forgeBtn" onclick="createQuest()">⚔ Forge Quest</button>
+</div>
+
+<!-- ══ HABITS SCREEN ══ -->
+<div class="screen" id="screen-habits">
+  <div style="display:flex;align-items:center;justify-content:space-between">
+    <div class="sec-title" style="border:none;padding:0">Daily Habits</div>
+    <button class="forge-btn" style="margin:0" onclick="toggleHabitForm()">+ New Habit</button>
+  </div>
+
+  <!-- Create habit form (hidden by default) -->
+  <div id="habitForm" style="display:none">
+    <div class="fg">
+      <div class="fl"><label class="fl-lbl">Habit Name</label>
+        <input class="fi" id="hName" placeholder="e.g. Morning run, Read 20 min…" maxlength="60">
+      </div>
+      <div class="fl"><label class="fl-lbl">Description (optional)</label>
+        <input class="fi" id="hDesc" placeholder="Keep it brief">
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <div class="fl" style="flex:1;margin:0"><label class="fl-lbl">XP Reward</label>
+          <select class="fi" id="hXp" style="padding:8px 10px">
+            <option value="5">5 XP (easy)</option>
+            <option value="10" selected>10 XP (medium)</option>
+            <option value="20">20 XP (hard)</option>
+          </select>
+        </div>
+        <div class="fl" style="flex:1;margin:0"><label class="fl-lbl">Gold Reward</label>
+          <select class="fi" id="hGold" style="padding:8px 10px">
+            <option value="3">3g (easy)</option>
+            <option value="5" selected>5g (medium)</option>
+            <option value="10">10g (hard)</option>
+          </select>
+        </div>
+      </div>
+      <button class="submit-btn" onclick="createHabit()">✦ Add Habit</button>
+    </div>
+  </div>
+
+  <div id="habitList" class="qlist"></div>
 </div>
 
 <!-- ══ PROFILE SCREEN ══ -->
@@ -736,6 +797,7 @@ function showScreen(id, btn) {
   if (btn) btn.classList.add('active');
   if (id === 'compass') { refreshCompassQuests(); renderCompass(); }
   if (id === 'quests')  { loadAllQuests(); renderAllQ(); }
+  if (id === 'habits')  { loadHabits(); }
   if (id === 'profile') { renderCustomizeUI(); renderProfile(); }
 }
 
@@ -1395,6 +1457,168 @@ function delQ(id, e) {
     renderAllQ();
     renderCompass();
     toast('Quest abandoned');
+  });
+}
+
+// ═══════════════════════════════════════════════════
+//  HABITS
+// ═══════════════════════════════════════════════════
+var allHabits = [];
+var habitFormOpen = false;
+
+function loadHabits() {
+  if (!currentUser) return;
+  sb.from('habits')
+    .select('*')
+    .eq('user_id', currentUser.id)
+    .order('created_at', { ascending: true })
+    .then(function(res) {
+      if (res.error) return;
+      allHabits = (res.data || []).map(function(h) {
+        return {
+          id:          h.id,
+          name:        h.name,
+          description: h.description || '',
+          xpReward:    h.xp_reward   || 10,
+          goldReward:  h.gold_reward || 5,
+          streak:      h.streak      || 0,
+          lastChecked: h.last_checked_at || null,
+        };
+      });
+      renderHabits();
+    });
+}
+
+function todayStr() {
+  return new Date().toISOString().slice(0, 10); // 'YYYY-MM-DD'
+}
+
+function isCheckedToday(h) {
+  return h.lastChecked === todayStr();
+}
+
+function renderHabits() {
+  var list = document.getElementById('habitList');
+  if (!list) return;
+  if (!allHabits.length) {
+    list.innerHTML = '<div class="empty"><div class="ei">🔥</div><p>No habits yet.<br>Add one to start building your streak.</p></div>';
+    return;
+  }
+  list.innerHTML = allHabits.map(function(h) {
+    var done = isCheckedToday(h);
+    var streakTxt = h.streak > 0 ? '🔥 ' + h.streak + ' day streak' : '🔥 Start your streak';
+    return '<div class="habit-card' + (done ? ' checked' : '') + '" id="hc-' + h.id + '">' +
+      '<button class="habit-del" onclick="deleteHabit(\'' + h.id + '\')" title="Delete">✕</button>' +
+      '<div class="habit-hdr">' +
+        '<div class="habit-name">' + escHtml(h.name) + '</div>' +
+        '<button class="habit-check' + (done ? ' done' : '') + '" ' +
+          (done ? 'disabled' : 'onclick="checkHabit(\'' + h.id + '\')"') + '>' +
+          (done ? '✓ Done' : 'Check In') +
+        '</button>' +
+      '</div>' +
+      (h.description ? '<div class="habit-meta">' + escHtml(h.description) + '</div>' : '') +
+      '<div class="habit-meta">' +
+        '<span class="habit-streak">' + streakTxt + '</span>' +
+        '<span class="habit-rewards">' +
+          '<span class="xp-pill">+' + h.xpReward + ' XP</span>' +
+          '<span style="font-size:11px;color:var(--gold);font-family:\'Cinzel\',serif">+' + h.goldReward + 'g</span>' +
+        '</span>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function toggleHabitForm() {
+  habitFormOpen = !habitFormOpen;
+  var f = document.getElementById('habitForm');
+  if (f) f.style.display = habitFormOpen ? 'block' : 'none';
+  if (habitFormOpen) {
+    var n = document.getElementById('hName');
+    if (n) setTimeout(function(){ n.focus(); }, 50);
+  }
+}
+
+function createHabit() {
+  var name = (document.getElementById('hName').value || '').trim();
+  if (!name) { toast('Give your habit a name', 'error'); return; }
+  var desc  = (document.getElementById('hDesc').value || '').trim();
+  var xp    = parseInt(document.getElementById('hXp').value)   || 10;
+  var gold  = parseInt(document.getElementById('hGold').value) || 5;
+
+  sb.from('habits').insert({
+    user_id:        currentUser.id,
+    name:           name,
+    description:    desc || null,
+    xp_reward:      xp,
+    gold_reward:    gold,
+    streak:         0,
+    last_checked_at: null,
+  }).select().single()
+  .then(function(res) {
+    if (res.error) { toast('Error: ' + res.error.message, 'error'); return; }
+    var h = res.data;
+    allHabits.push({
+      id: h.id, name: h.name, description: h.description || '',
+      xpReward: h.xp_reward, goldReward: h.gold_reward,
+      streak: 0, lastChecked: null,
+    });
+    // Reset form
+    document.getElementById('hName').value = '';
+    document.getElementById('hDesc').value = '';
+    toggleHabitForm();
+    renderHabits();
+    toast('🔥 Habit added!', 'success');
+  });
+}
+
+function checkHabit(id) {
+  var h = null;
+  for (var i = 0; i < allHabits.length; i++) { if (allHabits[i].id === id) { h = allHabits[i]; break; } }
+  if (!h || isCheckedToday(h)) return;
+
+  var today = todayStr();
+  // Calculate new streak
+  var yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  var yStr = yesterday.toISOString().slice(0, 10);
+  var newStreak = (h.lastChecked === yStr) ? h.streak + 1 : 1;
+
+  // Update Supabase
+  sb.from('habits')
+    .update({ last_checked_at: today, streak: newStreak })
+    .eq('id', id)
+    .then(function(res) {
+      if (res.error) { toast('Error: ' + res.error.message, 'error'); return; }
+      h.lastChecked = today;
+      h.streak = newStreak;
+      // Award XP + gold
+      var xpGain = h.xpReward;
+      S.profile.totalXp += xpGain;
+      S.profile.level = lvlFromXp(S.profile.totalXp);
+      awardGold(h.goldReward);
+      // Push XP to Supabase
+      sb.from('profiles')
+        .update({ total_xp: S.profile.totalXp, level: S.profile.level })
+        .eq('id', currentUser.id)
+        .then(function(){}).catch(function(){});
+      updateHeader();
+      renderHabits();
+      var msg = newStreak > 1
+        ? '🔥 ' + newStreak + ' day streak! +' + xpGain + ' XP +' + h.goldReward + 'g'
+        : '✓ Checked in! +' + xpGain + ' XP +' + h.goldReward + 'g';
+      toast(msg, 'success');
+    });
+}
+
+function deleteHabit(id) {
+  sb.from('habits').delete().eq('id', id).then(function(res) {
+    if (res.error) { toast('Error: ' + res.error.message, 'error'); return; }
+    allHabits = allHabits.filter(function(h) { return h.id !== id; });
+    renderHabits();
   });
 }
 
