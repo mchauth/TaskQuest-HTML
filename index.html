@@ -191,6 +191,15 @@ hr{border:none;border-top:1px solid var(--border)}
 .habit-rewards{display:flex;gap:6px}
 .habit-del{position:absolute;top:8px;right:8px;background:none;border:none;color:var(--border2);font-size:14px;cursor:pointer;padding:2px 5px;transition:color .15s;line-height:1}
 .habit-del:hover{color:var(--red)}
+/* Habit streak squares */
+.habit-squares{display:grid;grid-template-columns:repeat(5,1fr);gap:3px;margin-top:8px}
+.habit-sq{height:10px;border-radius:2px;border:1px solid var(--border);background:var(--bg);transition:background .25s,border-color .25s}
+.habit-sq.t0{background:#4caf7a;border-color:#4caf7a;box-shadow:0 0 3px rgba(76,175,122,.4)}
+.habit-sq.t1{background:#4a9fd4;border-color:#4a9fd4;box-shadow:0 0 3px rgba(74,159,212,.4)}
+.habit-sq.t2{background:#9b6dd6;border-color:#9b6dd6;box-shadow:0 0 3px rgba(155,109,214,.4)}
+.habit-sq.t3{background:#d4903a;border-color:#d4903a;box-shadow:0 0 3px rgba(212,144,58,.4)}
+.habit-sq.t4{background:#cf4444;border-color:#cf4444;box-shadow:0 0 3px rgba(207,68,68,.4)}
+.habit-milestone{font-size:10px;font-family:'Cinzel',serif;letter-spacing:.04em;margin-top:5px;text-align:right}
 /* HOME SCENE */
 .hs-wrap{border-radius:var(--r) var(--r) 0 0;overflow:hidden;border:1px solid var(--border2)}
 .hs{position:relative;width:100%;height:180px;overflow:hidden;background:#1a1a2e}
@@ -1497,6 +1506,18 @@ function isCheckedToday(h) {
   return h.lastChecked === todayStr();
 }
 
+var TIER_COLORS  = ['t0','t1','t2','t3','t4'];
+var TIER_NAMES   = ['','● Bronze','●● Silver','●●● Gold','★ Legendary'];
+var TIER_LABELS  = ['green','blue','purple','golden','legendary'];
+
+function habitTierInfo(streak) {
+  // filled squares 1-10 per cycle; tier determines color
+  var filled = streak === 0 ? 0 : (streak % 10 === 0 ? 10 : streak % 10);
+  var tier   = streak === 0 ? 0 : Math.min(Math.floor((streak - 1) / 10), TIER_COLORS.length - 1);
+  var next   = (Math.floor(streak / 10) + 1) * 10; // next milestone
+  return { filled: filled, tier: tier, next: next };
+}
+
 function renderHabits() {
   var list = document.getElementById('habitList');
   if (!list) return;
@@ -1506,7 +1527,27 @@ function renderHabits() {
   }
   list.innerHTML = allHabits.map(function(h) {
     var done = isCheckedToday(h);
+    var ti   = habitTierInfo(h.streak);
     var streakTxt = h.streak > 0 ? '🔥 ' + h.streak + ' day streak' : '🔥 Start your streak';
+
+    // Build 10 squares (2 rows of 5)
+    var squares = '';
+    for (var s = 0; s < 10; s++) {
+      var filled = s < ti.filled;
+      squares += '<div class="habit-sq' + (filled ? ' ' + TIER_COLORS[ti.tier] : '') + '"></div>';
+    }
+
+    // Milestone hint
+    var milestoneHint = '';
+    if (h.streak > 0) {
+      var bonusTier = Math.floor(h.streak / 10) + 1;
+      var xpBonus   = bonusTier * 50;
+      var gBonus    = bonusTier * 25;
+      var daysLeft  = ti.next - h.streak;
+      milestoneHint = '<div class="habit-milestone" style="color:var(--text-dim)">' +
+        daysLeft + ' day' + (daysLeft !== 1 ? 's' : '') + ' to milestone · ⬆ +' + xpBonus + ' XP +' + gBonus + 'g</div>';
+    }
+
     return '<div class="habit-card' + (done ? ' checked' : '') + '" id="hc-' + h.id + '">' +
       '<button class="habit-del" onclick="deleteHabit(\'' + h.id + '\')" title="Delete">✕</button>' +
       '<div class="habit-hdr">' +
@@ -1516,14 +1557,16 @@ function renderHabits() {
           (done ? '✓ Done' : 'Check In') +
         '</button>' +
       '</div>' +
-      (h.description ? '<div class="habit-meta">' + escHtml(h.description) + '</div>' : '') +
-      '<div class="habit-meta">' +
+      (h.description ? '<div class="habit-meta" style="margin-top:3px">' + escHtml(h.description) + '</div>' : '') +
+      '<div class="habit-meta" style="margin-top:6px">' +
         '<span class="habit-streak">' + streakTxt + '</span>' +
         '<span class="habit-rewards">' +
           '<span class="xp-pill">+' + h.xpReward + ' XP</span>' +
           '<span style="font-size:11px;color:var(--gold);font-family:\'Cinzel\',serif">+' + h.goldReward + 'g</span>' +
         '</span>' +
       '</div>' +
+      '<div class="habit-squares">' + squares + '</div>' +
+      milestoneHint +
     '</div>';
   }).join('');
 }
@@ -1595,11 +1638,26 @@ function checkHabit(id) {
       if (res.error) { toast('Error: ' + res.error.message, 'error'); return; }
       h.lastChecked = today;
       h.streak = newStreak;
-      // Award XP + gold
-      var xpGain = h.xpReward;
+
+      // Base daily reward
+      var xpGain   = h.xpReward;
+      var goldGain = h.goldReward;
+
+      // Milestone bonus every 10 days
+      var milestoneMsg = '';
+      if (newStreak % 10 === 0) {
+        var bonusTier = newStreak / 10;
+        var xpBonus   = bonusTier * 50;
+        var gBonus    = bonusTier * 25;
+        xpGain   += xpBonus;
+        goldGain += gBonus;
+        var tierLabel = TIER_LABELS[Math.min(bonusTier - 1, TIER_LABELS.length - 1)];
+        milestoneMsg = ' 🏆 ' + newStreak + '-day milestone! +' + xpBonus + ' XP +' + gBonus + 'g bonus';
+      }
+
       S.profile.totalXp += xpGain;
       S.profile.level = lvlFromXp(S.profile.totalXp);
-      awardGold(h.goldReward);
+      awardGold(goldGain);
       // Push XP to Supabase
       sb.from('profiles')
         .update({ total_xp: S.profile.totalXp, level: S.profile.level })
@@ -1607,10 +1665,10 @@ function checkHabit(id) {
         .then(function(){}).catch(function(){});
       updateHeader();
       renderHabits();
-      var msg = newStreak > 1
-        ? '🔥 ' + newStreak + ' day streak! +' + xpGain + ' XP +' + h.goldReward + 'g'
-        : '✓ Checked in! +' + xpGain + ' XP +' + h.goldReward + 'g';
-      toast(msg, 'success');
+      var baseMsg = newStreak > 1
+        ? '🔥 ' + newStreak + ' day streak! +' + h.xpReward + ' XP +' + h.goldReward + 'g'
+        : '✓ Checked in! +' + h.xpReward + ' XP +' + h.goldReward + 'g';
+      toast(milestoneMsg || baseMsg, milestoneMsg ? 'success' : 'success');
     });
 }
 
