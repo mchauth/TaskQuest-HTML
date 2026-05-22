@@ -2446,8 +2446,9 @@ setInterval(function() {
   var BG_LAYERS = [1,2,3,4,5].map(function(i){ return 'sprites/preview_assets/bg/layer'+i+'.png'; });
   var CHAR_IDS = { boots:'qsBoots', pants:'qsPants', shirt:'qsShirt', skin:'qsSkin', sword:'qsSword', hair:'qsHair' };
   var ANIM = {
-    idle: { row:0, frames:5, fps:6 },
-    walk: { row:1, frames:8, fps:10 },
+    idle:  { row:0, frames:5, fps:6 },
+    walk:  { row:1, frames:8, fps:10 },
+    sleep: { row:6, frames:2, fps:1.2, startCol:8 }, // frames 8-9 of row 6: lying on ground
   };
   var CF_SRCS = Array.from({length:16}, function(_,f){ return 'sprites/preview_assets/anim/fire_f'+f+'.png'; });
   var CF_FPS = 12;
@@ -2472,7 +2473,7 @@ setInterval(function() {
   }
 
   function qsSetCharFrame(anim, f) {
-    var x = -(f * 80), y = -(anim.row * 64);
+    var x = -((anim.startCol || 0) + f) * 80, y = -(anim.row * 64);
     Object.values(CHAR_IDS).forEach(function(id) {
       var el = document.getElementById(id);
       if (el) el.style.backgroundPosition = x+'px '+y+'px';
@@ -2505,11 +2506,11 @@ setInterval(function() {
     el = document.getElementById('qsPillLevel');  if(el) el.textContent = 'Lv '+level+' Warrior';
     el = document.getElementById('qsPillDone');   if(el) el.textContent = done+' Complete';
     // Switch animation state based on active quests
-    var newAnim = active > 0 ? 'walk' : 'idle';
+    var newAnim = active > 0 ? 'walk' : 'sleep';
     if (newAnim !== qsAnim) {
       qsAnim = newAnim; qsCharFrame = 0;
       el = document.getElementById('qsLabel');
-      if(el) el.textContent = active > 0 ? '⚔ On the march' : '🏕 Resting by camp';
+      if(el) el.textContent = active > 0 ? '⚔ On the march' : '💤 Resting by camp';
       el = document.getElementById('qs-fire-wrap') || document.querySelector('.qs-fire-wrap');
       if(el) el.style.display = active > 0 ? 'none' : 'block';
     }
