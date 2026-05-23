@@ -170,7 +170,7 @@ hr{border:none;border-top:1px solid var(--border)}
 .co-xp-flash{font-family:'Cinzel',serif;font-size:20px;color:#ffd700;text-shadow:0 0 18px rgba(255,215,0,.8);text-align:center;opacity:0;transform:translateY(8px);transition:opacity .5s,transform .5s;letter-spacing:.06em}
 .co-xp-flash.show{opacity:1;transform:translateY(0)}
 .co-chest-wrap{display:none;flex-direction:column;align-items:center;gap:10px}
-.co-chest-canvas{image-rendering:pixelated;transform:scale(2);transform-origin:top center;margin-bottom:60px}
+.co-chest-spr{width:96px;height:96px;background-image:url('sprites/preview_assets/chest.png');background-repeat:no-repeat;background-size:768px 96px;image-rendering:pixelated}
 .co-item-reveal{font-family:'Crimson Pro',serif;font-size:12px;color:#b0a070;text-align:center;letter-spacing:.08em;text-transform:uppercase}
 .co-item-name{font-family:'Cinzel',serif;font-size:16px;color:#ffd700;text-shadow:0 0 10px rgba(255,215,0,.6);text-align:center;margin-top:2px}
 .co-item-preview{width:70px;height:56px;background-repeat:no-repeat;image-rendering:pixelated;background-size:700px 392px;border:1px solid var(--gold-dim);border-radius:4px;background-color:var(--bg2)}
@@ -634,7 +634,7 @@ hr{border:none;border-top:1px solid var(--border)}
   <div class="co-xp-flash" id="coXpFlash">+0 XP  +0g</div>
   <!-- Chest + item reveal (shown after enemy defeated) -->
   <div class="co-chest-wrap" id="coChestWrap">
-    <canvas class="co-chest-canvas" id="coChestCanvas" width="64" height="64"></canvas>
+    <div class="co-chest-spr" id="coChestSpr"></div>
     <div class="co-item-reveal">⚔ Loot Drop!</div>
     <div class="co-item-name" id="coItemName"></div>
     <div class="co-item-preview" id="coItemPreview"></div>
@@ -2068,55 +2068,34 @@ function renderInventory() {
   }).join('');
 }
 
-// ── Chest pixel-art animation ────────────────────────
+// ── Chest sprite animation (chest.png: 8 frames × 48px, 384×48 total) ──
+// Frames 0-3: closed idle  |  Frames 4-7: opening sequence
 var _coChestFrame = 0, _coChestTimer = null;
+var CHEST_FRAME_W = 96; // display at 2× (48px native → 96px)
 
-function drawChestFrame(ctx, frame) {
-  ctx.clearRect(0, 0, 64, 64);
-  var f = Math.min(frame, 5);
-  // Body
-  ctx.fillStyle = '#6b3d1e'; ctx.fillRect(8, 36, 48, 22);
-  ctx.fillStyle = '#4a2810'; ctx.strokeStyle = '#3a1c08'; ctx.lineWidth = 1;
-  ctx.strokeRect(8, 36, 48, 22);
-  // Gold band body
-  ctx.fillStyle = '#c9a84c'; ctx.fillRect(8, 44, 48, 3);
-  // Lock plate
-  ctx.fillStyle = '#c9a84c'; ctx.fillRect(27, 38, 10, 8);
-  ctx.fillStyle = '#3a1c08'; ctx.fillRect(29, 38, 6, 5);
-
-  // Lid: rotates open
-  var lidOpen = Math.min(f / 3, 1);          // 0=closed, 1=fully open
-  var hingeX = 32, hingeY = 36;
-  ctx.save();
-  ctx.translate(hingeX, hingeY);
-  ctx.rotate(-lidOpen * 1.9);
-  ctx.fillStyle = '#7b4826'; ctx.fillRect(-24, -14, 48, 14);
-  ctx.strokeStyle = '#3a1c08'; ctx.lineWidth = 1; ctx.strokeRect(-24, -14, 48, 14);
-  ctx.fillStyle = '#c9a84c'; ctx.fillRect(-24, -7, 48, 3);
-  ctx.restore();
-
-  // Sparkles when open
-  if (f >= 3) {
-    var sp = f === 3 ? [[20,22],[44,16],[30,10]] : f === 4 ? [[14,18],[42,12],[34,8],[50,24]] : [[12,14],[45,10],[32,6],[54,20],[22,25]];
-    ctx.fillStyle = '#ffd700';
-    sp.forEach(function(p) {
-      ctx.fillRect(p[0], p[1], 2, 2);
-      ctx.fillRect(p[0]+1, p[1]-2, 1, 5);
-      ctx.fillRect(p[0]-2, p[1]+1, 5, 1);
-    });
-  }
+function setChestSprFrame(f) {
+  var el = document.getElementById('coChestSpr');
+  if (el) el.style.backgroundPosition = (-f * CHEST_FRAME_W) + 'px 0px';
 }
 
 function animateChest(onOpen) {
-  var ctx = document.getElementById('coChestCanvas').getContext('2d');
   _coChestFrame = 0;
   clearInterval(_coChestTimer);
-  _coChestTimer = setInterval(function() {
-    drawChestFrame(ctx, _coChestFrame);
-    if (_coChestFrame === 2 && onOpen) onOpen();
-    _coChestFrame++;
-    if (_coChestFrame > 5) { clearInterval(_coChestTimer); _coChestTimer = null; }
-  }, 120);
+  setChestSprFrame(0);
+  // Brief pause on closed frame, then play opening sequence
+  setTimeout(function() {
+    _coChestFrame = 4; // jump to opening frames
+    _coChestTimer = setInterval(function() {
+      setChestSprFrame(_coChestFrame);
+      if (_coChestFrame === 5 && onOpen) onOpen(); // item visible mid-open
+      _coChestFrame++;
+      if (_coChestFrame >= 8) {
+        clearInterval(_coChestTimer);
+        _coChestTimer = null;
+        setChestSprFrame(7); // hold on fully open
+      }
+    }, 130);
+  }, 300);
 }
 
 // ── Combat overlay ───────────────────────────────────
