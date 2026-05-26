@@ -165,8 +165,10 @@ hr{border:none;border-top:1px solid var(--border)}
 .co-scene{position:relative;width:300px;height:170px;overflow:visible}
 .co-enemy-ov{width:128px;height:128px;background-image:url('sprites/preview_assets/enemy_portal.png');background-repeat:no-repeat;background-size:1280px 128px;image-rendering:pixelated;position:absolute;right:10px;bottom:0;transition:transform .7s ease-in,opacity .7s ease-in}
 .co-enemy-ov.sinking{transform:translateY(160px);opacity:0}
-.co-hero-ov{width:80px;height:64px;position:absolute;left:10px;bottom:0;transform:scale(2) scaleX(-1);transform-origin:bottom left;image-rendering:pixelated}
+.co-hero-ov{width:80px;height:64px;position:absolute;left:40px;bottom:0;transform:scale(2) scaleX(-1);transform-origin:bottom center;image-rendering:pixelated}
 .co-hero-layer{position:absolute;top:0;left:0;width:80px;height:64px;background-repeat:no-repeat;image-rendering:pixelated;background-size:800px 448px}
+.co-victory{font-family:'Cinzel',serif;font-size:36px;font-weight:700;color:#ffd700;text-shadow:0 0 30px rgba(255,215,0,.9),0 0 60px rgba(255,180,0,.4);text-align:center;letter-spacing:.12em;animation:victoryPulse 1s ease-in-out infinite alternate}
+@keyframes victoryPulse{from{text-shadow:0 0 20px rgba(255,215,0,.8)}to{text-shadow:0 0 40px rgba(255,215,0,1),0 0 80px rgba(255,180,0,.6)}}
 .co-xp-flash{font-family:'Cinzel',serif;font-size:20px;color:#ffd700;text-shadow:0 0 18px rgba(255,215,0,.8);text-align:center;opacity:0;transform:translateY(8px);transition:opacity .5s,transform .5s;letter-spacing:.06em}
 .co-xp-flash.show{opacity:1;transform:translateY(0)}
 .co-chest-wrap{display:none;flex-direction:column;align-items:center;gap:10px}
@@ -177,12 +179,14 @@ hr{border:none;border-top:1px solid var(--border)}
 .co-continue{background:linear-gradient(135deg,#2a2010,#1a1508);border:1px solid var(--gold-dim);border-radius:var(--r);color:var(--gold2);font-family:'Cinzel',serif;font-size:12px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;padding:11px 28px}
 
 /* INVENTORY GRID */
-.inv-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px}
-.inv-item{background:var(--bg2);border:1px solid var(--border2);border-radius:4px;cursor:pointer;overflow:hidden;position:relative;display:flex;flex-direction:column;align-items:center;padding:4px 2px 14px;gap:2px}
+.inv-slot-group{margin-top:10px}
+.inv-slot-label{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);margin-bottom:6px;padding-left:2px}
+.inv-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.inv-item{background:var(--bg2);border:1px solid var(--border2);border-radius:4px;cursor:pointer;overflow:hidden;position:relative;display:flex;flex-direction:column;align-items:center;padding:4px 2px 14px}
 .inv-item.equipped{border-color:var(--gold);box-shadow:0 0 8px rgba(201,168,76,.35)}
 .inv-item-spr{width:70px;height:56px;background-repeat:no-repeat;image-rendering:pixelated;background-size:700px 392px}
 .inv-item-lbl{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.75);font-size:7px;color:#f0e0a0;text-align:center;padding:2px 1px;font-family:'Cinzel',serif;letter-spacing:.02em;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
-.inv-empty{font-family:'Crimson Pro',serif;font-size:13px;color:var(--text-dim);font-style:italic;text-align:center;padding:20px 0;grid-column:1/-1}
+.inv-empty{font-family:'Crimson Pro',serif;font-size:13px;color:var(--text-dim);font-style:italic;text-align:center;padding:20px 0}
 
 /* AUTH SCREEN */
 #authScreen{position:fixed;inset:0;z-index:200;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px}
@@ -631,6 +635,7 @@ hr{border:none;border-top:1px solid var(--border)}
     <!-- Enemy portal -->
     <div class="co-enemy-ov" id="coEnemy"></div>
   </div>
+  <div class="co-victory" id="coVictory" style="display:none">VICTORY!</div>
   <div class="co-xp-flash" id="coXpFlash">+0 XP  +0g</div>
   <!-- Chest + item reveal (shown after enemy defeated) -->
   <div class="co-chest-wrap" id="coChestWrap">
@@ -2028,6 +2033,11 @@ function addToInventory(item) {
   }
 }
 
+// Encode spaces in file paths for CSS url()
+function cssUrl(path) {
+  return "url('" + path.replace(/ /g, '%20') + "')";
+}
+
 function equipItem(itemId) {
   var item = LOOT_TABLE.find(function(x){ return x.id === itemId; });
   if (!item) return;
@@ -2045,27 +2055,47 @@ function equipItem(itemId) {
   }
   refreshSceneLayers();
   refreshHomeLayers();
+  refreshAvatarPreview();
   renderInventory();
 }
 
+var INV_SLOTS = [
+  { slot:'shirt', label:'Top' },
+  { slot:'pants', label:'Bottoms' },
+  { slot:'boots', label:'Footwear' },
+];
+
 function renderInventory() {
-  var grid = document.getElementById('invGrid');
-  if (!grid) return;
+  var container = document.getElementById('invGrid');
+  if (!container) return;
   var inv = S.profile.inventory || [];
   var eq  = S.profile.equippedItems || {};
+
   if (!inv.length) {
-    grid.innerHTML = '<div class="inv-empty">No items yet — complete quests to find loot!</div>';
+    container.innerHTML = '<div class="inv-empty">No items yet — complete quests to find loot!</div>';
     return;
   }
-  grid.innerHTML = inv.map(function(id) {
-    var item = LOOT_TABLE.find(function(x){ return x.id === id; });
-    if (!item) return '';
-    var isEq = eq[item.slot] === id;
-    return '<div class="inv-item'+(isEq?' equipped':'')+'" onclick="equipItem(\''+id+'\')" title="'+(isEq?'Unequip':'Equip')+': '+item.name+'">'
-      +'<div class="inv-item-spr" style="background-image:url(\''+item.file+'\');background-position:0px 0px"></div>'
-      +'<div class="inv-item-lbl">'+(isEq?'✓ ':'')+item.name+'</div>'
-      +'</div>';
-  }).join('');
+
+  var html = '';
+  INV_SLOTS.forEach(function(slotInfo) {
+    var items = inv.map(function(id) {
+      return LOOT_TABLE.find(function(x){ return x.id === id; });
+    }).filter(function(it){ return it && it.slot === slotInfo.slot; });
+    if (!items.length) return;
+
+    html += '<div class="inv-slot-group">'
+      + '<div class="inv-slot-label">' + slotInfo.label + '</div>'
+      + '<div class="inv-grid">';
+    items.forEach(function(item) {
+      var isEq = eq[item.slot] === item.id;
+      html += '<div class="inv-item'+(isEq?' equipped':'')+'" onclick="equipItem(\''+item.id+'\')" title="'+(isEq?'Unequip':'Equip')+': '+item.name+'">'
+        + '<div class="inv-item-spr" style="background-image:'+cssUrl(item.file)+';background-position:0px 0px"></div>'
+        + '<div class="inv-item-lbl">'+(isEq?'✓ ':'')+item.name+'</div>'
+        + '</div>';
+    });
+    html += '</div></div>';
+  });
+  container.innerHTML = html;
 }
 
 // ── Chest sprite animation (chest.png: 8 frames × 48px, 384×48 total) ──
@@ -2113,7 +2143,7 @@ function openCombatOverlay(xpEarned, goldEarned, lootItem) {
   var heroMap = { boots:'coBoots', pants:'coPants', shirt:'coShirt', skin:'coSkin', sword:'coSword', hair:'coHair' };
   Object.keys(heroMap).forEach(function(k) {
     var el = document.getElementById(heroMap[k]);
-    if (el) { el.style.backgroundImage = "url('"+layers[k]+"')"; el.style.backgroundSize = '800px 448px'; }
+    if (el) { el.style.backgroundImage = cssUrl(layers[k]); el.style.backgroundSize = '800px 448px'; }
   });
 
   // Start enemy portal animation
@@ -2168,13 +2198,16 @@ function openCombatOverlay(xpEarned, goldEarned, lootItem) {
           if (chestWrap) chestWrap.style.display = 'flex';
           document.getElementById('coItemName').textContent = lootItem.name;
           var prev = document.getElementById('coItemPreview');
-          if (prev) prev.style.backgroundImage = "url('" + lootItem.file + "')";
+          if (prev) prev.style.backgroundImage = cssUrl(lootItem.file);
           animateChest(null);
           setTimeout(function() {
             document.getElementById('coContinueBtn').style.display = '';
           }, 800);
         }, 600);
       } else {
+        // No loot — show VICTORY!
+        var vic = document.getElementById('coVictory');
+        if (vic) vic.style.display = '';
         setTimeout(function() {
           document.getElementById('coContinueBtn').style.display = '';
         }, 400);
@@ -2193,6 +2226,8 @@ function closeCombatOverlay() {
   if (en) en.classList.remove('sinking');
   var xpEl = document.getElementById('coXpFlash');
   if (xpEl) xpEl.classList.remove('show');
+  var vic = document.getElementById('coVictory');
+  if (vic) vic.style.display = 'none';
   var chestWrap = document.getElementById('coChestWrap');
   if (chestWrap) chestWrap.style.display = 'none';
   document.getElementById('coContinueBtn').style.display = 'none';
@@ -2636,7 +2671,7 @@ function refreshHomeLayers() {
   var layers = getCharLayers();
   Object.keys(HS_CHAR_IDS).forEach(function(k) {
     var el = document.getElementById(HS_CHAR_IDS[k]);
-    if (el) el.style.backgroundImage = "url('" + layers[k] + "')";
+    if (el) el.style.backgroundImage = cssUrl(layers[k]);
   });
 }
 
@@ -2686,7 +2721,7 @@ function refreshSceneLayers() {
   var idMap = { boots:'qsBoots', pants:'qsPants', shirt:'qsShirt', skin:'qsSkin', sword:'qsSword', hair:'qsHair' };
   Object.keys(idMap).forEach(function(k) {
     var el = document.getElementById(idMap[k]);
-    if (el) el.style.backgroundImage = "url('" + layers[k] + "')";
+    if (el) el.style.backgroundImage = cssUrl(layers[k]);
   });
 }
 
@@ -2715,7 +2750,7 @@ function refreshAvatarPreview() {
   Object.keys(AV_MAP).forEach(function(k) {
     var el = document.getElementById(AV_MAP[k]);
     if (el) {
-      el.style.backgroundImage = "url('" + layers[k] + "')";
+      el.style.backgroundImage = cssUrl(layers[k]);
       el.style.backgroundPosition = '0px 0px'; // idle frame 0
     }
   });
@@ -2783,7 +2818,7 @@ setInterval(function() {
     var layers = getCharLayers();
     Object.keys(CHAR_IDS).forEach(function(k) {
       var el = document.getElementById(CHAR_IDS[k]);
-      if (el) el.style.backgroundImage = "url('"+layers[k]+"')";
+      if (el) el.style.backgroundImage = cssUrl(layers[k]);
     });
     qsSetCharFrame(ANIM.idle, 0);
     document.getElementById('qsFireImg').src = CF_SRCS[0];
