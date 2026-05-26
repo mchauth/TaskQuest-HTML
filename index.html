@@ -262,6 +262,10 @@ hr{border:none;border-top:1px solid var(--border)}
 .ward-swatch{width:30px;height:30px;border-radius:4px;border:2px solid transparent;cursor:pointer;transition:border-color .15s;position:relative}
 .ward-swatch.active{border-color:var(--gold)!important;box-shadow:0 0 6px rgba(201,168,76,.4)}
 .ward-swatch:hover{border-color:var(--border2)}
+.hair-style-thumb{width:48px;height:38px;border:2px solid var(--border2);border-radius:4px;cursor:pointer;background:var(--bg);background-repeat:no-repeat;image-rendering:pixelated;position:relative;overflow:hidden;transition:border-color .15s}
+.hair-style-thumb.active{border-color:var(--gold);box-shadow:0 0 6px rgba(201,168,76,.4)}
+.hair-style-thumb:hover{border-color:var(--border2)}
+.hair-style-thumb-lbl{position:absolute;bottom:0;left:0;right:0;font-size:6px;font-family:'Cinzel',serif;text-align:center;color:var(--text-dim);background:rgba(0,0,0,.5);padding:1px}
 .ward-chip{padding:5px 12px;border-radius:4px;border:1px solid var(--border2);cursor:pointer;font-family:'Cinzel',serif;font-size:10px;letter-spacing:.06em;color:var(--text-dim);background:var(--bg);transition:all .15s}
 .ward-chip.active{border-color:var(--gold);color:var(--gold);background:rgba(201,168,76,.08)}
 .ward-chip:hover{border-color:var(--border2);color:var(--text)}
@@ -416,10 +420,10 @@ hr{border:none;border-top:1px solid var(--border)}
       <div class="qs-ground"></div>
       <div class="qs-label" id="qsLabel">🏕 Resting by camp</div>
       <div class="qs-char-wrap" id="qsCharWrap">
+        <div class="qs-char-layer" id="qsSkin"></div>
         <div class="qs-char-layer" id="qsBoots"></div>
         <div class="qs-char-layer" id="qsPants"></div>
         <div class="qs-char-layer" id="qsShirt"></div>
-        <div class="qs-char-layer" id="qsSkin"></div>
         <div class="qs-char-layer" id="qsSword"></div>
         <div class="qs-char-layer" id="qsHair"></div>
       </div>
@@ -540,12 +544,12 @@ hr{border:none;border-top:1px solid var(--border)}
       <img class="hs-prop" id="hsProp4" src="" alt="" style="display:none">
       <img class="hs-prop" id="hsProp5" src="" alt="" style="display:none">
       <img class="hs-prop" id="hsProp6" src="" alt="" style="display:none">
-      <!-- Character -->
+      <!-- Character (skin base → clothing → weapon → hair) -->
       <div class="hs-char-wrap">
+        <div class="hs-char-layer" id="hsSkin"></div>
         <div class="hs-char-layer" id="hsBoots"></div>
         <div class="hs-char-layer" id="hsPants"></div>
         <div class="hs-char-layer" id="hsShirt"></div>
-        <div class="hs-char-layer" id="hsSkin"></div>
         <div class="hs-char-layer" id="hsSword"></div>
         <div class="hs-char-layer" id="hsHair"></div>
       </div>
@@ -586,20 +590,9 @@ hr{border:none;border-top:1px solid var(--border)}
         <div class="ward-label">Hair</div>
         <div class="ward-opts" id="hairOpts"></div>
       </div>
-    </div>
-    <div class="sec-title" style="margin-top:14px">⚔ Warrior Wardrobe</div>
-    <div class="ward-section">
-      <div class="ward-row">
-        <div class="ward-label">Shirt</div>
-        <div class="ward-opts" id="shirtOpts"></div>
-      </div>
-      <div class="ward-row">
-        <div class="ward-label">Pants</div>
-        <div class="ward-opts" id="pantsOpts"></div>
-      </div>
-      <div class="ward-row">
-        <div class="ward-label">Boots</div>
-        <div class="ward-opts" id="bootsOpts"></div>
+      <div class="ward-row" style="align-items:flex-start">
+        <div class="ward-label" style="padding-top:4px">Style</div>
+        <div class="ward-opts" id="hairStyleOpts" style="flex-wrap:wrap;gap:6px"></div>
       </div>
     </div>
   </div>
@@ -623,12 +616,12 @@ hr{border:none;border-top:1px solid var(--border)}
 <!-- COMBAT VICTORY OVERLAY -->
 <div id="combatOverlay">
   <div class="co-scene" id="coScene">
-    <!-- Hero character (slash anim) -->
+    <!-- Hero character (slash anim) — skin first, clothing stacks on top -->
     <div class="co-hero-ov" id="coHeroWrap">
+      <div class="co-hero-layer" id="coSkin"></div>
       <div class="co-hero-layer" id="coBoots"></div>
       <div class="co-hero-layer" id="coPants"></div>
       <div class="co-hero-layer" id="coShirt"></div>
-      <div class="co-hero-layer" id="coSkin"></div>
       <div class="co-hero-layer" id="coSword"></div>
       <div class="co-hero-layer" id="coHair"></div>
     </div>
@@ -1974,34 +1967,36 @@ function awardGold(amount) {
 // ═══════════════════════════════════════════════════
 var LOOT_TABLE = [
   // ── Male ──────────────────────────────────────────
-  { id:'m_boots',        name:'Leather Boots',   gender:'m', slot:'boots', file:'sprites/preview_assets/clothing/male/Boots.png',         level:1 },
-  { id:'m_shoes',        name:'Traveler Shoes',  gender:'m', slot:'boots', file:'sprites/preview_assets/clothing/male/Shoes.png',          level:1 },
-  { id:'m_pants',        name:'Warrior Pants',   gender:'m', slot:'pants', file:'sprites/preview_assets/clothing/male/Pants.png',          level:1 },
-  { id:'m_pants_blue',   name:'Azure Trousers',  gender:'m', slot:'pants', file:'sprites/preview_assets/clothing/male/Blue Pants.png',     level:1 },
-  { id:'m_pants_green',  name:'Forest Trousers', gender:'m', slot:'pants', file:'sprites/preview_assets/clothing/male/Green Pants.png',    level:1 },
-  { id:'m_pants_orange', name:'Ember Trousers',  gender:'m', slot:'pants', file:'sprites/preview_assets/clothing/male/Orange Pants.png',   level:1 },
-  { id:'m_pants_purple', name:'Shadow Trousers', gender:'m', slot:'pants', file:'sprites/preview_assets/clothing/male/Purple Pants.png',   level:1 },
-  { id:'m_shirt',        name:'Warrior Tunic',   gender:'m', slot:'shirt', file:'sprites/preview_assets/clothing/male/Shirt.png',          level:1 },
-  { id:'m_shirt_blue',   name:'Azure Tunic',     gender:'m', slot:'shirt', file:'sprites/preview_assets/clothing/male/Blue Shirt v2.png',  level:1 },
-  { id:'m_shirt_green',  name:'Forest Tunic',    gender:'m', slot:'shirt', file:'sprites/preview_assets/clothing/male/Green Shirt v2.png', level:1 },
-  { id:'m_shirt_orange', name:'Ember Tunic',     gender:'m', slot:'shirt', file:'sprites/preview_assets/clothing/male/orange Shirt v2.png',level:1 },
-  { id:'m_shirt_purple', name:'Shadow Tunic',    gender:'m', slot:'shirt', file:'sprites/preview_assets/clothing/male/Purple Shirt v2.png',level:1 },
+  { id:'m_boots',        name:'Leather Boots',   gender:'m', slot:'boots', file:'sprites/preview_assets/clothing/male/Boots.png',          level:1 },
+  { id:'m_shoes',        name:'Traveler Shoes',  gender:'m', slot:'boots', file:'sprites/preview_assets/clothing/male/Shoes.png',           level:1 },
+  { id:'m_pants',        name:'Warrior Pants',   gender:'m', slot:'pants', file:'sprites/preview_assets/clothing/male/Pants.png',           level:1 },
+  { id:'m_pants_blue',   name:'Azure Trousers',  gender:'m', slot:'pants', file:'sprites/preview_assets/clothing/male/Blue_Pants.png',      level:1 },
+  { id:'m_pants_green',  name:'Forest Trousers', gender:'m', slot:'pants', file:'sprites/preview_assets/clothing/male/Green_Pants.png',     level:1 },
+  { id:'m_pants_orange', name:'Ember Trousers',  gender:'m', slot:'pants', file:'sprites/preview_assets/clothing/male/Orange_Pants.png',    level:1 },
+  { id:'m_pants_purple', name:'Shadow Trousers', gender:'m', slot:'pants', file:'sprites/preview_assets/clothing/male/Purple_Pants.png',    level:1 },
+  { id:'m_shirt',        name:'Warrior Tunic',   gender:'m', slot:'shirt', file:'sprites/preview_assets/clothing/male/Shirt.png',           level:1 },
+  { id:'m_shirt_v2',     name:'Classic Tunic',   gender:'m', slot:'shirt', file:'sprites/preview_assets/clothing/male/Shirt_v2.png',        level:1 },
+  { id:'m_shirt_blue',   name:'Azure Tunic',     gender:'m', slot:'shirt', file:'sprites/preview_assets/clothing/male/Blue_Shirt_v2.png',   level:1 },
+  { id:'m_shirt_green',  name:'Forest Tunic',    gender:'m', slot:'shirt', file:'sprites/preview_assets/clothing/male/Green_Shirt_v2.png',  level:1 },
+  { id:'m_shirt_orange', name:'Ember Tunic',     gender:'m', slot:'shirt', file:'sprites/preview_assets/clothing/male/orange_Shirt_v2.png', level:1 },
+  { id:'m_shirt_purple', name:'Shadow Tunic',    gender:'m', slot:'shirt', file:'sprites/preview_assets/clothing/male/Purple_Shirt_v2.png', level:1 },
   // ── Female ────────────────────────────────────────
-  { id:'f_boots',          name:'Leather Boots',    gender:'f', slot:'boots', file:'sprites/preview_assets/clothing/female/Boots.png',             level:1 },
-  { id:'f_socks',          name:'Wool Socks',        gender:'f', slot:'boots', file:'sprites/preview_assets/clothing/female/Socks.png',              level:1 },
-  { id:'f_socks_green',    name:'Forest Socks',      gender:'f', slot:'boots', file:'sprites/preview_assets/clothing/female/Green Socks.png',        level:1 },
-  { id:'f_socks_orange',   name:'Ember Socks',       gender:'f', slot:'boots', file:'sprites/preview_assets/clothing/female/Orange Socks.png',       level:1 },
-  { id:'f_socks_purple',   name:'Shadow Socks',      gender:'f', slot:'boots', file:'sprites/preview_assets/clothing/female/Purple Socks.png',       level:1 },
-  { id:'f_skirt',          name:'Adventurer Skirt',  gender:'f', slot:'pants', file:'sprites/preview_assets/clothing/female/Skirt.png',              level:1 },
-  { id:'f_corset',         name:'Warrior Corset',    gender:'f', slot:'shirt', file:'sprites/preview_assets/clothing/female/Corset.png',             level:1 },
-  { id:'f_corset_blue',    name:'Azure Corset',      gender:'f', slot:'shirt', file:'sprites/preview_assets/clothing/female/Blue Corset.png',        level:1 },
-  { id:'f_corset_green',   name:'Forest Corset',     gender:'f', slot:'shirt', file:'sprites/preview_assets/clothing/female/Green Corset.png',       level:1 },
-  { id:'f_corset_orange',  name:'Ember Corset',      gender:'f', slot:'shirt', file:'sprites/preview_assets/clothing/female/Orange Corset.png',      level:1 },
-  { id:'f_corset_purple',  name:'Shadow Corset',     gender:'f', slot:'shirt', file:'sprites/preview_assets/clothing/female/Purple Corset.png',      level:1 },
-  { id:'f_corset_blue2',   name:'Azure Corset II',   gender:'f', slot:'shirt', file:'sprites/preview_assets/clothing/female/Blue Corset v2.png',     level:1 },
-  { id:'f_corset_green2',  name:'Forest Corset II',  gender:'f', slot:'shirt', file:'sprites/preview_assets/clothing/female/Green Corset v2.png',    level:1 },
-  { id:'f_corset_orange2', name:'Ember Corset II',   gender:'f', slot:'shirt', file:'sprites/preview_assets/clothing/female/Orange Corset v2.png',   level:1 },
-  { id:'f_corset_purple2', name:'Shadow Corset II',  gender:'f', slot:'shirt', file:'sprites/preview_assets/clothing/female/Purple Corset v2.png',   level:1 },
+  { id:'f_boots',          name:'Leather Boots',    gender:'f', slot:'boots', file:'sprites/preview_assets/clothing/female/Boots.png',              level:1 },
+  { id:'f_socks',          name:'Wool Socks',        gender:'f', slot:'boots', file:'sprites/preview_assets/clothing/female/Socks.png',               level:1 },
+  { id:'f_socks_green',    name:'Forest Socks',      gender:'f', slot:'boots', file:'sprites/preview_assets/clothing/female/Green_Socks.png',         level:1 },
+  { id:'f_socks_orange',   name:'Ember Socks',       gender:'f', slot:'boots', file:'sprites/preview_assets/clothing/female/Orange_Socks.png',        level:1 },
+  { id:'f_socks_purple',   name:'Shadow Socks',      gender:'f', slot:'boots', file:'sprites/preview_assets/clothing/female/Purple_Socks.png',        level:1 },
+  { id:'f_skirt',          name:'Adventurer Skirt',  gender:'f', slot:'pants', file:'sprites/preview_assets/clothing/female/Skirt.png',               level:1 },
+  { id:'f_corset',         name:'Warrior Corset',    gender:'f', slot:'shirt', file:'sprites/preview_assets/clothing/female/Corset.png',              level:1 },
+  { id:'f_corset_v2',      name:'Warrior Corset II', gender:'f', slot:'shirt', file:'sprites/preview_assets/clothing/female/Corset_v2.png',           level:1 },
+  { id:'f_corset_blue',    name:'Azure Corset',      gender:'f', slot:'shirt', file:'sprites/preview_assets/clothing/female/Blue_Corset.png',         level:1 },
+  { id:'f_corset_green',   name:'Forest Corset',     gender:'f', slot:'shirt', file:'sprites/preview_assets/clothing/female/Green_Corset.png',        level:1 },
+  { id:'f_corset_orange',  name:'Ember Corset',      gender:'f', slot:'shirt', file:'sprites/preview_assets/clothing/female/Orange_Corset.png',       level:1 },
+  { id:'f_corset_purple',  name:'Shadow Corset',     gender:'f', slot:'shirt', file:'sprites/preview_assets/clothing/female/Purple_Corset.png',       level:1 },
+  { id:'f_corset_blue2',   name:'Azure Corset II',   gender:'f', slot:'shirt', file:'sprites/preview_assets/clothing/female/Blue_Corset_v2.png',      level:1 },
+  { id:'f_corset_green2',  name:'Forest Corset II',  gender:'f', slot:'shirt', file:'sprites/preview_assets/clothing/female/Green_Corset_v2.png',     level:1 },
+  { id:'f_corset_orange2', name:'Ember Corset II',   gender:'f', slot:'shirt', file:'sprites/preview_assets/clothing/female/Orange_Corset_v2.png',    level:1 },
+  { id:'f_corset_purple2', name:'Shadow Corset II',  gender:'f', slot:'shirt', file:'sprites/preview_assets/clothing/female/Purple_Corset_v2.png',    level:1 },
 ];
 
 // Roll loot drop — returns item or null. Drops every 3rd completed quest.
@@ -2070,15 +2065,26 @@ function renderInventory() {
   if (!container) return;
   var inv = S.profile.inventory || [];
   var eq  = S.profile.equippedItems || {};
+  var g   = S.customization.gender || 'm';
+
+  // Only show items for current gender
+  var genderedInv = inv.filter(function(id) {
+    var it = LOOT_TABLE.find(function(x){ return x.id === id; });
+    return it && it.gender === g;
+  });
 
   if (!inv.length) {
     container.innerHTML = '<div class="inv-empty">No items yet — complete quests to find loot!</div>';
     return;
   }
+  if (!genderedInv.length) {
+    container.innerHTML = '<div class="inv-empty">Switch to your other character to see those items, or earn loot for this gender.</div>';
+    return;
+  }
 
   var html = '';
   INV_SLOTS.forEach(function(slotInfo) {
-    var items = inv.map(function(id) {
+    var items = genderedInv.map(function(id) {
       return LOOT_TABLE.find(function(x){ return x.id === id; });
     }).filter(function(it){ return it && it.slot === slotInfo.slot; });
     if (!items.length) return;
@@ -2095,7 +2101,7 @@ function renderInventory() {
     });
     html += '</div></div>';
   });
-  container.innerHTML = html;
+  container.innerHTML = html || '<div class="inv-empty">No items for this gender yet.</div>';
 }
 
 // ── Chest sprite animation (chest.png: 8 frames × 48px, 384×48 total) ──
@@ -2665,6 +2671,7 @@ function setCustom(key, val) {
   renderCustomizeUI();
   refreshSceneLayers();  // quest scene
   refreshHomeLayers();   // home scene
+  if (key === 'gender') renderInventory(); // re-filter inventory by gender
 }
 
 function refreshHomeLayers() {
@@ -2690,29 +2697,29 @@ function renderCustomizeUI() {
   }).join('');
 
   // Hair swatches (1–5)
+  // Hair color swatches
   var hairEl = document.getElementById('hairOpts');
   if (hairEl) hairEl.innerHTML = HAIR_COLORS.map(function(col, i) {
     var n = i + 1;
-    return '<div class="ward-swatch' + ((c.hairNum||1) === n ? ' active' : '') + '" onclick="setCustom(\'hairNum\',' + n + ')" style="background:' + col + ';border-radius:50%" title="Hair ' + n + '"></div>';
+    return '<div class="ward-swatch' + ((c.hairNum||1) === n ? ' active' : '') + '" onclick="setCustom(\'hairNum\',' + n + ')" style="background:' + col + ';border-radius:50%" title="Color ' + n + '"></div>';
   }).join('');
 
-  // Shirt
-  var shirtEl = document.getElementById('shirtOpts');
-  if (shirtEl) shirtEl.innerHTML = Object.keys(SHIRT_COLORS).map(function(k) {
-    return '<div class="ward-swatch' + ((c.shirt||'default') === k ? ' active' : '') + '" onclick="setCustom(\'shirt\',\'' + k + '\')" style="background:' + SHIRT_COLORS[k] + '" title="' + k + '"></div>';
-  }).join('');
-
-  // Pants
-  var pantsEl = document.getElementById('pantsOpts');
-  if (pantsEl) pantsEl.innerHTML = Object.keys(PANTS_COLORS).map(function(k) {
-    return '<div class="ward-swatch' + ((c.pants||'default') === k ? ' active' : '') + '" onclick="setCustom(\'pants\',\'' + k + '\')" style="background:' + PANTS_COLORS[k] + '" title="' + k + '"></div>';
-  }).join('');
-
-  // Boots
-  var bootsEl = document.getElementById('bootsOpts');
-  if (bootsEl) bootsEl.innerHTML = Object.keys(BOOTS_LABELS).map(function(k) {
-    return '<div class="ward-chip' + ((c.boots||'boots') === k ? ' active' : '') + '" onclick="setCustom(\'boots\',\'' + k + '\')">' + BOOTS_LABELS[k] + '</div>';
-  }).join('');
+  // Hairstyle thumbnails — sprite preview of each hair_gN.png frame 0
+  var g = c.gender || 'm';
+  var styleEl = document.getElementById('hairStyleOpts');
+  if (styleEl) {
+    var STYLE_LABELS = ['Short','Medium','Long','Curly','Tied'];
+    styleEl.innerHTML = [1,2,3,4,5].map(function(n) {
+      var hairFile = 'sprites/preview_assets/char/hair_' + g + n + '.png';
+      var isActive = (c.hairNum||1) === n;
+      // Show frame 0: backgroundSize scales 800x448 sheet to 48x27, showing top-left frame (hair sits near top)
+      // Use background-size to show 2x of the 80x64 frame within a 48x38 container
+      return '<div class="hair-style-thumb' + (isActive ? ' active' : '') + '" onclick="setCustom(\'hairNum\',' + n + ')"'
+        + ' style="background-image:' + cssUrl(hairFile) + ';background-size:384px 214px;background-position:0px 0px">'
+        + '<div class="hair-style-thumb-lbl">' + STYLE_LABELS[n-1] + '</div>'
+        + '</div>';
+    }).join('');
+  }
 }
 
 // Refresh the quest scene character layers after customization change
