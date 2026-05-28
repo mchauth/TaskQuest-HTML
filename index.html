@@ -586,12 +586,8 @@ hr{border:none;border-top:1px solid var(--border)}
         <div class="ward-label">Skin</div>
         <div class="ward-opts" id="skinOpts"></div>
       </div>
-      <div class="ward-row">
-        <div class="ward-label">Hair</div>
-        <div class="ward-opts" id="hairOpts"></div>
-      </div>
       <div class="ward-row" style="align-items:flex-start">
-        <div class="ward-label" style="padding-top:4px">Style</div>
+        <div class="ward-label" style="padding-top:4px">Hair</div>
         <div class="ward-opts" id="hairStyleOpts" style="flex-wrap:wrap;gap:6px"></div>
       </div>
     </div>
@@ -679,7 +675,7 @@ var S = {
   avatarItems:       [],
   unlockedAvatarIds: [],
   selectedAvatarId:  null,
-  customization: { hair: 'brown', skin: 'medium', gender: 'm', skinNum: 1, hairNum: 1, shirt: 'default', pants: 'default', boots: 'boots', charClass: 'warrior' }
+  customization: { hair: 'brown', skin: 'medium', gender: 'm', skinNum: 1, hairNum: 1, charClass: 'warrior' }
 };
 
 var qFilter = 'active';
@@ -2149,7 +2145,7 @@ function openCombatOverlay(xpEarned, goldEarned, lootItem) {
   var heroMap = { boots:'coBoots', pants:'coPants', shirt:'coShirt', skin:'coSkin', sword:'coSword', hair:'coHair' };
   Object.keys(heroMap).forEach(function(k) {
     var el = document.getElementById(heroMap[k]);
-    if (el) { el.style.backgroundImage = cssUrl(layers[k]); el.style.backgroundSize = '800px 448px'; }
+    if (el) { el.style.backgroundImage = layers[k] ? cssUrl(layers[k]) : 'none'; el.style.backgroundSize = '800px 448px'; }
   });
 
   // Start enemy portal animation
@@ -2641,14 +2637,9 @@ function getCharLayers() {
   var g   = c.gender || 'm';
   var sn  = c.skinNum || 1;
   var hn  = c.hairNum || 1;
-  var sh  = c.shirt   || 'default';
-  var pa  = c.pants   || 'default';
-  var bo  = c.boots   || 'boots';
   var cls = c.charClass || 'warrior';
   var p   = 'sprites/preview_assets/char/';
-  // Female only has boots (no shoes variant), fall back gracefully
-  var bootsFile = (g === 'f' && bo === 'shoes') ? 'warrior_boots_f' : cls+'_'+bo+'_'+g;
-  // Check loot equipment overrides
+  // Check loot equipment overrides — clothing only shows when a loot item is equipped
   var eq = S.profile.equippedItems || {};
   function lootFile(slot) {
     if (!eq[slot]) return null;
@@ -2656,9 +2647,9 @@ function getCharLayers() {
     return it ? it.file : null;
   }
   return {
-    boots: lootFile('boots') || p + bootsFile + '.png',
-    pants: lootFile('pants') || p + cls + '_pants_' + pa + '_' + g + '.png',
-    shirt: lootFile('shirt') || p + cls + '_shirt_' + sh + '_' + g + '.png',
+    boots: lootFile('boots') || null,
+    pants: lootFile('pants') || null,
+    shirt: lootFile('shirt') || null,
     skin:  p + 'skin_' + g + sn + '.png',
     sword: p + 'sword_' + g + '.png',
     hair:  p + 'hair_' + g + hn + '.png',
@@ -2678,7 +2669,7 @@ function refreshHomeLayers() {
   var layers = getCharLayers();
   Object.keys(HS_CHAR_IDS).forEach(function(k) {
     var el = document.getElementById(HS_CHAR_IDS[k]);
-    if (el) el.style.backgroundImage = cssUrl(layers[k]);
+    if (el) el.style.backgroundImage = layers[k] ? cssUrl(layers[k]) : 'none';
   });
 }
 
@@ -2696,27 +2687,17 @@ function renderCustomizeUI() {
     return '<div class="ward-swatch' + ((c.skinNum||1) === n ? ' active' : '') + '" onclick="setCustom(\'skinNum\',' + n + ')" style="background:' + col + '" title="Skin ' + n + '"></div>';
   }).join('');
 
-  // Hair swatches (1–5)
-  // Hair color swatches
-  var hairEl = document.getElementById('hairOpts');
-  if (hairEl) hairEl.innerHTML = HAIR_COLORS.map(function(col, i) {
-    var n = i + 1;
-    return '<div class="ward-swatch' + ((c.hairNum||1) === n ? ' active' : '') + '" onclick="setCustom(\'hairNum\',' + n + ')" style="background:' + col + ';border-radius:50%" title="Color ' + n + '"></div>';
-  }).join('');
-
-  // Hairstyle thumbnails — sprite preview of each hair_gN.png frame 0
+  // Hair thumbnails — sprite preview of each hair_gN.png, labeled by actual color
   var g = c.gender || 'm';
   var styleEl = document.getElementById('hairStyleOpts');
   if (styleEl) {
-    var STYLE_LABELS = ['Short','Medium','Long','Curly','Tied'];
+    var HAIR_COLOR_LABELS = ['Dark','Auburn','Blonde','Red','Silver'];
     styleEl.innerHTML = [1,2,3,4,5].map(function(n) {
       var hairFile = 'sprites/preview_assets/char/hair_' + g + n + '.png';
       var isActive = (c.hairNum||1) === n;
-      // Show frame 0: backgroundSize scales 800x448 sheet to 48x27, showing top-left frame (hair sits near top)
-      // Use background-size to show 2x of the 80x64 frame within a 48x38 container
       return '<div class="hair-style-thumb' + (isActive ? ' active' : '') + '" onclick="setCustom(\'hairNum\',' + n + ')"'
         + ' style="background-image:' + cssUrl(hairFile) + ';background-size:384px 214px;background-position:0px 0px">'
-        + '<div class="hair-style-thumb-lbl">' + STYLE_LABELS[n-1] + '</div>'
+        + '<div class="hair-style-thumb-lbl">' + HAIR_COLOR_LABELS[n-1] + '</div>'
         + '</div>';
     }).join('');
   }
@@ -2728,7 +2709,7 @@ function refreshSceneLayers() {
   var idMap = { boots:'qsBoots', pants:'qsPants', shirt:'qsShirt', skin:'qsSkin', sword:'qsSword', hair:'qsHair' };
   Object.keys(idMap).forEach(function(k) {
     var el = document.getElementById(idMap[k]);
-    if (el) el.style.backgroundImage = cssUrl(layers[k]);
+    if (el) el.style.backgroundImage = layers[k] ? cssUrl(layers[k]) : 'none';
   });
 }
 
@@ -2745,7 +2726,7 @@ function refreshAvatarPreview() {
 
   // Build sprite layer structure once
   if (!document.getElementById('avSkin')) {
-    var LAYER_IDS = ['avBoots','avPants','avShirt','avSkin','avSword','avHair'];
+    var LAYER_IDS = ['avSkin','avBoots','avPants','avShirt','avSword','avHair'];
     big.innerHTML = '<div class="av-char-wrap">' +
       LAYER_IDS.map(function(id) { return '<div class="av-layer" id="'+id+'"></div>'; }).join('') +
       '</div>';
@@ -2757,7 +2738,7 @@ function refreshAvatarPreview() {
   Object.keys(AV_MAP).forEach(function(k) {
     var el = document.getElementById(AV_MAP[k]);
     if (el) {
-      el.style.backgroundImage = cssUrl(layers[k]);
+      el.style.backgroundImage = layers[k] ? cssUrl(layers[k]) : 'none';
       el.style.backgroundPosition = '0px 0px'; // idle frame 0
     }
   });
