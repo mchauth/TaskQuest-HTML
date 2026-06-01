@@ -1767,14 +1767,9 @@ var HOME_TIERS = [
   },
   {
     name: "Ranger's Outpost",
-    home: 'sprites/preview_assets/home/home_t1_camp_tent.png',
+    home: 'sprites/preview_assets/home/home_t1_stone_house_v1.png',
     fire: false,
-    props: [
-      { src:'sprites/preview_assets/home/tree_birch.png',    left:  0,  bottom:32, height:100, z:5 },
-      { src:'sprites/preview_assets/home/tree_birch2.png',   left: 90,  bottom:32, height:80,  z:5 },
-      { src:'sprites/preview_assets/home/prop_cooking.png',  right:108, bottom:32, height:48,  z:7 },
-      { src:'sprites/preview_assets/home/prop_logs.png',     right: 72, bottom:32, height:34,  z:7 },
-    ],
+    props: [],
     cost: 150
   },
   {
@@ -1835,7 +1830,7 @@ function renderHomeScene() {
     if (t.home) {
       homeEl.src = t.home;
       homeEl.style.display = 'block';
-      homeEl.style.maxHeight = tier >= 2 ? '148px' : '100px';
+      homeEl.style.maxHeight = tier >= 2 ? '148px' : tier === 1 ? '128px' : '100px';
     } else if (t.tent) {
       homeEl.src = t.tent;
       homeEl.style.display = 'block';
