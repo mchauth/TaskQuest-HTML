@@ -2689,10 +2689,11 @@ function renderCustomizeUI() {
   var g = c.gender || 'm';
   var hs = c.hairStyle || 1;
 
-  // Style toggle: Short (1) vs Long (2)
+  // Style toggle: 6 styles
   var toggleEl = document.getElementById('hairStyleToggle');
   if (toggleEl) {
-    toggleEl.innerHTML = [['1','Short'],['2','Long']].map(function(pair) {
+    var STYLE_NAMES = [['1','Short'],['2','Long'],['3','Medium'],['4','Ponytail'],['5','Mohawk'],['6','Bun']];
+    toggleEl.innerHTML = STYLE_NAMES.map(function(pair) {
       return '<div class="ward-chip' + (hs === parseInt(pair[0]) ? ' active' : '') + '" onclick="setCustom(\'hairStyle\',' + pair[0] + ')">' + pair[1] + '</div>';
     }).join('');
   }
