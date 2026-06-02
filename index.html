@@ -586,8 +586,12 @@ hr{border:none;border-top:1px solid var(--border)}
         <div class="ward-label">Skin</div>
         <div class="ward-opts" id="skinOpts"></div>
       </div>
+      <div class="ward-row">
+        <div class="ward-label">Style</div>
+        <div class="ward-opts" id="hairStyleToggle"></div>
+      </div>
       <div class="ward-row" style="align-items:flex-start">
-        <div class="ward-label" style="padding-top:4px">Hair</div>
+        <div class="ward-label" style="padding-top:4px">Color</div>
         <div class="ward-opts" id="hairStyleOpts" style="flex-wrap:wrap;gap:6px"></div>
       </div>
     </div>
@@ -675,7 +679,7 @@ var S = {
   avatarItems:       [],
   unlockedAvatarIds: [],
   selectedAvatarId:  null,
-  customization: { hair: 'brown', skin: 'medium', gender: 'm', skinNum: 1, hairNum: 1, charClass: 'warrior' }
+  customization: { hair: 'brown', skin: 'medium', gender: 'm', skinNum: 1, hairNum: 1, hairStyle: 1, charClass: 'warrior' }
 };
 
 var qFilter = 'active';
@@ -2647,7 +2651,7 @@ function getCharLayers() {
     shirt: lootFile('shirt') || null,
     skin:  p + 'skin_' + g + sn + '.png',
     sword: p + 'sword_' + g + '.png',
-    hair:  p + 'hair_' + g + hn + '.png',
+    hair:  p + 'hair_' + g + (((c.hairStyle||1) - 1) * 5 + hn) + '.png',
   };
 }
 
@@ -2682,13 +2686,24 @@ function renderCustomizeUI() {
     return '<div class="ward-swatch' + ((c.skinNum||1) === n ? ' active' : '') + '" onclick="setCustom(\'skinNum\',' + n + ')" style="background:' + col + '" title="Skin ' + n + '"></div>';
   }).join('');
 
-  // Hair thumbnails — sprite preview of each hair_gN.png, labeled by actual color
   var g = c.gender || 'm';
+  var hs = c.hairStyle || 1;
+
+  // Style toggle: Short (1) vs Long (2)
+  var toggleEl = document.getElementById('hairStyleToggle');
+  if (toggleEl) {
+    toggleEl.innerHTML = [['1','Short'],['2','Long']].map(function(pair) {
+      return '<div class="ward-chip' + (hs === parseInt(pair[0]) ? ' active' : '') + '" onclick="setCustom(\'hairStyle\',' + pair[0] + ')">' + pair[1] + '</div>';
+    }).join('');
+  }
+
+  // Color thumbnails — show the correct style's sprites
   var styleEl = document.getElementById('hairStyleOpts');
   if (styleEl) {
-    var HAIR_COLOR_LABELS = ['Dark','Auburn','Blonde','Red','Silver'];
+    var HAIR_COLOR_LABELS = ['Dark','Auburn','Red','Blonde','Silver'];
     styleEl.innerHTML = [1,2,3,4,5].map(function(n) {
-      var hairFile = 'sprites/preview_assets/char/hair_' + g + n + '.png';
+      var fileNum = (hs - 1) * 5 + n;
+      var hairFile = 'sprites/preview_assets/char/hair_' + g + fileNum + '.png';
       var isActive = (c.hairNum||1) === n;
       return '<div class="hair-style-thumb' + (isActive ? ' active' : '') + '" onclick="setCustom(\'hairNum\',' + n + ')"'
         + ' style="background-image:' + cssUrl(hairFile) + ';background-size:384px 214px;background-position:0px 0px">'
