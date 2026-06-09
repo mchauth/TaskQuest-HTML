@@ -34,8 +34,8 @@
 | 2 | hair_m6–10 | Long | ✅ DONE, clean |
 | 3 | hair_m11–15 | Medium | ✅ DONE, clean |
 | 4 | hair_m16–20 | Ponytail | ✅ DONE, clean |
-| 5 | hair_m21–25 | Slicked Back | ✅ DONE — bang removal + 65% vertical compression + 1px right shift |
-| 6 | hair_m26–30 | Man-Bun | ✅ DONE — bang removal + 65% vertical compression + bun knot at right |
+| 5 | hair_m21–25 | Slicked Back | ✅ DONE — horizontal flip of hair pixels + 70% vertical compression |
+| 6 | hair_m26–30 | Man-Bun | ✅ DONE — horizontal flip of hair pixels + 70% vertical compression + 5×4 oval bun knot |
 
 ### index.html STYLE_NAMES
 ```js
@@ -67,27 +67,34 @@
 - **Source**: Manipulate existing sprite sheets frame-by-frame using Python/Pillow
 - **Do NOT use PixelLab API** — quality issues at 80×64 (generates full characters, not just hair)
 - **Vertical compression**: remap `y → min_y + int((y - min_y) * factor)` to flatten hair
-- **Bang removal**: For each column x in the front half of hair's x-range, remove any hair pixel whose y > (min_y + hair_height * 0.5). This eliminates forward-hanging strands that make pulled-back styles look like short hair.
+- **Hair isolation**: diff each hair frame against skin.png frame — any non-transparent pixel that differs from skin by >15 RGB units is a hair pixel
+- **Horizontal flip**: mirror hair pixels within their bounding box: `x_flip = min_x + max_x - x`. Front bangs land at the back of the head, giving a naturally swept-back silhouette without any explicit bang removal.
 - **Palette mapping**: sample colors from hair_m1–5 and remap per color variant
 - **Preview**: composite hair frame 0 over skin.png frame 0, scale 4×, grid of all styles/colors
 
 ### Slicked Back approach (hair_m21–25)
 1. Start from short hair (hair_m1–5), process each of 70 frames independently
-2. Remove front bang pixels (front half of x-range, y > midpoint threshold)
-3. Compress vertically: `y → min_y + int((y - min_y) * 0.65)`
-4. Shift all pixels 1px right to suggest swept direction
+2. Isolate hair pixels (diff against skin.png — non-skin, non-transparent pixels)
+3. Find bounding box (min_x, max_x, min_y, max_y) of hair pixels
+4. Mirror horizontally within bounding box: place pixel at (x, y) → (min_x + max_x - x, y)
+   — front bangs naturally appear at the back, giving a swept-back silhouette
+5. Apply 70% vertical compression: `y_new = min_y + int((y - min_y) * 0.70)` to flatten profile
 
 ### Man-Bun approach (hair_m26–30)
 1. Start from short hair (hair_m1–5), process each of 70 frames independently
-2. Remove front bang pixels (same technique as slicked)
-3. Compress vertically: `y → min_y + int((y - min_y) * 0.65)`
-4. Add 5×4px oval bun knot at rightmost hair position: darker border, main color fill
+2. Isolate hair pixels (diff against skin.png)
+3. Find bounding box, mirror horizontally within it (same as slicked)
+4. Apply 70% vertical compression
+5. Add 5×4px oval bun knot just behind the rightmost flipped-hair cluster:
+   - Border = darkest sampled hair color; fill = median hair color
+   - Bun placed ~3px to the right of max_x of flipped hair, vertically centered on hair band
 
 ---
 
 ## Known Issues / History
 
+- **Bang removal approach** (previous): explicitly removing front pixels works but leaves an unnatural cutoff. The horizontal flip approach is more organic — the bang-heavy front side mirrors to the back, naturally suggesting swept/pulled hair.
 - **Bleedthrough fix** (zeroing pixels matching short hair base) makes crown look bald — avoid this approach
 - **PixelLab inpaint at 80×64** generates full characters, not just hair — don't use
 - **Stamping frame 0 across all frames** breaks animation — always process per-frame
-- **Preserving front bangs** on pulled-back styles makes them look identical to short hair — always run bang removal before building slicked/bun styles
+- **Preserving front bangs** on pulled-back styles makes them look identical to short hair — horizontal flip solves this without explicit removal
