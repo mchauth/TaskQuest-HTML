@@ -34,8 +34,8 @@
 | 2 | hair_m6–10 | Long | ✅ DONE, clean |
 | 3 | hair_m11–15 | Medium | ✅ DONE, clean |
 | 4 | hair_m16–20 | Ponytail | ✅ DONE, clean |
-| 5 | hair_m21–25 | Slicked Back | ⏳ Pushed — awaiting user approval. Uses vertically compressed short hair (60% height) + 1px right shift. |
-| 6 | hair_m26–30 | Man-Bun | ⏳ Pushed — awaiting user approval. Uses compressed short hair base + small bun knot at back. |
+| 5 | hair_m21–25 | Slicked Back | ✅ DONE — bang removal + 65% vertical compression + 1px right shift |
+| 6 | hair_m26–30 | Man-Bun | ✅ DONE — bang removal + 65% vertical compression + bun knot at right |
 
 ### index.html STYLE_NAMES
 ```js
@@ -67,8 +67,21 @@
 - **Source**: Manipulate existing sprite sheets frame-by-frame using Python/Pillow
 - **Do NOT use PixelLab API** — quality issues at 80×64 (generates full characters, not just hair)
 - **Vertical compression**: remap `y → min_y + int((y - min_y) * factor)` to flatten hair
+- **Bang removal**: For each column x in the front half of hair's x-range, remove any hair pixel whose y > (min_y + hair_height * 0.5). This eliminates forward-hanging strands that make pulled-back styles look like short hair.
 - **Palette mapping**: sample colors from hair_m1–5 and remap per color variant
 - **Preview**: composite hair frame 0 over skin.png frame 0, scale 4×, grid of all styles/colors
+
+### Slicked Back approach (hair_m21–25)
+1. Start from short hair (hair_m1–5), process each of 70 frames independently
+2. Remove front bang pixels (front half of x-range, y > midpoint threshold)
+3. Compress vertically: `y → min_y + int((y - min_y) * 0.65)`
+4. Shift all pixels 1px right to suggest swept direction
+
+### Man-Bun approach (hair_m26–30)
+1. Start from short hair (hair_m1–5), process each of 70 frames independently
+2. Remove front bang pixels (same technique as slicked)
+3. Compress vertically: `y → min_y + int((y - min_y) * 0.65)`
+4. Add 5×4px oval bun knot at rightmost hair position: darker border, main color fill
 
 ---
 
@@ -77,3 +90,4 @@
 - **Bleedthrough fix** (zeroing pixels matching short hair base) makes crown look bald — avoid this approach
 - **PixelLab inpaint at 80×64** generates full characters, not just hair — don't use
 - **Stamping frame 0 across all frames** breaks animation — always process per-frame
+- **Preserving front bangs** on pulled-back styles makes them look identical to short hair — always run bang removal before building slicked/bun styles
