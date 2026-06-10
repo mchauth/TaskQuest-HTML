@@ -34,18 +34,18 @@
 | 2 | hair_m6–10 | Long | ✅ DONE, clean |
 | 3 | hair_m11–15 | Medium | ✅ DONE, clean |
 | 4 | hair_m16–20 | Ponytail | ✅ DONE, clean |
-| 5 | hair_m21–25 | Slicked Back | ✅ DONE — horizontal flip of hair pixels + 70% vertical compression |
-| 6 | hair_m26–30 | Man-Bun | ✅ DONE — horizontal flip of hair pixels + 70% vertical compression + 5×4 oval bun knot |
+| 5 | hair_m21–25 | Mohawk | ✅ DONE — spike shape, kept from repo |
+| 6 | hair_m26–30 | Man-Bun | ✅ DONE — compact top-knot from new_sprites |
 
 ### index.html STYLE_NAMES
 ```js
-['Short', 'Long', 'Medium', 'Ponytail', 'Slicked', 'Man-Bun']
+['Short', 'Long', 'Medium', 'Ponytail', 'Mohawk', 'Man-Bun']
 ```
 
 ---
 
 ## Next Up
-- Female hairstyles (after male styles 5–6 are approved)
+- Female hairstyles
 
 ---
 
