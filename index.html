@@ -1825,7 +1825,7 @@ function renderHomeScene() {
   var layers = getCharLayers();
   Object.keys(HS_CHAR_IDS).forEach(function(k) {
     var el = document.getElementById(HS_CHAR_IDS[k]);
-    if (el) el.style.backgroundImage = "url('" + layers[k] + "')";
+    if (el) el.style.backgroundImage = layers[k] ? cssUrl(layers[k]) : "none";
   });
 
   // Home structure
@@ -2657,11 +2657,12 @@ function getCharLayers() {
 
 function setCustom(key, val) {
   S.customization[key] = val;
+  if (key === 'gender') S.customization.hairStyle = 1; // reset before refresh
   saveCustomization();
   renderCustomizeUI();
   refreshSceneLayers();  // quest scene
   refreshHomeLayers();   // home scene
-  if (key === 'gender') { S.customization.hairStyle = 1; renderInventory(); } // reset style + re-filter
+  if (key === 'gender') renderInventory(); // re-filter inventory by gender
 }
 
 function refreshHomeLayers() {
@@ -2819,7 +2820,7 @@ setInterval(function() {
     var layers = getCharLayers();
     Object.keys(CHAR_IDS).forEach(function(k) {
       var el = document.getElementById(CHAR_IDS[k]);
-      if (el) el.style.backgroundImage = cssUrl(layers[k]);
+      if (el) el.style.backgroundImage = layers[k] ? cssUrl(layers[k]) : 'none';
     });
     qsSetCharFrame(ANIM.idle, 0);
     document.getElementById('qsFireImg').src = CF_SRCS[0];
