@@ -2661,7 +2661,7 @@ function setCustom(key, val) {
   renderCustomizeUI();
   refreshSceneLayers();  // quest scene
   refreshHomeLayers();   // home scene
-  if (key === 'gender') renderInventory(); // re-filter inventory by gender
+  if (key === 'gender') { S.customization.hairStyle = 1; renderInventory(); } // reset style + re-filter
 }
 
 function refreshHomeLayers() {
@@ -2692,7 +2692,9 @@ function renderCustomizeUI() {
   // Style toggle: 6 styles
   var toggleEl = document.getElementById('hairStyleToggle');
   if (toggleEl) {
-    var STYLE_NAMES = [['1','Short'],['2','Long'],['3','Medium'],['4','Ponytail'],['5','Mohawk'],['6','Man-Bun']];
+    var MALE_STYLE_NAMES   = [['1','Short'],['2','Long'],['3','Medium'],['4','Ponytail'],['5','Mohawk'],['6','Man-Bun']];
+    var FEMALE_STYLE_NAMES = [['1','Short'],['2','Long'],['3','Braid'],['4','Updo']];
+    var STYLE_NAMES = (g === 'f') ? FEMALE_STYLE_NAMES : MALE_STYLE_NAMES;
     toggleEl.innerHTML = STYLE_NAMES.map(function(pair) {
       return '<div class="ward-chip' + (hs === parseInt(pair[0]) ? ' active' : '') + '" onclick="setCustom(\'hairStyle\',' + pair[0] + ')">' + pair[1] + '</div>';
     }).join('');
