@@ -2279,16 +2279,40 @@ function renderProfile() {
 
 function resetData() {
   if (!currentUser) return;
-  if (!confirm('Delete ALL your quests? This cannot be undone.')) return;
-  sb.from('quests').delete().eq('creator_id', currentUser.id).then(function(res) {
-    if (res.error) { toast('Error resetting data', 'error'); return; }
-    S.quests    = [];
-    allQuests   = [];
-    S.focusedId = null;
-    updateHeader();
-    renderProfile();
-    renderCompass();
-    toast('All quests deleted');
+  if (!confirm('Reset ALL data? This will delete your quests, clear your level, gold, and inventory. This cannot be undone.')) return;
+  var uid = currentUser.id;
+  // Delete all quests
+  sb.from('quests').delete().eq('creator_id', uid).then(function(res) {
+    if (res.error) { toast('Error resetting quests', 'error'); return; }
+    // Reset profile stats
+    sb.from('profiles').update({
+      total_xp: 0, level: 1, tasks_completed: 0,
+      gold: 0, home_tier: 0,
+      inventory: [], equipped_items: {}
+    }).eq('id', uid).then(function(res2) {
+      if (res2.error) { toast('Error resetting profile', 'error'); return; }
+      // Clear local state
+      S.quests    = [];
+      allQuests   = [];
+      S.focusedId = null;
+      S.profile.totalXp      = 0;
+      S.profile.level        = 1;
+      S.profile.completed    = 0;
+      S.profile.gold         = 0;
+      S.profile.homeTier     = 0;
+      S.profile.inventory    = [];
+      S.profile.equippedItems = {};
+      // Clear localStorage fallbacks
+      localStorage.removeItem('tq_gold');
+      localStorage.removeItem('tq_home_tier');
+      localStorage.removeItem('tq_inventory');
+      localStorage.removeItem('tq_equipped');
+      updateHeader();
+      renderProfile();
+      renderCompass();
+      refreshHomeLayers();
+      toast('All data reset');
+    });
   });
 }
 
