@@ -611,6 +611,7 @@ hr{border:none;border-top:1px solid var(--border)}
   <hr>
   <div class="sec-title">Danger Zone</div>
   <button onclick="resetData()" style="width:100%;padding:11px;background:rgba(207,68,68,.08);border:1px solid #6a2a2a;border-radius:4px;color:#cf6464;font-family:'Cinzel',serif;font-size:11px;letter-spacing:.08em;cursor:pointer">Reset All Data</button>
+  <div id="versionTap" onclick="devTap()" style="text-align:center;margin-top:18px;padding:4px;color:var(--text-dim);font-family:'Cinzel',serif;font-size:9px;letter-spacing:.1em;opacity:.35;user-select:none;cursor:default">v1.0</div>
 </div>
 
 <!-- COMBAT VICTORY OVERLAY -->
@@ -660,6 +661,10 @@ hr{border:none;border-top:1px solid var(--border)}
 var SUPA_URL = 'https://meoljhvhrbdzegjdquqh.supabase.co';
 var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1lb2xqaHZocmJkemVnamRxdXFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1OTQ4NTAsImV4cCI6MjA5MzE3MDg1MH0.15xSl5TrEqjQ4bsPXjnz4xsA4Gv7kdef3DGzIaUeRXg';
 var sb = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+// ── DEV MODE — tap the v1.0 label in Profile 5× to toggle ──
+var DEV_MODE = false;
+var _devTaps = 0, _devTapTimer;
 
 var currentUser = null;
 var allQuests   = [];   // all user quests — for the Quests list screen
@@ -1974,7 +1979,10 @@ var LOOT_TABLE = [
   { id:'m_shirt_blue',   name:'Azure Tunic',     gender:'m', slot:'shirt', file:'sprites/preview_assets/clothing/male/Blue_Shirt_v2.png',   level:1 },
   { id:'m_shirt_green',  name:'Forest Tunic',    gender:'m', slot:'shirt', file:'sprites/preview_assets/clothing/male/Green_Shirt_v2.png',  level:1 },
   { id:'m_shirt_orange', name:'Ember Tunic',     gender:'m', slot:'shirt', file:'sprites/preview_assets/clothing/male/orange_Shirt_v2.png', level:1 },
-  { id:'m_shirt_purple', name:'Shadow Tunic',    gender:'m', slot:'shirt', file:'sprites/preview_assets/clothing/male/Purple_Shirt_v2.png', level:1 },
+  { id:'m_shirt_purple',     name:'Shadow Tunic',     gender:'m', slot:'shirt', file:'sprites/preview_assets/clothing/male/Purple_Shirt_v2.png',    level:1 },
+  // ── Male armor ────────────────────────────────────
+  { id:'leather_armor_1',    name:'Leather Armor',    gender:'m', slot:'shirt', file:'sprites/preview_assets/char/leather_armor_1.png',            level:1 },
+  { id:'armor_chest_2',      name:'Studded Leather',  gender:'m', slot:'shirt', file:'sprites/preview_assets/char/armor_chest_2.png',              level:5 },
   // ── Female ────────────────────────────────────────
   { id:'f_boots',          name:'Leather Boots',    gender:'f', slot:'boots', file:'sprites/preview_assets/clothing/female/Boots.png',              level:1 },
   { id:'f_socks',          name:'Wool Socks',        gender:'f', slot:'boots', file:'sprites/preview_assets/clothing/female/Socks.png',               level:1 },
@@ -1993,6 +2001,18 @@ var LOOT_TABLE = [
   { id:'f_corset_orange2', name:'Ember Corset II',   gender:'f', slot:'shirt', file:'sprites/preview_assets/clothing/female/Orange_Corset_v2.png',    level:1 },
   { id:'f_corset_purple2', name:'Shadow Corset II',  gender:'f', slot:'shirt', file:'sprites/preview_assets/clothing/female/Purple_Corset_v2.png',    level:1 },
 ];
+
+function devTap() {
+  clearTimeout(_devTapTimer);
+  _devTaps++;
+  _devTapTimer = setTimeout(function() { _devTaps = 0; }, 1500);
+  if (_devTaps >= 5) {
+    _devTaps = 0;
+    DEV_MODE = !DEV_MODE;
+    renderInventory();
+    toast(DEV_MODE ? '🛠 Dev mode ON — all items visible' : 'Dev mode off', DEV_MODE ? 'success' : '');
+  }
+}
 
 // Roll loot drop — returns item or null. Drops every 3rd completed quest.
 function rollLoot() {
@@ -2062,13 +2082,18 @@ function renderInventory() {
   var eq  = S.profile.equippedItems || {};
   var g   = S.customization.gender || 'm';
 
-  // Only show items for current gender
-  var genderedInv = inv.filter(function(id) {
-    var it = LOOT_TABLE.find(function(x){ return x.id === id; });
-    return it && it.gender === g;
-  });
+  // DEV_MODE: show all LOOT_TABLE items for current gender, ignoring drops
+  var genderedInv;
+  if (DEV_MODE) {
+    genderedInv = LOOT_TABLE.filter(function(it) { return it.gender === g; }).map(function(it) { return it.id; });
+  } else {
+    genderedInv = inv.filter(function(id) {
+      var it = LOOT_TABLE.find(function(x){ return x.id === id; });
+      return it && it.gender === g;
+    });
+  }
 
-  if (!inv.length) {
+  if (!DEV_MODE && !inv.length) {
     container.innerHTML = '<div class="inv-empty">No items yet — complete quests to find loot!</div>';
     return;
   }
@@ -2077,7 +2102,7 @@ function renderInventory() {
     return;
   }
 
-  var html = '';
+  var html = DEV_MODE ? '<div style="font-family:\'Cinzel\',serif;font-size:9px;letter-spacing:.08em;color:var(--gold);opacity:.7;margin-bottom:8px">🛠 DEV — showing all items</div>' : '';
   INV_SLOTS.forEach(function(slotInfo) {
     var items = genderedInv.map(function(id) {
       return LOOT_TABLE.find(function(x){ return x.id === id; });
