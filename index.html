@@ -597,7 +597,7 @@ hr{border:none;border-top:1px solid var(--border)}
     </div>
   </div>
   <div class="sec-title" style="margin-top:14px">🎒 Inventory</div>
-  <div class="inv-grid" id="invGrid">
+  <div id="invGrid">
     <div class="inv-empty">No items yet — complete quests to find loot!</div>
   </div>
 
@@ -2005,7 +2005,7 @@ var LOOT_TABLE = [
 function devTap() {
   clearTimeout(_devTapTimer);
   _devTaps++;
-  _devTapTimer = setTimeout(function() { _devTaps = 0; }, 1500);
+  _devTapTimer = setTimeout(function() { _devTaps = 0; }, 3000);
   if (_devTaps >= 5) {
     _devTaps = 0;
     DEV_MODE = !DEV_MODE;
