@@ -326,12 +326,9 @@ hr{border:none;border-top:1px solid var(--border)}
 <!-- HEADER -->
 <header>
   <div class="hrow">
+    <div class="logo">⚔ TaskQuest</div>
     <div style="display:flex;align-items:center;gap:8px">
-      <div class="logo">⚔ TaskQuest</div>
-      <div id="headerAvatar" style="width:24px;height:24px;image-rendering:pixelated;flex-shrink:0"></div>
-    </div>
-    <div style="display:flex;align-items:center;gap:8px">
-      <div class="gps-row"><div class="gdot" id="gpsDot"></div><span id="gpsLbl">No GPS</span></div>
+      <button id="devModeHeaderBtn" onclick="toggleDevMode()" title="Toggle dev mode" style="background:none;border:1px solid var(--border);border-radius:2px;color:var(--text-dim);font-size:13px;padding:2px 7px;cursor:pointer;line-height:1;transition:all .2s">🛠</button>
       <div class="gold-badge" id="goldBadge">💰 0g</div>
       <div class="lvl-badge" id="lvlBadge">LVL 1</div>
       <button class="logout-btn" onclick="doLogout()">Exit</button>
@@ -2003,12 +2000,17 @@ var LOOT_TABLE = [
 
 function toggleDevMode() {
   DEV_MODE = !DEV_MODE;
-  var btn = document.getElementById('devModeBtn');
-  if (btn) {
-    btn.textContent = DEV_MODE ? '🛠 DEV MODE: ON' : '🛠 DEV MODE: OFF';
-    btn.style.borderColor = DEV_MODE ? 'var(--gold-dim)' : 'var(--border2)';
-    btn.style.color = DEV_MODE ? 'var(--gold)' : 'var(--text-dim)';
-    btn.style.background = DEV_MODE ? 'rgba(201,168,76,.07)' : 'none';
+  var hBtn = document.getElementById('devModeHeaderBtn');
+  if (hBtn) {
+    hBtn.style.borderColor = DEV_MODE ? 'var(--gold-dim)' : 'var(--border)';
+    hBtn.style.color       = DEV_MODE ? 'var(--gold)'     : 'var(--text-dim)';
+  }
+  var pBtn = document.getElementById('devModeBtn');
+  if (pBtn) {
+    pBtn.textContent       = DEV_MODE ? '🛠 DEV MODE: ON' : '🛠 DEV MODE: OFF';
+    pBtn.style.borderColor = DEV_MODE ? 'var(--gold-dim)' : 'var(--border2)';
+    pBtn.style.color       = DEV_MODE ? 'var(--gold)'     : 'var(--text-dim)';
+    pBtn.style.background  = DEV_MODE ? 'rgba(201,168,76,.07)' : 'none';
   }
   renderInventory();
 }
