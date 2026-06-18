@@ -611,7 +611,7 @@ hr{border:none;border-top:1px solid var(--border)}
   <hr>
   <div class="sec-title">Danger Zone</div>
   <button onclick="resetData()" style="width:100%;padding:11px;background:rgba(207,68,68,.08);border:1px solid #6a2a2a;border-radius:4px;color:#cf6464;font-family:'Cinzel',serif;font-size:11px;letter-spacing:.08em;cursor:pointer">Reset All Data</button>
-  <div id="versionTap" onclick="devTap()" style="text-align:center;margin-top:18px;padding:4px;color:var(--text-dim);font-family:'Cinzel',serif;font-size:9px;letter-spacing:.1em;opacity:.35;user-select:none;cursor:default">v1.0</div>
+  <button id="devModeBtn" onclick="toggleDevMode()" style="width:100%;margin-top:10px;padding:9px;background:none;border:1px solid var(--border2);border-radius:4px;color:var(--text-dim);font-family:'Cinzel',serif;font-size:11px;letter-spacing:.08em;cursor:pointer;transition:all .2s">🛠 DEV MODE: OFF</button>
 </div>
 
 <!-- COMBAT VICTORY OVERLAY -->
@@ -662,9 +662,8 @@ var SUPA_URL = 'https://meoljhvhrbdzegjdquqh.supabase.co';
 var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1lb2xqaHZocmJkemVnamRxdXFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1OTQ4NTAsImV4cCI6MjA5MzE3MDg1MH0.15xSl5TrEqjQ4bsPXjnz4xsA4Gv7kdef3DGzIaUeRXg';
 var sb = supabase.createClient(SUPA_URL, SUPA_KEY);
 
-// ── DEV MODE — tap the v1.0 label in Profile 5× to toggle ──
+// ── DEV MODE — toggle via button at bottom of Profile screen ──
 var DEV_MODE = false;
-var _devTaps = 0, _devTapTimer;
 
 var currentUser = null;
 var allQuests   = [];   // all user quests — for the Quests list screen
@@ -2002,16 +2001,16 @@ var LOOT_TABLE = [
   { id:'f_corset_purple2', name:'Shadow Corset II',  gender:'f', slot:'shirt', file:'sprites/preview_assets/clothing/female/Purple_Corset_v2.png',    level:1 },
 ];
 
-function devTap() {
-  clearTimeout(_devTapTimer);
-  _devTaps++;
-  _devTapTimer = setTimeout(function() { _devTaps = 0; }, 3000);
-  if (_devTaps >= 5) {
-    _devTaps = 0;
-    DEV_MODE = !DEV_MODE;
-    renderInventory();
-    toast(DEV_MODE ? '🛠 Dev mode ON — all items visible' : 'Dev mode off', DEV_MODE ? 'success' : '');
+function toggleDevMode() {
+  DEV_MODE = !DEV_MODE;
+  var btn = document.getElementById('devModeBtn');
+  if (btn) {
+    btn.textContent = DEV_MODE ? '🛠 DEV MODE: ON' : '🛠 DEV MODE: OFF';
+    btn.style.borderColor = DEV_MODE ? 'var(--gold-dim)' : 'var(--border2)';
+    btn.style.color = DEV_MODE ? 'var(--gold)' : 'var(--text-dim)';
+    btn.style.background = DEV_MODE ? 'rgba(201,168,76,.07)' : 'none';
   }
+  renderInventory();
 }
 
 // Roll loot drop — returns item or null. Drops every 3rd completed quest.
