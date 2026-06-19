@@ -149,13 +149,38 @@ Combat: row 5 plays when active quests exist; row 6 (sleep) when idle.
 
 Clothing drops every 3rd completed quest (`S.profile.completed % 3 === 0`).  
 Items stored in `S.profile.inventory` (array of item IDs) and `S.profile.equippedItems` (slot→itemId map).  
-Slots: `shirt`, `pants`, `boots`.
-
-**LOOT_TABLE** in index.html maps item IDs → `{ id, name, gender, slot, file, level, rarity, levelReq, classes }`.  
-Files live under `sprites/preview_assets/clothing/{male,female}/`.  
-All filenames use underscores (spaces were renamed early in dev).
-
+Slots: `shirt`, `pants`, `boots`.  
 **Supabase columns:** `profiles.inventory` (JSONB), `profiles.equipped_items` (JSONB).
+
+### LOOT_TABLE Schema
+
+Defined in `index.html` as `var LOOT_TABLE = [...]` (~line 1964). Each entry:
+
+```js
+{ id: 'armor_chest_2',          // unique string key — used in inventory array & equippedItems map
+  name: 'Studded Leather',       // display name in inventory UI
+  gender: 'm',                   // 'm' or 'f' — only shown to matching gender
+  slot: 'shirt',                 // 'shirt' | 'pants' | 'boots'
+  file: 'sprites/preview_assets/char/armor_chest_2.png',  // path relative to project root
+  level: 5 }                     // minimum player level for this item to appear in loot drops
+```
+
+`rollLoot()` filters by `gender === playerGender && level <= playerLevel`, then picks randomly from items not yet owned. No rarity or class filtering is currently implemented.
+
+### How to Add a New Armor Tier to LOOT_TABLE
+
+1. Generate the spritesheet and commit it to `sprites/preview_assets/char/armor_chest_N.png`
+2. In `index.html` find the `// ── Male armor ────` block (~line 1979) and add an entry:
+   ```js
+   { id:'armor_chest_3', name:'Chainmail Hauberk', gender:'m', slot:'shirt',
+     file:'sprites/preview_assets/char/armor_chest_3.png', level:10 },
+   ```
+3. If the armor has a female variant, add a matching entry in the `// ── Female ────` block with `gender:'f'`.
+4. The item will start appearing in loot drops for players at or above the specified level. Existing players won't see it until they reach that level.
+
+### Clothing Files
+
+Standard clothing (non-armor) lives under `sprites/preview_assets/clothing/{male,female}/` with underscored filenames (`Blue_Shirt_v2.png`, etc.). Armor spritesheets go in `sprites/preview_assets/char/` alongside the base layers.
 
 ---
 
@@ -171,36 +196,196 @@ All filenames use underscores (spaces were renamed early in dev).
 
 ## Armor Sprite Pipeline
 
-Armor sprites are layered on top of the character's `shirt.png` slot, sharing the same 800×448 spritesheet format (80×64 frames, 10×7 = 70 frames).
+Armor sprites occupy the character's `shirt.png` slot. They use the same 800×448 spritesheet format — 80×64 px per frame, 10 cols × 7 rows = 70 frame slots, ~45 active (any frame whose `shirt.png` crop contains ≥1 opaque pixel).
 
-**What works (confirmed):**
-- **Direct shirt-pixel recolor** — load `shirt.png`, apply Euclidean nearest-match color mapping to every opaque pixel, output the recolored sprite sheet. Zero drift, pixel-perfect tracking across all animation frames. This is the canonical approach for all armor tiers.
-- **Leather palette mapping** (shirt RGB → leather RGB):
-  - `(97,75,68)` → `(30,20,10)` outline
-  - `(163,137,130)` → `(120,75,35)` mid
-  - `(191,176,168)` → `(120,75,35)` mid
-  - `(229,218,209)` → `(175,120,60)` highlight
-- **Plate overlay via shirt-mask zones** — define plate regions relative to the shirt pixel mask per frame (e.g. top 2 rows of shirt pixels = pauldrons, center columns of mid rows = chest plate); paint iron-grey tones directly onto matching shirt pixel positions. 4-tone iron palette: `#1A1A1A / #3A3A3A / #606060 / #8C8C8C`.
-- **Aseprite MCP** (`mcp__plugin_pixel-plugin_aseprite__*`) — available for hand-editing individual frame pixel fixes after generation.
+**Frame addressing:** `fi = row*10 + col`; global pixel offset `gx = col*80`, `gy = row*64`.  
+**Animation rows:** 0=Idle (5f), 1=Walk (8f), 2=Run (8f), 5=Slash (6f), 6=Sleep (10f, startCol=8).
 
-**What does NOT work:**
-- **Centroid-offset propagation** — shifts the entire armor shape by an average offset per frame; causes rows to drift in/out of position during idle animation (the character's up/down bob makes single pixel rows appear/disappear). Do not use.
-- **PixelLab Bitforge for clothing** — regenerates the whole character in a new pose; cannot isolate edits to just the clothing layer.
+---
 
-**Palette / art conventions at 80×64 (~13×15 usable body px):**
-- Use 4–5 tones; no bright specular (looks like a white line at this scale).
-- 3/4 left-facing perspective; pauldrons at y=34–35, single leather gap at y=36, chest plate y=37–43.
+### Step-by-Step Pipeline for a New Armor Tier
 
-**Armor tier status:**
+#### Step 1 — Build the leather base (zero-drift foundation)
 
-| Tier | File                 | Status      | Notes |
-|------|----------------------|-------------|-------|
-| 1    | `leather_armor_1.png`| ✅ COMMITTED | Direct shirt recolor; full frame set; clean |
-| 2    | `armor_chest_2.png`  | ✅ COMMITTED | Leather base + iron plate overlay via shirt-mask method |
-| 3    | `armor_chest_3.png`  | ❌ Not created | — |
-| 4    | `armor_chest_4.png`  | ❌ Not created | — |
-| 5    | `armor_chest_5.png`  | ❌ Not created | — |
-| 6    | `armor_chest_6.png`  | ❌ Not created | — |
+For every armor tier, start by recoloring `shirt.png` pixel-for-pixel into the leather palette. Do **not** skip this step even if the new tier will cover most of the leather with plate — it guarantees frame-perfect tracking with no drift.
+
+```python
+from PIL import Image
+import numpy as np
+
+shirt = np.array(Image.open("sprites/preview_assets/char/shirt.png").convert('RGBA'))
+
+# Shirt source colors → leather target colors (nearest Euclidean RGB)
+MAPPING = [
+    ((97, 75, 68),   (30, 20, 10, 255)),   # dark outline
+    ((163,137,130),  (120, 75, 35, 255)),   # mid
+    ((191,176,168),  (120, 75, 35, 255)),   # mid-light (maps same)
+    ((229,218,209),  (175,120, 60, 255)),   # highlight
+]
+
+def nearest(px):
+    r,g,b,a = px
+    if a == 0: return (0,0,0,0)
+    best = min(MAPPING, key=lambda m: (r-m[0][0])**2+(g-m[0][1])**2+(b-m[0][2])**2)
+    return best[1]
+
+out = np.zeros_like(shirt)
+for y in range(shirt.shape[0]):
+    for x in range(shirt.shape[1]):
+        out[y,x] = nearest(tuple(shirt[y,x]))
+Image.fromarray(out).save("sprites/preview_assets/char/leather_armor_N.png")
+```
+
+#### Step 2 — Hand-paint the plate overlay on frame 0
+
+Create an 80×64 PNG on the Desktop (e.g. `~/Desktop/armor_chest_N_frame0.png`). Start from the leather frame 0 crop as the base. Paint iron-grey pixels using the palette below. Do **not** edit the spritesheet directly — keep the approved frame 0 as the source of truth.
+
+**Plate zone reference (frame 0, local coords):**
+- Pauldrons: y=33–36; right shoulder x≈34–37 (recedes, darker); left shoulder x≈43–46 (faces viewer, brighter)
+- Chest plate top rim: y=37, full width x=34–46 (gradient dark-left → bright-right)
+- Chest plate body: y=38–41, x=35–46 (right edge absent at y≥41 due to shirt mask)
+- Chest plate bottom: y=42–43, x=36–41 (full shadow, no highlights)
+
+**Pauldron corner softening:** On the bottom row of each pauldron (y=35), replace the outermost 1–2 `#1A1A1A` pixels with `#3A3A3A`. Without this the pauldron bottom looks square-cut.
+
+**Art conventions at this scale (~13×15 usable body px):**
+- 3/4 left-facing perspective — character's right side recedes (darker), left side faces viewer (brighter)
+- Use 4 tones max per material; no bright `#E0E0E0` specular unless it's a single-pixel rim highlight
+- Pauldrons at y=33–35, collar/transition at y=36, chest plate y=37–43
+
+#### Step 3 — Approve frame 0 before propagating
+
+Inspect the Desktop frame 0 PNG. Confirm:
+- Zero leather/brown pixels (`R>80 and G<80 and B<40`) in the plate zone (y=33–47, x=30–50)
+- All iron-grey pixels are from the 4-tone palette exactly (no stray off-tones)
+- Pauldron corners softened as desired
+
+#### Step 4 — Propagate across all frames
+
+```python
+from PIL import Image
+import numpy as np
+
+CHAR  = "sprites/preview_assets/char"
+DESK  = "/Users/matthauth/Desktop"
+FRAME_W, FRAME_H, COLS, ROWS = 80, 64, 10, 7
+
+PLATE_COLORS = {(26,26,26,255),(58,58,58,255),(96,96,96,255),(140,140,140,255)}
+O = (26,26,26,255)   # #1A1A1A  outline/deep
+D = (58,58,58,255)   # #3A3A3A  dark shadow
+S = (96,96,96,255)   # #606060  mid shadow
+M = (140,140,140,255)# #8C8C8C  base highlight
+
+leather = np.array(Image.open(f"{CHAR}/leather_armor_N.png").convert('RGBA'))
+shirt   = np.array(Image.open(f"{CHAR}/shirt.png").convert('RGBA'))
+frame0  = np.array(Image.open(f"{DESK}/armor_chest_N_frame0.png").convert('RGBA'))
+
+# Extract iron-grey pixels from approved frame 0 only
+plate = {(x,y): tuple(frame0[y,x])
+         for y in range(FRAME_H) for x in range(FRAME_W)
+         if tuple(frame0[y,x]) in PLATE_COLORS}
+
+# Add any targeted fixes that can't be baked into the frame0 design
+# (e.g. edge pixels that only exist in specific animation frames)
+# plate[(45,38)] = O   # example
+
+# Frame 0 shirt centroid (anchor for offset calculation)
+f0_op = np.argwhere(shirt[:FRAME_H,:FRAME_W,3] > 0)
+cx0, cy0 = float(np.mean(f0_op[:,1])), float(np.mean(f0_op[:,0]))
+
+out = leather.copy()
+for fi in range(COLS * ROWS):
+    col, row = fi % COLS, fi // COLS
+    gx, gy   = col * FRAME_W, row * FRAME_H
+    fs = shirt[gy:gy+FRAME_H, gx:gx+FRAME_W]
+    op = np.argwhere(fs[:,:,3] > 0)
+    if len(op) == 0:
+        continue
+    # Per-frame centroid offset (rounds to nearest pixel)
+    dx = round(float(np.mean(op[:,1])) - cx0)
+    dy = round(float(np.mean(op[:,0])) - cy0)
+    mask = set(zip(op[:,1].tolist(), op[:,0].tolist()))
+    for (lx,ly), color in plate.items():
+        nx, ny = lx+dx, ly+dy
+        if (nx,ny) in mask:          # clamp: only paint within shirt mask
+            out[gy+ny, gx+nx] = color
+
+Image.fromarray(out).save(f"{CHAR}/armor_chest_N.png")
+```
+
+#### Step 5 — Post-pass: scan for brown drift escapes (REQUIRED)
+
+Even with shirt-mask clamping, edge-adjacent plate pixels can blink between brown and iron across animation frames (the character's idle bob shifts pixels in and out by 1 px). Scan the full plate zone after propagation and overwrite any leather pixel that slipped through.
+
+```python
+# Run immediately after the propagation loop above, before saving
+for fi in range(COLS * ROWS):
+    col, row = fi % COLS, fi // COLS
+    gx, gy = col * FRAME_W, row * FRAME_H
+    fs = shirt[gy:gy+FRAME_H, gx:gx+FRAME_W]
+    op = np.argwhere(fs[:,:,3] > 0)
+    if len(op) == 0:
+        continue
+    mask = set(zip(op[:,1].tolist(), op[:,0].tolist()))
+    for ly in range(33, 47):        # plate zone rows
+        for lx in range(30, 50):    # plate zone cols — adjust per tier
+            if (lx, ly) not in mask:
+                continue
+            r,g,b,a = out[gy+ly, gx+lx]
+            if a > 0 and (r,g,b,a) not in PLATE_COLORS:
+                out[gy+ly, gx+lx] = O  # seal with outline tone
+```
+
+After saving, re-inspect frame 0's plate zone to confirm zero brown pixels. If any remain, add them as explicit entries in `plate` dict (Step 4) and re-run.
+
+---
+
+### What NOT To Do
+
+| Don't | Why |
+|-------|-----|
+| Use centroid-offset propagation **without** shirt-mask clamping | Plate pixels escape the body silhouette; single rows appear/disappear during idle animation bob |
+| Skip the post-pass brown-pixel scan | Edge pixels still blink brown on certain animation frames even with mask clamping |
+| Use PixelLab Bitforge for clothing | Regenerates the whole character pose — can't isolate edits to the clothing layer |
+| Paint plate pixels directly onto the full spritesheet | Bypasses the propagation system; frame 0 design file is the source of truth |
+| Commit a file that hardcodes a GitHub PAT | Push protection will block it; token goes in `git remote set-url` only |
+
+---
+
+### Color Palettes (Locked In)
+
+**Leather base — shirt-to-leather mapping:**
+
+| Shirt source RGB | Leather target RGB | Role |
+|---|---|---|
+| (97, 75, 68) | (30, 20, 10) | Dark outline |
+| (163, 137, 130) | (120, 75, 35) | Mid tone |
+| (191, 176, 168) | (120, 75, 35) | Mid-light (same as mid) |
+| (229, 218, 209) | (175, 120, 60) | Highlight |
+
+**Iron plate — 4-tone palette:**
+
+| Hex | RGB | Role |
+|---|---|---|
+| `#1A1A1A` | (26, 26, 26) | Outline / deepest shadow |
+| `#3A3A3A` | (58, 58, 58) | Dark shadow / softened corners |
+| `#606060` | (96, 96, 96) | Mid shadow |
+| `#8C8C8C` | (140, 140, 140) | Base / highlight face |
+
+---
+
+### Armor Tier Roadmap
+
+| Tier | File | Status | Notes |
+|------|------|--------|-------|
+| 1 | `leather_armor_1.png` | ✅ Done | Pure leather, direct shirt recolor, no plate |
+| 2 | `armor_chest_2.png` | ✅ Done | Studded leather with iron pauldrons + chest plate |
+| 3 | `armor_chest_3.png` | ❌ Not started | Chainmail (small diamond weave, muted steel tones) |
+| 4 | `armor_chest_4.png` | ❌ Not started | Full iron plate (less leather showing) |
+| 5 | `armor_chest_5.png` | ❌ Not started | Dark steel / engraved iron |
+| 6 | `armor_chest_6.png` | ❌ Not started | Ornate plate — gold trim, legendary tier |
+
+All tiers: 800×448 spritesheet, `sprites/preview_assets/char/`, indexed in LOOT_TABLE with `slot:'shirt'`.
 
 ---
 
