@@ -423,6 +423,7 @@ hr{border:none;border-top:1px solid var(--border)}
         <div class="qs-char-layer" id="qsShirt"></div>
         <div class="qs-char-layer" id="qsSword"></div>
         <div class="qs-char-layer" id="qsHair"></div>
+        <div class="qs-char-layer" id="qsHelmet"></div>
       </div>
       <div class="qs-fire-wrap">
         <img id="qsFireImg" src="sprites/preview_assets/anim/fire_f0.png" alt="">
@@ -549,6 +550,7 @@ hr{border:none;border-top:1px solid var(--border)}
         <div class="hs-char-layer" id="hsShirt"></div>
         <div class="hs-char-layer" id="hsSword"></div>
         <div class="hs-char-layer" id="hsHair"></div>
+        <div class="hs-char-layer" id="hsHelmet"></div>
       </div>
       <!-- Overlay info -->
       <div class="hs-info">
@@ -622,6 +624,7 @@ hr{border:none;border-top:1px solid var(--border)}
       <div class="co-hero-layer" id="coShirt"></div>
       <div class="co-hero-layer" id="coSword"></div>
       <div class="co-hero-layer" id="coHair"></div>
+      <div class="co-hero-layer" id="coHelmet"></div>
     </div>
     <!-- Enemy portal -->
     <div class="co-enemy-ov" id="coEnemy"></div>
@@ -1807,7 +1810,7 @@ var HOME_TIERS = [
 var HS_CF_SRCS = Array.from({length:16}, function(_,f){ return 'sprites/preview_assets/anim/fire_f'+f+'.png'; });
 var hsCfFrame = 0, hsCfLast = 0, hsCharFrame = 0, hsCharLast = 0, hsSceneRunning = false;
 var HS_BG = [1,2,3,4,5].map(function(i){ return 'sprites/preview_assets/bg/layer'+i+'.png'; });
-var HS_CHAR_IDS = { boots:'hsBoots', pants:'hsPants', shirt:'hsShirt', skin:'hsSkin', sword:'hsSword', hair:'hsHair' };
+var HS_CHAR_IDS = { boots:'hsBoots', pants:'hsPants', shirt:'hsShirt', skin:'hsSkin', sword:'hsSword', hair:'hsHair', helmet:'hsHelmet' };
 var HS_ANIM = { idle:{row:0,frames:5,fps:6}, walk:{row:1,frames:8,fps:10} };
 
 function renderHomeScene() {
@@ -1995,6 +1998,13 @@ var LOOT_TABLE = [
   { id:'armor_chest_6',      name:'Diamond Plate',    gender:'m', slot:'shirt', file:'sprites/preview_assets/char/armor_chest_6.png',              level:40 },
   { id:'armor_pants_6',      name:'Diamond Plate Pants', gender:'m', slot:'pants', file:'sprites/preview_assets/char/armor_pants_6.png',           level:40 },
   { id:'armor_boots_6',      name:'Diamond Sabatons', gender:'m', slot:'boots', file:'sprites/preview_assets/char/armor_boots_6.png',              level:40 },
+  // ── Male helmets ────────────────────────────────────
+  { id:'leather_helmet_1',   name:'Leather Cap',      gender:'m', slot:'helmet', file:'sprites/preview_assets/char/leather_helmet_1.png',           level:1  },
+  { id:'helmet_2',           name:'Iron Nasal Helm',  gender:'m', slot:'helmet', file:'sprites/preview_assets/char/helmet_2.png',                   level:5  },
+  { id:'helmet_3',           name:'Chainmail Coif',   gender:'m', slot:'helmet', file:'sprites/preview_assets/char/helmet_3.png',                   level:10 },
+  { id:'helmet_4',           name:'Silver Sallet',    gender:'m', slot:'helmet', file:'sprites/preview_assets/char/helmet_4.png',                   level:20 },
+  { id:'helmet_5',           name:'Gold Barbute',     gender:'m', slot:'helmet', file:'sprites/preview_assets/char/helmet_5.png',                   level:30 },
+  { id:'helmet_6',           name:'Dark Armet',       gender:'m', slot:'helmet', file:'sprites/preview_assets/char/helmet_6.png',                   level:40 },
   // ── Female ────────────────────────────────────────
   { id:'f_boots',          name:'Leather Boots',    gender:'f', slot:'boots', file:'sprites/preview_assets/clothing/female/Boots.png',              level:1 },
   { id:'f_socks',          name:'Wool Socks',        gender:'f', slot:'boots', file:'sprites/preview_assets/clothing/female/Socks.png',               level:1 },
@@ -2087,6 +2097,7 @@ function equipItem(itemId) {
 }
 
 var INV_SLOTS = [
+  { slot:'helmet', label:'Headgear' },
   { slot:'shirt', label:'Top' },
   { slot:'pants', label:'Bottoms' },
   { slot:'boots', label:'Footwear' },
@@ -2183,7 +2194,7 @@ function openCombatOverlay(xpEarned, goldEarned, lootItem) {
 
   // Wire hero layers with current char appearance
   var layers = getCharLayers();
-  var heroMap = { boots:'coBoots', pants:'coPants', shirt:'coShirt', skin:'coSkin', sword:'coSword', hair:'coHair' };
+  var heroMap = { boots:'coBoots', pants:'coPants', shirt:'coShirt', skin:'coSkin', sword:'coSword', hair:'coHair', helmet:'coHelmet' };
   Object.keys(heroMap).forEach(function(k) {
     var el = document.getElementById(heroMap[k]);
     if (el) { el.style.backgroundImage = layers[k] ? cssUrl(layers[k]) : 'none'; el.style.backgroundSize = '800px 448px'; }
@@ -2711,13 +2722,15 @@ function getCharLayers() {
     var it = LOOT_TABLE.find(function(x){ return x.id === eq[slot]; });
     return it ? it.file : null;
   }
+  var helmetFile = lootFile('helmet') || null;
   return {
     boots: lootFile('boots') || null,
     pants: lootFile('pants') || null,
     shirt: lootFile('shirt') || null,
     skin:  p + 'skin_' + g + sn + '.png',
     sword: p + 'sword_' + g + '.png',
-    hair:  p + 'hair_' + g + (((c.hairStyle||1) - 1) * 5 + hn) + '.png',
+    hair:  helmetFile ? null : p + 'hair_' + g + (((c.hairStyle||1) - 1) * 5 + hn) + '.png',
+    helmet: helmetFile,
   };
 }
 
@@ -2786,7 +2799,7 @@ function renderCustomizeUI() {
 // Refresh the quest scene character layers after customization change
 function refreshSceneLayers() {
   var layers = getCharLayers();
-  var idMap = { boots:'qsBoots', pants:'qsPants', shirt:'qsShirt', skin:'qsSkin', sword:'qsSword', hair:'qsHair' };
+  var idMap = { boots:'qsBoots', pants:'qsPants', shirt:'qsShirt', skin:'qsSkin', sword:'qsSword', hair:'qsHair', helmet:'qsHelmet' };
   Object.keys(idMap).forEach(function(k) {
     var el = document.getElementById(idMap[k]);
     if (el) el.style.backgroundImage = layers[k] ? cssUrl(layers[k]) : 'none';
@@ -2806,7 +2819,7 @@ function refreshAvatarPreview() {
 
   // Build sprite layer structure once
   if (!document.getElementById('avSkin')) {
-    var LAYER_IDS = ['avSkin','avBoots','avPants','avShirt','avSword','avHair'];
+    var LAYER_IDS = ['avSkin','avBoots','avPants','avShirt','avSword','avHair','avHelmet'];
     big.innerHTML = '<div class="av-char-wrap">' +
       LAYER_IDS.map(function(id) { return '<div class="av-layer" id="'+id+'"></div>'; }).join('') +
       '</div>';
@@ -2814,7 +2827,7 @@ function refreshAvatarPreview() {
 
   // Update layers to match current customization
   var layers = getCharLayers();
-  var AV_MAP = { boots:'avBoots', pants:'avPants', shirt:'avShirt', skin:'avSkin', sword:'avSword', hair:'avHair' };
+  var AV_MAP = { boots:'avBoots', pants:'avPants', shirt:'avShirt', skin:'avSkin', sword:'avSword', hair:'avHair', helmet:'avHelmet' };
   Object.keys(AV_MAP).forEach(function(k) {
     var el = document.getElementById(AV_MAP[k]);
     if (el) {
@@ -2862,7 +2875,7 @@ setInterval(function() {
 // ── QUEST SCENE ANIMATION ──
 (function() {
   var BG_LAYERS = [1,2,3,4,5].map(function(i){ return 'sprites/preview_assets/bg/layer'+i+'.png'; });
-  var CHAR_IDS = { boots:'qsBoots', pants:'qsPants', shirt:'qsShirt', skin:'qsSkin', sword:'qsSword', hair:'qsHair' };
+  var CHAR_IDS = { boots:'qsBoots', pants:'qsPants', shirt:'qsShirt', skin:'qsSkin', sword:'qsSword', hair:'qsHair', helmet:'qsHelmet' };
   var ANIM = {
     idle:   { row:0, frames:5, fps:6 },
     walk:   { row:1, frames:8, fps:10 },
