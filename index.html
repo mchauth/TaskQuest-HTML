@@ -2729,7 +2729,7 @@ function getCharLayers() {
     shirt: lootFile('shirt') || null,
     skin:  p + 'skin_' + g + sn + '.png',
     sword: p + 'sword_' + g + '.png',
-    hair:  p + 'hair_' + g + (((c.hairStyle||1) - 1) * 5 + hn) + '.png',
+    hair:  helmetFile ? null : p + 'hair_' + g + (((c.hairStyle||1) - 1) * 5 + hn) + '.png',
     helmet: helmetFile,
   };
 }
@@ -2914,7 +2914,15 @@ setInterval(function() {
     });
     var helmetOn = !!(S.profile.equippedItems || {}).helmet;
     var hairEl = document.getElementById('qsHair');
-    if (hairEl) hairEl.style.display = (helmetOn && qsAnim !== 'sleep') ? 'none' : '';
+    if (hairEl && helmetOn) {
+      if (qsAnim === 'sleep') {
+        var c = S.customization, g = c.gender || 'm', hn = c.hairNum || 1;
+        var hairUrl = 'sprites/preview_assets/char/hair_' + g + (((c.hairStyle||1) - 1) * 5 + hn) + '.png';
+        hairEl.style.backgroundImage = cssUrl(hairUrl);
+      } else {
+        hairEl.style.backgroundImage = 'none';
+      }
+    }
   }
 
   function qsSetPortalFrame(f) {
