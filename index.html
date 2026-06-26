@@ -2729,7 +2729,7 @@ function getCharLayers() {
     shirt: lootFile('shirt') || null,
     skin:  p + 'skin_' + g + sn + '.png',
     sword: p + 'sword_' + g + '.png',
-    hair:  helmetFile ? null : p + 'hair_' + g + (((c.hairStyle||1) - 1) * 5 + hn) + '.png',
+    hair:  p + 'hair_' + g + (((c.hairStyle||1) - 1) * 5 + hn) + '.png',
     helmet: helmetFile,
   };
 }
@@ -2961,20 +2961,6 @@ setInterval(function() {
       // Show/hide enemy portal
       el = document.getElementById('qsEnemyWrap');
       if(el) el.style.display = active > 0 ? 'block' : 'none';
-      // Sleep frames: show hair, hide helmet (helmet has no prone frames)
-      var isSleep = newAnim === 'sleep';
-      var layers = getCharLayers();
-      var hairEl = document.getElementById('qsHair');
-      var helmEl = document.getElementById('qsHelmet');
-      if (hairEl && isSleep) {
-        var c = S.customization, g = c.gender||'m', hn = c.hairNum||1;
-        hairEl.style.backgroundImage = cssUrl('sprites/preview_assets/char/hair_' + g + (((c.hairStyle||1)-1)*5+hn) + '.png');
-      } else if (hairEl && layers.hair) {
-        hairEl.style.backgroundImage = cssUrl(layers.hair);
-      } else if (hairEl) {
-        hairEl.style.backgroundImage = 'none';
-      }
-      if (helmEl) helmEl.style.backgroundImage = isSleep ? 'none' : (layers.helmet ? cssUrl(layers.helmet) : 'none');
     }
   };
 
