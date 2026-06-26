@@ -2912,6 +2912,9 @@ setInterval(function() {
       var el = document.getElementById(id);
       if (el) el.style.backgroundPosition = x+'px '+y+'px';
     });
+    var helmetOn = !!(S.profile.equippedItems || {}).helmet;
+    var hairEl = document.getElementById('qsHair');
+    if (hairEl) hairEl.style.display = (helmetOn && qsAnim !== 'sleep') ? 'none' : '';
   }
 
   function qsSetPortalFrame(f) {
