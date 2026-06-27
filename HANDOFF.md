@@ -376,16 +376,87 @@ After saving, re-inspect frame 0's plate zone to confirm zero brown pixels. If a
 
 ### Armor Tier Roadmap
 
-| Tier | File | Status | Notes |
-|------|------|--------|-------|
-| 1 | `leather_armor_1.png` | ✅ Done | Pure leather, direct shirt recolor, no plate |
-| 2 | `armor_chest_2.png` | ✅ Done | Studded leather with iron pauldrons + chest plate |
-| 3 | `armor_chest_3.png` | ❌ Not started | Chainmail (small diamond weave, muted steel tones) |
-| 4 | `armor_chest_4.png` | ❌ Not started | Full iron plate (less leather showing) |
-| 5 | `armor_chest_5.png` | ❌ Not started | Dark steel / engraved iron |
-| 6 | `armor_chest_6.png` | ❌ Not started | Ornate plate — gold trim, legendary tier |
+| Tier | Shirt | Pants | Boots | Helmet | Level |
+|------|-------|-------|-------|--------|-------|
+| 1 | `leather_armor_1` ✅ | `leather_pants_1` ✅ | `leather_boots_1` ✅ | `leather_helmet_1` ✅ | 1 |
+| 2 | `armor_chest_2` ✅ | `armor_pants_2` ✅ | `armor_boots_2` ✅ | `helmet_2` ✅ | 5 |
+| 3 | `armor_chest_3` ✅ | `armor_pants_3` ✅ | `armor_boots_3` ✅ | `helmet_3` ✅ | 10 |
+| 4 | `armor_chest_4` ✅ | `armor_pants_4` ✅ | `armor_boots_4` ✅ | `helmet_4` ✅ | 20 |
+| 5 | `armor_chest_5` ✅ | `armor_pants_5` ✅ | `armor_boots_5` ✅ | `helmet_5` ✅ | 30 |
+| 6 | `armor_chest_6` ✅ | `armor_pants_6` ✅ | `armor_boots_6` ✅ | `helmet_6` ✅ | 40 |
 
 All tiers: 800×448 spritesheet, `sprites/preview_assets/char/`, indexed in LOOT_TABLE with `slot:'shirt'`.
+
+---
+
+## Helmet Sprite Pipeline
+
+Helmets occupy the `helmet` equipment slot, rendering above all other character layers (DOM order: skin → boots → pants → shirt → sword → hair → helmet). When a helmet is equipped, `getCharLayers()` returns `hair: null` so hair is hidden under the helmet. Hair is dynamically re-shown during sleep animation via `qsSetCharFrame()`.
+
+### Head Pixel Reference (skin_m1.png frame 0)
+
+| Row | x range | Description |
+|-----|---------|-------------|
+| y=21 | x=38–42 (5px) | Skull top (all outline `#13131C`) |
+| y=22 | x=37–43 (7px) | Upper skull |
+| y=23–24 | x=36–44 (9px) | Forehead |
+| y=25 | x=36–44 (9px) | Brow / upper face |
+| y=26 | x=36–44 (9px) | **Eyes** (dark pixels at x=37, 39–41) |
+| y=27 | x=36–44 (9px) | Nose bridge |
+| y=28–30 | x=36–44 → x=36–42 | Mouth, chin (narrows) |
+| y=31 | x=37–42 (6px) | Neck |
+
+### Helmet Zone Layout (frame 0 local coords)
+
+- **Dome:** y=22–25 — covers skull and forehead. Max width x=35–44 (1px beyond head edge). Dome top no higher than y=22.
+- **Brow ridge:** y=25 — darkened row separating dome from face zone.
+- **Eye opening:** y=26–27 — open on left/face side (x=35–40), solid plate on right/back side (x=41–44). 3/4 asymmetric.
+- **Face plate:** y=28–31 — solid plate with T-bar slot or grate. Breathing slit possible.
+- **T-bar slot:** Vertical void 1px wide at x=38, runs y=28–30. Flares to 3px (x=37–39) at bottom row y=30 (keyhole shape).
+- **T6 grate:** Void bars at x=37/39/41, solid plate at x=38/40 between bars, runs y=28–30.
+
+### 3/4 Perspective Shading (character faces LEFT)
+
+- **Viewer-left (x=35–38):** Highlight / brightest tones — the face side catches light.
+- **Center (x=39–41):** Mid tones.
+- **Viewer-right (x=42–44):** Shadow / darkest fill — the back side recedes.
+- **Black outline (#000000):** On ALL exposed edges.
+- **Face openings:** Only on x=35–40 (viewer-left). x=41–44 is always solid closed plate.
+- **Interior depth:** Fill eye/face voids with near-black (#050505 or #0A0A0A).
+
+### Propagation
+
+Use `skin_m1.png` head bounding box (y<32) for per-frame tracking:
+1. For each frame, find the **top-of-head y** (minimum opaque y in head zone) — NOT centroid.
+2. Find **centroid x** of head pixels for horizontal positioning.
+3. Compute `dy = frame_top_y - f0_top_y` and `dx = round(frame_cx - f0_cx)`.
+4. Shift all helmet pixels by (dx, dy). Bounds-check before painting.
+5. The 1px idle bob (top_y alternates 20↔21) is captured correctly by top-of-head tracking.
+
+### Sleep Frames (68–69)
+
+- **No helmet pixels** rendered in frames 68–69 (spritesheet is transparent there).
+- **Hair visibility:** `qsSetCharFrame()` dynamically swaps the hair element's `backgroundImage` — loads the hair sprite URL when `qsAnim === 'sleep'` and helmet is equipped, sets to `'none'` otherwise. This runs every animation tick.
+- Do NOT attempt to rotate the frame-0 helmet for prone — pixel rotation produces artifacts.
+
+### Helmet Tier Status
+
+| Tier | File | Level | Type |
+|------|------|-------|------|
+| 1 | `leather_helmet_1.png` | 1 | Leather skullcap (open face) |
+| 2 | `helmet_2.png` | 5 | Iron kettle helm + nasal bar |
+| 3 | `helmet_3.png` | 10 | Chainmail coif + side drapes + face plate |
+| 4 | `helmet_4.png` | 20 | Silver sallet + T-bar visor |
+| 5 | `helmet_5.png` | 30 | Gold barbute + T-bar + keyhole |
+| 6 | `helmet_6.png` | 40 | Dark armet + grate + crown spike + red gem |
+
+### Design Preview Workflow
+
+1. Generate a bare head composite: `skin_m1.png` frame 0 on dark background, 20× zoom.
+2. Design helmet pixels in a dict `{(x,y): (r,g,b,a)}`.
+3. Composite helmet over bare head at 20× and save to Desktop for review.
+4. Iterate on the design before propagation — propagation is fast but design review is what takes time.
+5. After approval, propagate across all 45 frames and push.
 
 ---
 
