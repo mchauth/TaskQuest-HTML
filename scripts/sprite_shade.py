@@ -1,23 +1,46 @@
 #!/usr/bin/env python3
 """
-sprite_shade.py — Add convex shading to flat-colored armor sprites.
+sprite_shade.py — Per-pixel smooth shading for armor sprite sheets.
+
+Replaces the old zone-based shader (discrete darken/lighten bands) with a
+continuous cosine-falloff lighting model. Light source: upper-right,
+slightly elevated.
 
 Usage:
-  python3 scripts/sprite_shade.py <input.png> <output.png> [--alpha-threshold 10]
+  python3 scripts/sprite_shade.py <input.png> [output.png] [--dry-run] [--frame N]
 
-Shading model (light from the right, 3/4 perspective):
-  rel_x < 35   : deep shadow  → darken 35%
-  rel_x 35–38  : shadow zone  → darken 25%
-  rel_x 39–41  : highlight    → lighten 20%
-  rel_x 42–44  : base zone    → no change
-  rel_x 45+    : wrap shadow  → darken 15%
+If output.png is omitted the input is overwritten in place.
 
-Plus vertical gradient: top of armor ≈ +10%, bottom ≈ –10%.
+Shading model
+-------------
+Horizontal (primary light direction):
+  norm_x = (px_in_frame - 30) / 24        # character zone x=30..54 -> 0..1
+  intensity = cos((norm_x - 0.55) * pi)   # bell curve, peak at 0.55
+  base_adj  = map intensity [-1..1] -> [-0.35 .. +0.25]
 
-Armor pixels are defined as: opaque (alpha ≥ threshold), not outline
-(brightness < 30), not skin (#F4A460 ±20), not hair colors.
+Vertical (elevated light):
+  Within each contiguous armor segment per column: +8% at segment top
+  fading linearly to -8% at segment bottom.
 
-RGB adjustments are made in HSV space (V channel only) to avoid hue shift.
+Edge shadow:
+  Armor pixels 8-adjacent to an outline pixel get an extra -10%.
+
+Material response:
+  metallic (HSV sat > 0.35 and val > 0.55): positive adj capped at +0.25,
+      plus a 3px-wide specular streak at the highlight peak boosted to +0.35
+  matte (HSV sat < 0.35): positive adj capped at +0.15
+  everything else: cap +0.25
+
+Pixel classes
+-------------
+  outline    : alpha == 255 and R+G+B < 90     -> never shaded (defines form)
+  background : alpha < 10                      -> skipped
+  skin       : within +/-25 of #F4A460         -> skipped
+  hair       : near brown/black/blonde/silver palette -> skipped
+  armor      : alpha > 10, brightness > 30, not skin/hair/outline -> shaded
+
+Brightness is adjusted on the HSV V channel only (uniform RGB scale), so
+hue and saturation are preserved.
 """
 
 import sys
@@ -28,214 +51,239 @@ from PIL import Image
 FRAME_W, FRAME_H = 80, 64
 COLS, ROWS = 10, 7
 
-# Skin color and tolerance
-SKIN_RGB = np.array([244, 164, 96], dtype=np.float32)
-SKIN_TOL = 20
+# Character occupies x=30..54 within each frame
+CHAR_X0, CHAR_X1 = 30, 54
 
-# Hair color palette (dark → silver, covering all 5 game variants)
-# These are approximate palette entries; actual sprite pixels may vary slightly.
+# Skin color and tolerance (per task spec: #F4A460 +/-25)
+SKIN_RGB = np.array([244, 164, 96], dtype=np.float32)
+SKIN_TOL = 25
+
+# Hair palette — Dark / Auburn / Red / Blonde / Silver game variants
+# (brown/black/blonde/silver ranges; see HANDOFF.md hair color labels)
 HAIR_PALETTE = np.array([
     [40,  25,  12],   # Dark (very dark brown)
+    [60,  30,  10],   # Dark variant 2
     [80,  40,  15],   # Auburn dark
     [110, 60,  20],   # Auburn mid
     [150, 90,  40],   # Brown mid
-    [200, 160, 80],   # Blonde
-    [210, 210, 210],  # Silver light
-    [180, 180, 180],  # Silver mid
-    [155, 155, 155],  # Silver dark
-    [60,  30,  10],   # Dark variant 2
     [190, 130, 60],   # Warm blonde
+    [200, 160, 80],   # Blonde
+    [155, 155, 155],  # Silver dark
+    [180, 180, 180],  # Silver mid
+    [210, 210, 210],  # Silver light
 ], dtype=np.float32)
-HAIR_TOL = 15   # tight tolerance — avoids false-positives on dark-gold armor colors
+HAIR_TOL = 15   # tight Chebyshev tolerance — avoids eating gold armor tones
+
+# Shading constants
+PEAK = 0.55            # highlight peak position (norm_x)
+ADJ_MIN, ADJ_MAX = -0.35, 0.25
+VERT_AMPL = 0.08       # +/-8% top-to-bottom of each contiguous segment
+EDGE_DARK = -0.10      # extra darkening next to outline pixels
+METALLIC_CAP = 0.25
+SPECULAR_BOOST = 0.35  # metallic streak at highlight peak
+MATTE_CAP = 0.15
+SPECULAR_HALF_WIDTH_PX = 1.5   # ~3px wide streak centered on the peak
+MET_SAT, MET_VAL = 0.35, 0.55  # metallic thresholds in HSV
 
 
-# ── LUTs ──────────────────────────────────────────────────────────────────────
+# ── Horizontal cosine LUT ────────────────────────────────────────────────────
 
-def _build_x_factor_lut() -> np.ndarray:
-    """Float32 array [0..FRAME_W): brightness multiplier by x position."""
-    lut = np.ones(FRAME_W, dtype=np.float32)
-    for x in range(FRAME_W):
-        if x < 35:
-            lut[x] = 0.65   # deep shadow: darken 35%
-        elif x <= 38:
-            lut[x] = 0.75   # shadow zone: darken 25%
-        elif x <= 41:
-            lut[x] = 1.20   # highlight:   lighten 20%
-        elif x <= 44:
-            lut[x] = 1.00   # base zone:   no change
-        else:
-            lut[x] = 0.85   # wrap shadow: darken 15%
-    return lut
+def _build_x_adj_lut() -> np.ndarray:
+    """Per-x additive brightness adjustment from the cosine bell curve."""
+    xs = np.arange(FRAME_W, dtype=np.float32)
+    norm_x = np.clip((xs - CHAR_X0) / float(CHAR_X1 - CHAR_X0), 0.0, 1.0)
+    intensity = np.cos((norm_x - PEAK) * np.pi)          # [-1 .. 1]
+    return ADJ_MIN + (intensity + 1.0) * 0.5 * (ADJ_MAX - ADJ_MIN)
 
 
-def _build_y_factor_lut() -> np.ndarray:
-    """Float32 array [0..FRAME_H): brightness multiplier by y position."""
-    lut = np.ones(FRAME_H, dtype=np.float32)
-    Y_TOP, Y_BOT = 28, 45
-    for y in range(FRAME_H):
-        if y <= Y_TOP:
-            lut[y] = 1.10
-        elif y >= Y_BOT:
-            lut[y] = 0.90
-        else:
-            t = (y - Y_TOP) / (Y_BOT - Y_TOP)
-            lut[y] = 1.10 - t * 0.20   # linear 1.10 → 0.90
-    return lut
+X_ADJ = _build_x_adj_lut()
+
+# Specular streak column mask (3px around the peak x)
+_peak_px = CHAR_X0 + PEAK * (CHAR_X1 - CHAR_X0)
+SPECULAR_COLS = np.abs(np.arange(FRAME_W) - _peak_px) <= SPECULAR_HALF_WIDTH_PX
 
 
-X_FACTOR = _build_x_factor_lut()
-Y_FACTOR = _build_y_factor_lut()
+# ── Pixel classification ─────────────────────────────────────────────────────
 
-# Combined factor grid: shape (FRAME_H, FRAME_W)
-COMBINED_FACTOR = (Y_FACTOR[:, np.newaxis] * X_FACTOR[np.newaxis, :])
+def classify(frame: np.ndarray):
+    """Return (armor_mask, outline_mask) boolean arrays for one RGBA frame."""
+    rgb = frame[:, :, :3].astype(np.float32)
+    alpha = frame[:, :, 3]
 
+    brightness = rgb.mean(axis=-1)
+    rgb_sum = rgb.sum(axis=-1)
 
-# ── Pixel classification helpers ───────────────────────────────────────────────
+    outline = (alpha == 255) & (rgb_sum < 90)
+    background = alpha < 10
 
-def _brightness(rgb: np.ndarray) -> np.ndarray:
-    """Mean brightness per pixel. rgb shape (..., 3), returns (...)."""
-    return rgb.mean(axis=-1)
+    skin = (np.abs(rgb - SKIN_RGB) <= SKIN_TOL).all(axis=-1)
 
-
-def _is_skin(rgb: np.ndarray) -> np.ndarray:
-    """Boolean mask: True where pixel is within SKIN_TOL of skin color."""
-    diff = np.abs(rgb.astype(np.float32) - SKIN_RGB)
-    return (diff <= SKIN_TOL).all(axis=-1)
-
-
-def _is_hair(rgb: np.ndarray) -> np.ndarray:
-    """Boolean mask: True where pixel is within HAIR_TOL of any hair color."""
-    # rgb: (H, W, 3), result: (H, W)
     h, w = rgb.shape[:2]
-    rf = rgb.astype(np.float32).reshape(-1, 1, 3)     # (H*W, 1, 3)
-    palette = HAIR_PALETTE[np.newaxis, :, :]           # (1, P, 3)
-    diffs = np.abs(rf - palette).max(axis=-1)          # (H*W, P) — Chebyshev
-    closest = diffs.min(axis=-1)                       # (H*W,)
-    return (closest <= HAIR_TOL).reshape(h, w)
+    diffs = np.abs(rgb.reshape(-1, 1, 3) - HAIR_PALETTE[np.newaxis, :, :]).max(axis=-1)
+    hair = (diffs.min(axis=-1) <= HAIR_TOL).reshape(h, w)
+
+    armor = (~background) & (alpha > 10) & (brightness > 30) & ~outline & ~skin & ~hair
+    return armor, outline
 
 
-# ── HSV brightness adjustment (vectorised) ────────────────────────────────────
-
-def _adjust_v(rgb: np.ndarray, factors: np.ndarray) -> np.ndarray:
-    """
-    Scale the V (value) channel of each pixel by factors[y,x] without
-    shifting hue or saturation.
-
-    Parameters
-    ----------
-    rgb     : uint8 (H, W, 3)
-    factors : float32 (H, W)
-
-    Returns
-    -------
-    uint8 (H, W, 3)
-    """
-    rf = rgb.astype(np.float32)
-    v = rf.max(axis=-1)                          # V = max(R,G,B), shape (H,W)
-    v_new = np.clip(v * factors, 0.0, 255.0)
-
-    # Scale factor per pixel: avoid div-by-zero on pure black
-    scale = np.where(v > 0, v_new / np.maximum(v, 1e-9), 1.0)  # (H,W)
-    result = np.clip(rf * scale[:, :, np.newaxis], 0, 255)
-    return result.astype(np.uint8)
-
-
-# ── Main shading routine ───────────────────────────────────────────────────────
-
-def shade_sprite(
-    arr: np.ndarray,
-    alpha_threshold: int = 10,
-) -> np.ndarray:
-    """
-    Apply convex shading to all armor pixels in the sprite sheet.
-
-    Parameters
-    ----------
-    arr              : uint8 RGBA array (448, 800, 4)
-    alpha_threshold  : minimum alpha to consider a pixel opaque
-
-    Returns
-    -------
-    uint8 RGBA (448, 800, 4) — alpha channel untouched
-    """
-    out = arr.copy()
-
-    for row in range(ROWS):
-        for col in range(COLS):
-            gy = row * FRAME_H
-            gx = col * FRAME_W
-
-            frame = arr[gy:gy+FRAME_H, gx:gx+FRAME_W]   # (64, 80, 4)
-            rgb   = frame[:, :, :3]
-            alpha = frame[:, :,  3]
-
-            # --- build armor mask ---
-            opaque    = alpha >= alpha_threshold
-            outline   = _brightness(rgb.astype(np.float32)) < 30
-            skin_mask = _is_skin(rgb)
-            hair_mask = _is_hair(rgb)
-
-            armor_mask = opaque & ~outline & ~skin_mask & ~hair_mask
-
-            if not armor_mask.any():
+def dilate8(mask: np.ndarray) -> np.ndarray:
+    """8-neighbor dilation via padded shifts (no scipy dependency)."""
+    p = np.pad(mask, 1, mode='constant')
+    out = np.zeros_like(mask)
+    for dy in (-1, 0, 1):
+        for dx in (-1, 0, 1):
+            if dy == 0 and dx == 0:
                 continue
-
-            # --- apply shading only within this frame ---
-            rgb_shaded = _adjust_v(rgb, COMBINED_FACTOR)
-
-            # Write back: only armor pixels change, alpha untouched
-            new_rgb = rgb.copy()
-            new_rgb[armor_mask] = rgb_shaded[armor_mask]
-            out[gy:gy+FRAME_H, gx:gx+FRAME_W, :3] = new_rgb
-
+            out |= p[1 + dy:1 + dy + mask.shape[0], 1 + dx:1 + dx + mask.shape[1]]
     return out
 
 
-# ── CLI ────────────────────────────────────────────────────────────────────────
+# ── Vertical segment gradient ────────────────────────────────────────────────
 
-def print_sample(arr: np.ndarray, label: str):
-    """Print shading gradient samples from frame 0 for visual verification."""
-    print(f"\n── {label} frame-0 samples (frame 0 = top-left 80×64 crop) ──")
-    print(f"  {'y':>3}  {'x=36':>14}  {'x=40':>14}  {'x=43':>14}")
-    for y in [30, 34, 38, 42, 46]:
-        def fmt(x):
-            r, g, b, a = arr[y, x]
-            return f"({r:3},{g:3},{b:3})" if a > 10 else "    transp    "
-        print(f"  {y:>3}  {fmt(36)}  {fmt(40)}  {fmt(43)}")
+def vertical_adj(armor: np.ndarray) -> np.ndarray:
+    """
+    Per-pixel vertical adjustment: within each contiguous run of armor pixels
+    in a column, +VERT_AMPL at the top fading linearly to -VERT_AMPL at the
+    bottom. Single-pixel segments get 0.
+    """
+    h, w = armor.shape
+    adj = np.zeros((h, w), dtype=np.float32)
+    for x in range(w):
+        col = armor[:, x]
+        if not col.any():
+            continue
+        ys = np.flatnonzero(col)
+        # split into contiguous runs
+        splits = np.flatnonzero(np.diff(ys) > 1) + 1
+        for run in np.split(ys, splits):
+            top, bot = run[0], run[-1]
+            if bot == top:
+                continue
+            t = (run - top) / float(bot - top)          # 0 at top, 1 at bottom
+            adj[run, x] = VERT_AMPL - 2.0 * VERT_AMPL * t
+    return adj
+
+
+# ── HSV material classification ──────────────────────────────────────────────
+
+def material_masks(rgb: np.ndarray):
+    """Return (metallic, matte) masks from HSV saturation/value."""
+    rf = rgb.astype(np.float32) / 255.0
+    v = rf.max(axis=-1)
+    mn = rf.min(axis=-1)
+    sat = np.where(v > 0, (v - mn) / np.maximum(v, 1e-9), 0.0)
+    metallic = (sat > MET_SAT) & (v > MET_VAL)
+    matte = sat <= MET_SAT
+    return metallic, matte
+
+
+# ── Per-frame shading ────────────────────────────────────────────────────────
+
+def shade_frame(frame: np.ndarray) -> tuple[np.ndarray, int]:
+    """Shade one 64x80 RGBA frame. Returns (new_frame, n_armor_pixels)."""
+    armor, outline = classify(frame)
+    if not armor.any():
+        return frame, 0
+
+    rgb = frame[:, :, :3]
+
+    # 1) horizontal cosine adjustment (broadcast per column)
+    adj = np.broadcast_to(X_ADJ[np.newaxis, :], armor.shape).astype(np.float32).copy()
+
+    # 2) vertical per-segment gradient
+    adj += vertical_adj(armor)
+
+    # 3) edge darkening next to outline pixels
+    adj += np.where(dilate8(outline), EDGE_DARK, 0.0)
+
+    # 4) material response: cap positive adjustments, add specular streak
+    metallic, matte = material_masks(rgb)
+    pos = adj > 0
+    adj = np.where(pos & matte, np.minimum(adj, MATTE_CAP), adj)
+    adj = np.where(pos & metallic, np.minimum(adj, METALLIC_CAP), adj)
+    # specular: metallic pixels in the 3px peak streak get boosted highlight
+    streak = metallic & np.broadcast_to(SPECULAR_COLS[np.newaxis, :], armor.shape) & pos
+    adj = np.where(streak, SPECULAR_BOOST, adj)
+
+    # apply on V channel: scale RGB uniformly so hue/sat are preserved
+    factor = 1.0 + adj
+    rf = rgb.astype(np.float32)
+    v = rf.max(axis=-1)
+    v_new = np.clip(v * factor, 0.0, 255.0)
+    scale = np.where(v > 0, v_new / np.maximum(v, 1e-9), 1.0)
+    shaded = np.clip(rf * scale[:, :, np.newaxis], 0, 255).astype(np.uint8)
+
+    out = frame.copy()
+    out[:, :, :3] = np.where(armor[:, :, np.newaxis], shaded, rgb)
+    return out, int(armor.sum())
+
+
+def shade_sheet(arr: np.ndarray, only_frame: int | None = None):
+    """Shade all frames (or a single frame). Returns (out, stats dict)."""
+    out = arr.copy()
+    total_armor = 0
+    frames_touched = 0
+    for fi in range(COLS * ROWS):
+        if only_frame is not None and fi != only_frame:
+            continue
+        col, row = fi % COLS, fi // COLS
+        gx, gy = col * FRAME_W, row * FRAME_H
+        new_frame, n = shade_frame(arr[gy:gy + FRAME_H, gx:gx + FRAME_W])
+        if n:
+            out[gy:gy + FRAME_H, gx:gx + FRAME_W] = new_frame
+            total_armor += n
+            frames_touched += 1
+    return out, {"armor_pixels": total_armor, "frames_shaded": frames_touched}
+
+
+# ── CLI ──────────────────────────────────────────────────────────────────────
+
+SAMPLE_XS = (35, 38, 41, 44)
+SAMPLE_Y = 35
+
+
+def print_samples(before: np.ndarray, after: np.ndarray):
+    print(f"  frame 0 samples at y={SAMPLE_Y}:")
+    for x in SAMPLE_XS:
+        br, bg_, bb, ba = (int(v) for v in before[SAMPLE_Y, x])
+        ar, ag, ab, aa = (int(v) for v in after[SAMPLE_Y, x])
+        if ba <= 10:
+            print(f"    x={x}: transparent")
+        else:
+            print(f"    x={x}: ({br:3},{bg_:3},{bb:3}) -> ({ar:3},{ag:3},{ab:3})")
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Add convex shading to flat-colored armor sprite sheets."
-    )
-    parser.add_argument("input",  help="Input PNG sprite sheet (800×448)")
-    parser.add_argument("output", help="Output PNG path")
-    parser.add_argument(
-        "--alpha-threshold", type=int, default=10,
-        help="Min alpha to treat pixel as opaque (default 10)"
-    )
-    parser.add_argument(
-        "--samples", action="store_true",
-        help="Print pixel value samples at x=36,40,43 for visual verification"
-    )
+        description="Per-pixel cosine-falloff shading for armor sprite sheets.")
+    parser.add_argument("input", help="Input PNG sprite sheet (800x448)")
+    parser.add_argument("output", nargs="?", default=None,
+                        help="Output PNG path (default: overwrite input)")
+    parser.add_argument("--dry-run", action="store_true",
+                        help="Print stats without saving")
+    parser.add_argument("--frame", type=int, default=None, metavar="N",
+                        help="Process only frame N (0-69), for testing")
     args = parser.parse_args()
 
     img = Image.open(args.input).convert("RGBA")
     if img.size != (800, 448):
-        print(f"WARNING: expected 800×448, got {img.size}", file=sys.stderr)
+        print(f"WARNING: expected 800x448, got {img.size}", file=sys.stderr)
 
     arr = np.array(img, dtype=np.uint8)
+    shaded, stats = shade_sheet(arr, only_frame=args.frame)
 
-    if args.samples:
-        print_sample(arr, f"BEFORE {args.input}")
+    print(f"{args.input}: shaded {stats['armor_pixels']} armor pixels "
+          f"across {stats['frames_shaded']} frames"
+          f"{f' (frame {args.frame} only)' if args.frame is not None else ''}")
+    print_samples(arr, shaded)
 
-    shaded = shade_sprite(arr, alpha_threshold=args.alpha_threshold)
+    if args.dry_run:
+        print("  dry run — nothing saved")
+        return
 
-    if args.samples:
-        print_sample(shaded, f"AFTER  {args.output}")
-
-    Image.fromarray(shaded).save(args.output)
-    print(f"Saved: {args.output}")
+    out_path = args.output or args.input
+    Image.fromarray(shaded).save(out_path)
+    print(f"  saved: {out_path}")
 
 
 if __name__ == "__main__":
