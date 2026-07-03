@@ -14,16 +14,20 @@ If output.png is omitted the input is overwritten in place.
 Shading model
 -------------
 Horizontal (primary light direction):
-  norm_x = (px_in_frame - 30) / 24        # character zone x=30..54 -> 0..1
-  intensity = cos((norm_x - 0.55) * pi)   # bell curve, peak at 0.55
-  base_adj  = map intensity [-1..1] -> [-0.35 .. +0.25]
+  norm_x = (px_in_frame - 30) / 24            # character zone x=30..54 -> 0..1
+  intensity = cos((norm_x - 0.55) * pi * 0.8) # wide bell, peak at 0.55
+  base_adj  = map intensity [-1..1] -> [-0.28 .. +0.25]
 
-Vertical (elevated light):
-  Within each contiguous armor segment per column: +8% at segment top
-  fading linearly to -8% at segment bottom.
+Vertical (elevated light / plate bulge):
+  Within each contiguous armor segment per column, a sine bulge:
+  sin(pi * t) with t = position within segment. The middle of the plate
+  reads as the most forward surface. Mapped to +/-8% brightness
+  (-8% at segment ends, +8% at the middle).
 
-Edge shadow:
-  Armor pixels 8-adjacent to an outline pixel get an extra -10%.
+Edge shadow (curvature falloff):
+  Distance-from-outline falloff: armor pixels within 3px of any outline
+  pixel get a quadratic shadow ramp, from 0% at 3px away to -12% right
+  next to the outline. No hard adjacency line.
 
 Material response:
   metallic (HSV sat > 0.35 and val > 0.55): positive adj smoothly rescaled
@@ -76,9 +80,11 @@ HAIR_TOL = 15   # tight Chebyshev tolerance — avoids eating gold armor tones
 
 # Shading constants
 PEAK = 0.55            # highlight peak position (norm_x)
-ADJ_MIN, ADJ_MAX = -0.35, 0.25
-VERT_AMPL = 0.08       # +/-8% top-to-bottom of each contiguous segment
-EDGE_DARK = -0.10      # extra darkening next to outline pixels
+BELL_WIDTH = 0.8       # cosine bell widening factor (spreads the highlight)
+ADJ_MIN, ADJ_MAX = -0.28, 0.25
+VERT_AMPL = 0.08       # +/-8% sine bulge within each contiguous segment
+EDGE_DARK_MAX = 0.12   # max shadow right next to an outline pixel
+EDGE_DIST = 3          # falloff radius in px (0 shadow at this distance)
 METALLIC_PEAK = 0.30   # smooth cosine peak for metallic colors (was cap 0.25)
 MATTE_CAP = 0.15
 MET_SAT, MET_VAL = 0.35, 0.55  # metallic thresholds in HSV
@@ -90,7 +96,7 @@ def _build_x_adj_lut() -> np.ndarray:
     """Per-x additive brightness adjustment from the cosine bell curve."""
     xs = np.arange(FRAME_W, dtype=np.float32)
     norm_x = np.clip((xs - CHAR_X0) / float(CHAR_X1 - CHAR_X0), 0.0, 1.0)
-    intensity = np.cos((norm_x - PEAK) * np.pi)          # [-1 .. 1]
+    intensity = np.cos((norm_x - PEAK) * np.pi * BELL_WIDTH)   # wide bell
     return ADJ_MIN + (intensity + 1.0) * 0.5 * (ADJ_MAX - ADJ_MIN)
 
 
@@ -132,13 +138,31 @@ def dilate8(mask: np.ndarray) -> np.ndarray:
     return out
 
 
+def edge_falloff_adj(outline: np.ndarray) -> np.ndarray:
+    """
+    Curvature shadow: per-pixel negative adjustment that ramps quadratically
+    from -EDGE_DARK_MAX right next to an outline pixel to 0 at EDGE_DIST px
+    away. Chebyshev distance via iterated 8-neighbor dilation.
+    """
+    dist = np.full(outline.shape, EDGE_DIST + 1, dtype=np.float32)
+    ring = outline.copy()
+    for d in range(1, EDGE_DIST + 1):
+        ring = dilate8(ring) | ring
+        dist = np.where(ring & (dist > EDGE_DIST), d, dist)
+    # quadratic ramp: t=1 right next to outline (dist 1), t=0 at EDGE_DIST
+    t = np.clip((EDGE_DIST - dist) / float(EDGE_DIST - 1), 0.0, 1.0)
+    return -EDGE_DARK_MAX * t * t
+
+
 # ── Vertical segment gradient ────────────────────────────────────────────────
 
 def vertical_adj(armor: np.ndarray) -> np.ndarray:
     """
     Per-pixel vertical adjustment: within each contiguous run of armor pixels
-    in a column, +VERT_AMPL at the top fading linearly to -VERT_AMPL at the
-    bottom. Single-pixel segments get 0.
+    in a column, a sine bulge sin(pi * t) mapped to [-VERT_AMPL, +VERT_AMPL].
+    The middle of each segment is brightest (+VERT_AMPL), the ends darkest
+    (-VERT_AMPL) — plates read as curved, not flat ramps. Single-pixel
+    segments get 0.
     """
     h, w = armor.shape
     adj = np.zeros((h, w), dtype=np.float32)
@@ -154,7 +178,7 @@ def vertical_adj(armor: np.ndarray) -> np.ndarray:
             if bot == top:
                 continue
             t = (run - top) / float(bot - top)          # 0 at top, 1 at bottom
-            adj[run, x] = VERT_AMPL - 2.0 * VERT_AMPL * t
+            adj[run, x] = VERT_AMPL * (2.0 * np.sin(np.pi * t) - 1.0)
     return adj
 
 
@@ -187,8 +211,8 @@ def shade_frame(frame: np.ndarray) -> tuple[np.ndarray, int]:
     # 2) vertical per-segment gradient
     adj += vertical_adj(armor)
 
-    # 3) edge darkening next to outline pixels
-    adj += np.where(dilate8(outline), EDGE_DARK, 0.0)
+    # 3) curvature shadow: quadratic distance-from-outline falloff
+    adj += edge_falloff_adj(outline)
 
     # 4) material response: matte pixels capped; metallic pixels get their
     #    positive adjustment smoothly rescaled so the cosine peak reaches
