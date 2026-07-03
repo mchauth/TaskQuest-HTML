@@ -26,8 +26,8 @@ Edge shadow:
   Armor pixels 8-adjacent to an outline pixel get an extra -10%.
 
 Material response:
-  metallic (HSV sat > 0.35 and val > 0.55): positive adj capped at +0.25,
-      plus a 3px-wide specular streak at the highlight peak boosted to +0.35
+  metallic (HSV sat > 0.35 and val > 0.55): positive adj smoothly rescaled
+      so the cosine peak reaches +0.30 (continuous curve, no bands/streaks)
   matte (HSV sat < 0.35): positive adj capped at +0.15
   everything else: cap +0.25
 
@@ -79,10 +79,8 @@ PEAK = 0.55            # highlight peak position (norm_x)
 ADJ_MIN, ADJ_MAX = -0.35, 0.25
 VERT_AMPL = 0.08       # +/-8% top-to-bottom of each contiguous segment
 EDGE_DARK = -0.10      # extra darkening next to outline pixels
-METALLIC_CAP = 0.25
-SPECULAR_BOOST = 0.35  # metallic streak at highlight peak
+METALLIC_PEAK = 0.30   # smooth cosine peak for metallic colors (was cap 0.25)
 MATTE_CAP = 0.15
-SPECULAR_HALF_WIDTH_PX = 1.5   # ~3px wide streak centered on the peak
 MET_SAT, MET_VAL = 0.35, 0.55  # metallic thresholds in HSV
 
 
@@ -97,10 +95,6 @@ def _build_x_adj_lut() -> np.ndarray:
 
 
 X_ADJ = _build_x_adj_lut()
-
-# Specular streak column mask (3px around the peak x)
-_peak_px = CHAR_X0 + PEAK * (CHAR_X1 - CHAR_X0)
-SPECULAR_COLS = np.abs(np.arange(FRAME_W) - _peak_px) <= SPECULAR_HALF_WIDTH_PX
 
 
 # ── Pixel classification ─────────────────────────────────────────────────────
@@ -196,14 +190,15 @@ def shade_frame(frame: np.ndarray) -> tuple[np.ndarray, int]:
     # 3) edge darkening next to outline pixels
     adj += np.where(dilate8(outline), EDGE_DARK, 0.0)
 
-    # 4) material response: cap positive adjustments, add specular streak
+    # 4) material response: matte pixels capped; metallic pixels get their
+    #    positive adjustment smoothly rescaled so the cosine peak reaches
+    #    METALLIC_PEAK. Continuous curve — no discrete bands or streaks.
     metallic, matte = material_masks(rgb)
     pos = adj > 0
     adj = np.where(pos & matte, np.minimum(adj, MATTE_CAP), adj)
-    adj = np.where(pos & metallic, np.minimum(adj, METALLIC_CAP), adj)
-    # specular: metallic pixels in the 3px peak streak get boosted highlight
-    streak = metallic & np.broadcast_to(SPECULAR_COLS[np.newaxis, :], armor.shape) & pos
-    adj = np.where(streak, SPECULAR_BOOST, adj)
+    adj = np.where(pos & metallic,
+                   np.minimum(adj * (METALLIC_PEAK / ADJ_MAX), METALLIC_PEAK),
+                   adj)
 
     # apply on V channel: scale RGB uniformly so hue/sat are preserved
     factor = 1.0 + adj
