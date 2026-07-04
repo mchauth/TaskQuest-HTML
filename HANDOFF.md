@@ -387,6 +387,18 @@ After saving, re-inspect frame 0's plate zone to confirm zero brown pixels. If a
 
 All tiers: 800×448 spritesheet, `sprites/preview_assets/char/`, indexed in LOOT_TABLE with `slot:'shirt'`.
 
+### Rare Warrior Sets (Legendary Prestige Skins)
+
+Not part of the tier progression — unlockable prestige skins. Generated pixel-by-pixel with PIL using palette-swap + centroid/head-top propagation. Level 25 req, `rarity:'legendary'`, `classes:['warrior']`.
+
+| Set | Files | Color Identity | Signature |
+|-----|-------|---------------|-----------|
+| Crimson Sentinel | `helmet_rare1`, `shirt_rare1`, `pants_rare1` | Deep red + gold | Full-face gold visor, white star emblem, T-bar slot |
+| Shadow Warden | `helmet_rare2`, `shirt_rare2`, `pants_rare2` | Near-black + teal | Full-face teal visor, 3-bar teal grate, teal diamond |
+| Solar Paladin | `helmet_rare3`, `shirt_rare3`, `pants_rare3` | Rich gold + ivory | Full-face ivory visor, white sun emblem, T-bar slot |
+
+**Design approach:** Palette-swap from `shirt.png`/`pants.png` mask + explicit helm pixel dicts. Generation script at `outputs/gen_rare_armor.py`. Accent pixels (emblem, visor) painted on frame 0 before propagation.
+
 ---
 
 ## Helmet Sprite Pipeline
@@ -508,8 +520,8 @@ Reassemble in Python: `''.join(c.replace('|','') for c in chunks)`.
 ## Deployment
 
 ```bash
-# From scratch each session (PAT expires occasionally):
-cd /tmp && git clone https://mchauth:<PAT>@github.com/mchauth/TaskQuest-HTML.git tq_push
+# From scratch each session:
+cd /tmp && git clone https://mchauth:<GITHUB_PAT>@github.com/mchauth/TaskQuest-HTML.git tq_push
 cd /tmp/tq_push
 git config user.email "mchauth@gmail.com"
 git config user.name "Matt Hauth"
