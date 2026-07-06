@@ -13,10 +13,17 @@ If output.png is omitted the input is overwritten in place.
 
 Shading model
 -------------
+Band smoothing (pre-pass):
+  Hue-preserving V diffusion across armor pixels (3 iterations, 3x3
+  neighbourhood, 45% blend). Dissolves flat authored tone bands (e.g.
+  255 -> 159 -> 50 hard steps across the chest plate) into gradients.
+  Emblem/accent pixels (bright gold/teal) are frozen but act as light
+  sources, producing a soft glow falloff around the chest triangle.
+
 Horizontal (primary light direction):
   norm_x = (px_in_frame - 30) / 24            # character zone x=30..54 -> 0..1
-  intensity = cos((norm_x - 0.55) * pi * 0.8) # wide bell, peak at 0.55
-  base_adj  = map intensity [-1..1] -> [-0.18 .. +0.30]
+  intensity = cos((norm_x - 0.55) * pi * 0.7) # wide bell, peak at 0.55
+  base_adj  = map intensity [-1..1] -> [-0.12 .. +0.30]
 
 Vertical (elevated light / plate bulge):
   Within each contiguous armor segment per column, a sine bulge:
@@ -37,11 +44,12 @@ Material response:
 
 Pixel classes
 -------------
-  outline    : alpha == 255 and R+G+B < 90     -> never shaded (defines form)
+  outline    : alpha == 255 and R+G+B < 15     -> never shaded (defines form)
   background : alpha < 10                      -> skipped
   skin       : within +/-25 of #F4A460         -> skipped
-  hair       : near brown/black/blonde/silver palette -> skipped
-  armor      : alpha > 10, brightness > 30, not skin/hair/outline -> shaded
+  hair       : near brown/black/blonde/silver palette, y < 28 only -> skipped
+  accent     : bright gold/teal (emblem, trim) -> smoothing source, never shaded
+  armor      : alpha > 10, brightness > 4, not skin/hair/outline -> shaded
 
 Brightness is adjusted on the HSV V channel only (uniform RGB scale), so
 hue and saturation are preserved.
@@ -80,11 +88,24 @@ HAIR_TOL = 15   # tight Chebyshev tolerance — avoids eating gold armor tones
 
 # Shading constants
 PEAK = 0.55            # highlight peak position (norm_x)
-BELL_WIDTH = 0.8       # cosine bell widening factor (spreads the highlight)
-ADJ_MIN, ADJ_MAX = -0.18, 0.30
-VERT_AMPL = 0.08       # +/-8% sine bulge within each contiguous segment
-EDGE_DARK_MAX = 0.12   # max shadow right next to an outline pixel
+BELL_WIDTH = 0.7       # cosine bell widening factor (wider = smoother falloff)
+ADJ_MIN, ADJ_MAX = -0.12, 0.30
+VERT_AMPL = 0.05       # +/-5% sine bulge within each contiguous segment
+EDGE_DARK_MAX = 0.08   # max shadow right next to an outline pixel
 EDGE_DIST = 3          # falloff radius in px (0 shadow at this distance)
+
+# Band smoothing (hue-preserving V diffusion — removes flat tone-band steps)
+SMOOTH_ITERS = 3       # diffusion iterations
+SMOOTH_ALPHA = 0.45    # per-iteration blend toward 3x3 armor-neighbor mean V
+
+# Classification thresholds
+OUTLINE_SUM_MAX = 15   # R+G+B below this (at alpha 255) = true black outline
+ARMOR_MIN_BRIGHT = 4   # mean RGB above this counts as armor (dark shadow
+                       # tones like 50,0,0 / 40,25,0 / 18,10,32 are armor,
+                       # NOT outline — they must be smoothed/lightened)
+HAIR_Y_MAX = 28        # hair exclusion only applies above this row (head
+                       # zone); prevents dark chest shadow tones (e.g.
+                       # 40,25,0) from matching the hair palette
 METALLIC_PEAK = 0.30   # smooth cosine peak for metallic colors (was cap 0.25)
 MATTE_CAP = 0.15
 MET_SAT, MET_VAL = 0.35, 0.55  # metallic thresholds in HSV
@@ -113,7 +134,9 @@ def classify(frame: np.ndarray):
     brightness = rgb.mean(axis=-1)
     rgb_sum = rgb.sum(axis=-1)
 
-    outline = (alpha == 255) & (rgb_sum < 90)
+    # Only true black counts as outline. Dark shadow tones (50,0,0 etc.)
+    # must remain armor so the band-smoothing pass can lift them.
+    outline = (alpha == 255) & (rgb_sum < OUTLINE_SUM_MAX)
     background = alpha < 10
 
     skin = (np.abs(rgb - SKIN_RGB) <= SKIN_TOL).all(axis=-1)
@@ -121,9 +144,58 @@ def classify(frame: np.ndarray):
     h, w = rgb.shape[:2]
     diffs = np.abs(rgb.reshape(-1, 1, 3) - HAIR_PALETTE[np.newaxis, :, :]).max(axis=-1)
     hair = (diffs.min(axis=-1) <= HAIR_TOL).reshape(h, w)
+    hair[HAIR_Y_MAX:, :] = False   # hair lives on the head only
 
-    armor = (~background) & (alpha > 10) & (brightness > 30) & ~outline & ~skin & ~hair
+    armor = ((~background) & (alpha > 10) & (brightness > ARMOR_MIN_BRIGHT)
+             & ~outline & ~skin & ~hair)
     return armor, outline
+
+
+def accent_mask(rgb: np.ndarray, alpha: np.ndarray) -> np.ndarray:
+    """
+    Emblem / accent pixels (bright gold or teal trim, e.g. the chest
+    triangle). These are protected: never darkened by shading and never
+    modified by band smoothing — though they DO act as diffusion sources,
+    which gives armor around the emblem a gentle bright falloff.
+    """
+    r = rgb[:, :, 0].astype(np.int16)
+    g = rgb[:, :, 1].astype(np.int16)
+    b = rgb[:, :, 2].astype(np.int16)
+    gold = (r >= 230) & (g >= 190)
+    teal = (g >= 190) & (b >= 160) & (r <= g) & (r <= b)
+    return (alpha > 10) & (gold | teal)
+
+
+def smooth_bands(rgb: np.ndarray, armor: np.ndarray,
+                 accent: np.ndarray) -> np.ndarray:
+    """
+    Hue-preserving band smoothing: iteratively blend each armor pixel's
+    V (max RGB) toward the mean V of its 3x3 armor neighbourhood. Flat
+    tone-band steps (e.g. 255 -> 159 -> 50 across adjacent columns) turn
+    into gradual ramps; hue and saturation are untouched because RGB is
+    scaled uniformly per pixel. Accent/emblem pixels contribute as
+    sources but are never modified.
+    """
+    h, w = armor.shape
+    rf = rgb.astype(np.float32)
+    v = rf.max(axis=-1)
+    vv = v.copy()
+    m = armor.astype(np.float32)
+    editable = armor & ~accent
+    for _ in range(SMOOTH_ITERS):
+        pv = np.pad(vv * m, 1)
+        pm = np.pad(m, 1)
+        s = np.zeros((h, w), dtype=np.float32)
+        c = np.zeros((h, w), dtype=np.float32)
+        for dy in (0, 1, 2):
+            for dx in (0, 1, 2):
+                s += pv[dy:dy + h, dx:dx + w]
+                c += pm[dy:dy + h, dx:dx + w]
+        mean = np.where(c > 0, s / np.maximum(c, 1e-9), vv)
+        target = vv * (1.0 - SMOOTH_ALPHA) + mean * SMOOTH_ALPHA
+        vv = np.where(editable, target, vv)
+    scale = np.where(v > 0, vv / np.maximum(v, 1e-9), 1.0)
+    return np.clip(rf * scale[:, :, np.newaxis], 0, 255)
 
 
 def dilate8(mask: np.ndarray) -> np.ndarray:
@@ -204,6 +276,11 @@ def shade_frame(frame: np.ndarray) -> tuple[np.ndarray, int]:
         return frame, 0
 
     rgb = frame[:, :, :3]
+    accent = accent_mask(rgb, frame[:, :, 3])
+
+    # 0) band smoothing: dissolve flat tone-band steps into gradients
+    #    before applying the light model (hue-preserving V diffusion)
+    rf = smooth_bands(rgb, armor, accent)
 
     # 1) horizontal cosine adjustment (broadcast per column)
     adj = np.broadcast_to(X_ADJ[np.newaxis, :], armor.shape).astype(np.float32).copy()
@@ -224,9 +301,12 @@ def shade_frame(frame: np.ndarray) -> tuple[np.ndarray, int]:
                    np.minimum(adj * (METALLIC_PEAK / ADJ_MAX), METALLIC_PEAK),
                    adj)
 
+    # 5) emblem/accent protection: the chest triangle and bright trim keep
+    #    their authored colors — no darkening, no gradient
+    adj = np.where(accent, 0.0, adj)
+
     # apply on V channel: scale RGB uniformly so hue/sat are preserved
     factor = 1.0 + adj
-    rf = rgb.astype(np.float32)
     v = rf.max(axis=-1)
     v_new = np.clip(v * factor, 0.0, 255.0)
     scale = np.where(v > 0, v_new / np.maximum(v, 1e-9), 1.0)
