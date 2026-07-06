@@ -16,7 +16,7 @@ Shading model
 Horizontal (primary light direction):
   norm_x = (px_in_frame - 30) / 24            # character zone x=30..54 -> 0..1
   intensity = cos((norm_x - 0.55) * pi * 0.8) # wide bell, peak at 0.55
-  base_adj  = map intensity [-1..1] -> [-0.28 .. +0.25]
+  base_adj  = map intensity [-1..1] -> [-0.18 .. +0.30]
 
 Vertical (elevated light / plate bulge):
   Within each contiguous armor segment per column, a sine bulge:
@@ -81,7 +81,7 @@ HAIR_TOL = 15   # tight Chebyshev tolerance — avoids eating gold armor tones
 # Shading constants
 PEAK = 0.55            # highlight peak position (norm_x)
 BELL_WIDTH = 0.8       # cosine bell widening factor (spreads the highlight)
-ADJ_MIN, ADJ_MAX = -0.28, 0.25
+ADJ_MIN, ADJ_MAX = -0.18, 0.30
 VERT_AMPL = 0.08       # +/-8% sine bulge within each contiguous segment
 EDGE_DARK_MAX = 0.12   # max shadow right next to an outline pixel
 EDGE_DIST = 3          # falloff radius in px (0 shadow at this distance)
