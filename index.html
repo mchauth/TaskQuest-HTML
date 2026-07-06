@@ -575,6 +575,14 @@ hr{border:none;border-top:1px solid var(--border)}
         </div>
       </div>
       <div class="ward-row">
+        <div class="ward-label">Class</div>
+        <div class="ward-opts">
+          <div class="ward-chip" id="classWarrior" onclick="setCustom('charClass','warrior')">⚔ Warrior</div>
+          <div class="ward-chip" id="classMage" onclick="setCustom('charClass','mage')">✦ Mage</div>
+          <div class="ward-chip" id="classRanger" onclick="setCustom('charClass','ranger')">➳ Ranger</div>
+        </div>
+      </div>
+      <div class="ward-row">
         <div class="ward-label">Skin</div>
         <div class="ward-opts" id="skinOpts"></div>
       </div>
@@ -2013,6 +2021,16 @@ var LOOT_TABLE = [
   { id:'shirt_rare3',   name:'Solar Paladin Plate',    gender:'m', slot:'shirt',  file:'sprites/preview_assets/char/shirt_rare3.png',   level:25, rarity:'legendary', classes:['warrior'] },
   { id:'pants_rare3',   name:'Solar Paladin Greaves',  gender:'m', slot:'pants',  file:'sprites/preview_assets/char/pants_rare3.png',   level:25, rarity:'legendary', classes:['warrior'] },
   { id:'boots_rare3',   name:'Solar Paladin Sabatons', gender:'m', slot:'boots',  file:'sprites/preview_assets/char/boots_rare3.png',   level:25, rarity:'legendary', classes:['warrior'] },
+  // ── Mage tier 1: Apprentice Robes ────────────────────────────────
+  { id:'shirt_mage1',   name:'Apprentice Robe',     gender:'m', slot:'shirt',  file:'sprites/preview_assets/char/shirt_mage1.png',   level:1, rarity:'common', classes:['mage'] },
+  { id:'pants_mage1',   name:'Apprentice Leggings', gender:'m', slot:'pants',  file:'sprites/preview_assets/char/pants_mage1.png',   level:1, rarity:'common', classes:['mage'] },
+  { id:'boots_mage1',   name:'Apprentice Boots',    gender:'m', slot:'boots',  file:'sprites/preview_assets/char/boots_mage1.png',   level:1, rarity:'common', classes:['mage'] },
+  { id:'helmet_mage1',  name:'Apprentice Hood',     gender:'m', slot:'helmet', file:'sprites/preview_assets/char/helmet_mage1.png',  level:1, rarity:'common', classes:['mage'] },
+  // ── Ranger tier 1: Scout Leathers ────────────────────────────────
+  { id:'shirt_ranger1',  name:'Scout Tunic',    gender:'m', slot:'shirt',  file:'sprites/preview_assets/char/shirt_ranger1.png',  level:1, rarity:'common', classes:['ranger'] },
+  { id:'pants_ranger1',  name:'Scout Breeches', gender:'m', slot:'pants',  file:'sprites/preview_assets/char/pants_ranger1.png',  level:1, rarity:'common', classes:['ranger'] },
+  { id:'boots_ranger1',  name:'Scout Boots',    gender:'m', slot:'boots',  file:'sprites/preview_assets/char/boots_ranger1.png',  level:1, rarity:'common', classes:['ranger'] },
+  { id:'helmet_ranger1', name:'Scout Hood',     gender:'m', slot:'helmet', file:'sprites/preview_assets/char/helmet_ranger1.png', level:1, rarity:'common', classes:['ranger'] },
   // ── Female ────────────────────────────────────────
   { id:'f_boots',          name:'Leather Boots',    gender:'f', slot:'boots', file:'sprites/preview_assets/clothing/female/Boots.png',              level:1 },
   { id:'f_socks',          name:'Wool Socks',        gender:'f', slot:'boots', file:'sprites/preview_assets/clothing/female/Socks.png',               level:1 },
@@ -2055,8 +2073,11 @@ function rollLoot() {
   if (completed === 0 || completed % 3 !== 0) return null;
   var g = S.customization.gender || 'm';
   var level = S.profile.level || 1;
+  var cls = S.customization.charClass || 'warrior';
   var eligible = LOOT_TABLE.filter(function(x) {
-    return x.gender === g && x.level <= level;
+    // Items with no classes field (or empty array) drop for every class
+    var classOk = !x.classes || x.classes.length === 0 || x.classes.indexOf(cls) >= 0;
+    return x.gender === g && x.level <= level && classOk;
   });
   if (!eligible.length) return null;
   // Exclude already-owned items if there are still new ones available
@@ -2117,15 +2138,19 @@ function renderInventory() {
   var inv = S.profile.inventory || [];
   var eq  = S.profile.equippedItems || {};
   var g   = S.customization.gender || 'm';
+  var cls = S.customization.charClass || 'warrior';
+  function classOk(it) {
+    return !it.classes || it.classes.length === 0 || it.classes.indexOf(cls) >= 0;
+  }
 
-  // DEV_MODE: show all LOOT_TABLE items for current gender, ignoring drops
+  // DEV_MODE: show all LOOT_TABLE items for current gender+class, ignoring drops
   var genderedInv;
   if (DEV_MODE) {
-    genderedInv = LOOT_TABLE.filter(function(it) { return it.gender === g; }).map(function(it) { return it.id; });
+    genderedInv = LOOT_TABLE.filter(function(it) { return it.gender === g && classOk(it); }).map(function(it) { return it.id; });
   } else {
     genderedInv = inv.filter(function(id) {
       var it = LOOT_TABLE.find(function(x){ return x.id === id; });
-      return it && it.gender === g;
+      return it && it.gender === g && classOk(it);
     });
   }
 
@@ -2733,7 +2758,7 @@ function setCustom(key, val) {
   renderCustomizeUI();
   refreshSceneLayers();  // quest scene
   refreshHomeLayers();   // home scene
-  if (key === 'gender') renderInventory(); // re-filter inventory by gender
+  if (key === 'gender' || key === 'charClass') renderInventory(); // re-filter inventory by gender/class
 }
 
 function refreshHomeLayers() {
@@ -2750,6 +2775,13 @@ function renderCustomizeUI() {
   // Gender
   var gm = document.getElementById('genderM'); if(gm) gm.className = 'ward-chip' + (c.gender !== 'f' ? ' active' : '');
   var gf = document.getElementById('genderF'); if(gf) gf.className = 'ward-chip' + (c.gender === 'f' ? ' active' : '');
+
+  // Class (Warrior / Mage / Ranger)
+  var cCls = c.charClass || 'warrior';
+  [['classWarrior','warrior'],['classMage','mage'],['classRanger','ranger']].forEach(function(pair) {
+    var el = document.getElementById(pair[0]);
+    if (el) el.className = 'ward-chip' + (cCls === pair[1] ? ' active' : '');
+  });
 
   // Skin swatches (1–5)
   var skinEl = document.getElementById('skinOpts');
