@@ -2031,6 +2031,16 @@ var LOOT_TABLE = [
   { id:'pants_ranger1',  name:'Scout Breeches', gender:'m', slot:'pants',  file:'sprites/preview_assets/char/pants_ranger1.png',  level:1, rarity:'common', classes:['ranger'] },
   { id:'boots_ranger1',  name:'Scout Boots',    gender:'m', slot:'boots',  file:'sprites/preview_assets/char/boots_ranger1.png',  level:1, rarity:'common', classes:['ranger'] },
   { id:'helmet_ranger1', name:'Scout Hood',     gender:'m', slot:'helmet', file:'sprites/preview_assets/char/helmet_ranger1.png', level:1, rarity:'common', classes:['ranger'] },
+  // ── Mage tier 1 (female): Apprentice Robes ───────────────────────
+  { id:'shirt_mage1_f',   name:'Apprentice Robe',     gender:'f', slot:'shirt',  file:'sprites/preview_assets/char/shirt_mage1_f.png',   level:1, rarity:'common', classes:['mage'] },
+  { id:'pants_mage1_f',   name:'Apprentice Skirt',    gender:'f', slot:'pants',  file:'sprites/preview_assets/char/pants_mage1_f.png',   level:1, rarity:'common', classes:['mage'] },
+  { id:'boots_mage1_f',   name:'Apprentice Boots',    gender:'f', slot:'boots',  file:'sprites/preview_assets/char/boots_mage1_f.png',   level:1, rarity:'common', classes:['mage'] },
+  { id:'helmet_mage1_f',  name:'Apprentice Hood',     gender:'f', slot:'helmet', file:'sprites/preview_assets/char/helmet_mage1_f.png',  level:1, rarity:'common', classes:['mage'] },
+  // ── Ranger tier 1 (female): Scout Leathers ───────────────────────
+  { id:'shirt_ranger1_f',  name:'Scout Tunic',    gender:'f', slot:'shirt',  file:'sprites/preview_assets/char/shirt_ranger1_f.png',  level:1, rarity:'common', classes:['ranger'] },
+  { id:'pants_ranger1_f',  name:'Scout Skirt',    gender:'f', slot:'pants',  file:'sprites/preview_assets/char/pants_ranger1_f.png',  level:1, rarity:'common', classes:['ranger'] },
+  { id:'boots_ranger1_f',  name:'Scout Boots',    gender:'f', slot:'boots',  file:'sprites/preview_assets/char/boots_ranger1_f.png',  level:1, rarity:'common', classes:['ranger'] },
+  { id:'helmet_ranger1_f', name:'Scout Hood',     gender:'f', slot:'helmet', file:'sprites/preview_assets/char/helmet_ranger1_f.png', level:1, rarity:'common', classes:['ranger'] },
   // ── Female ────────────────────────────────────────
   { id:'f_boots',          name:'Leather Boots',    gender:'f', slot:'boots', file:'sprites/preview_assets/clothing/female/Boots.png',              level:1 },
   { id:'f_socks',          name:'Wool Socks',        gender:'f', slot:'boots', file:'sprites/preview_assets/clothing/female/Socks.png',               level:1 },
@@ -2737,7 +2747,11 @@ function getCharLayers() {
   function lootFile(slot) {
     if (!eq[slot]) return null;
     var it = LOOT_TABLE.find(function(x){ return x.id === eq[slot]; });
-    return it ? it.file : null;
+    if (!it) return null;
+    // Don't render cross-gender sprites — male-shaped armor misaligns on the
+    // female body (bare legs / floating boots) and vice versa.
+    if (it.gender && it.gender !== g) return null;
+    return it.file;
   }
   var helmetFile = lootFile('helmet') || null;
   return {
