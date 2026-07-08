@@ -2244,6 +2244,7 @@ function openCombatOverlay(xpEarned, goldEarned, lootItem) {
     var el = document.getElementById(heroMap[k]);
     if (el) { el.style.backgroundImage = layers[k] ? cssUrl(layers[k]) : 'none'; el.style.backgroundSize = '800px 448px'; }
   });
+  applyLegLayerOrder();
 
   // Start enemy portal animation
   _coPortalFrame = 0;
@@ -2765,6 +2766,46 @@ function getCharLayers() {
   };
 }
 
+// ── Boot/pants stacking ─────────────────────────────
+// Male/warrior trousers must render BELOW boots (boots cover the trouser cuff,
+// fixes boot bleed-through). Female mage/ranger skirts must render ABOVE boots
+// (the skirt hem hangs below the shirt and would otherwise be clipped by boots).
+function isSkirtEquipped() {
+  var eq = S.profile.equippedItems || {};
+  if (!eq.pants) return false;
+  var it = LOOT_TABLE.find(function(x){ return x.id === eq.pants; });
+  if (!it) return false;
+  // Only counts if the sprite actually renders (gender matches — see getCharLayers)
+  var g = S.customization.gender || 'm';
+  if (it.gender && it.gender !== g) return false;
+  return it.slot === 'pants' && it.gender === 'f' && Array.isArray(it.classes) &&
+         (it.classes.indexOf('mage') !== -1 || it.classes.indexOf('ranger') !== -1);
+}
+
+// Reorder the pants/boots DOM nodes in every scene so stacking matches the
+// equipped item type. Runs on every render/equip/customization change.
+var LEG_LAYER_PAIRS = [
+  ['qsPants','qsBoots'],  // quest scene
+  ['hsPants','hsBoots'],  // home scene
+  ['coPants','coBoots'],  // combat overlay
+  ['avPants','avBoots'],  // profile avatar preview
+];
+function applyLegLayerOrder() {
+  var skirt = isSkirtEquipped();
+  LEG_LAYER_PAIRS.forEach(function(pair) {
+    var pants = document.getElementById(pair[0]);
+    var boots = document.getElementById(pair[1]);
+    if (!pants || !boots || pants.parentNode !== boots.parentNode) return;
+    // Desired DOM order (bottom→top): skirt → boots first, pants(skirt) second;
+    // trousers → pants first, boots second.
+    var lower = skirt ? boots : pants;
+    var upper = skirt ? pants : boots;
+    if (lower.nextElementSibling !== upper) {
+      lower.parentNode.insertBefore(lower, upper);
+    }
+  });
+}
+
 function setCustom(key, val) {
   S.customization[key] = val;
   if (key === 'gender') S.customization.hairStyle = 1; // reset before refresh
@@ -2781,6 +2822,7 @@ function refreshHomeLayers() {
     var el = document.getElementById(HS_CHAR_IDS[k]);
     if (el) el.style.backgroundImage = layers[k] ? cssUrl(layers[k]) : 'none';
   });
+  applyLegLayerOrder();
 }
 
 function renderCustomizeUI() {
@@ -2842,6 +2884,7 @@ function refreshSceneLayers() {
     var el = document.getElementById(idMap[k]);
     if (el) el.style.backgroundImage = layers[k] ? cssUrl(layers[k]) : 'none';
   });
+  applyLegLayerOrder();
 }
 
 function saveCustomization() {
@@ -2857,7 +2900,7 @@ function refreshAvatarPreview() {
 
   // Build sprite layer structure once
   if (!document.getElementById('avSkin')) {
-    var LAYER_IDS = ['avSkin','avBoots','avPants','avShirt','avSword','avHair','avHelmet'];
+    var LAYER_IDS = ['avSkin','avPants','avBoots','avShirt','avSword','avHair','avHelmet'];
     big.innerHTML = '<div class="av-char-wrap">' +
       LAYER_IDS.map(function(id) { return '<div class="av-layer" id="'+id+'"></div>'; }).join('') +
       '</div>';
@@ -2873,6 +2916,7 @@ function refreshAvatarPreview() {
       el.style.backgroundPosition = '0px 0px'; // idle frame 0
     }
   });
+  applyLegLayerOrder();
 
   updateHeaderAvatar();
 }
@@ -2939,6 +2983,7 @@ setInterval(function() {
       var el = document.getElementById(CHAR_IDS[k]);
       if (el) el.style.backgroundImage = layers[k] ? cssUrl(layers[k]) : 'none';
     });
+    applyLegLayerOrder();
     qsSetCharFrame(ANIM.idle, 0);
     document.getElementById('qsFireImg').src = CF_SRCS[0];
     if (!qsRunning) { qsRunning = true; requestAnimationFrame(qsLoop); }
