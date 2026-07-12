@@ -1831,6 +1831,7 @@ function renderHomeScene() {
     var el = document.getElementById(HS_CHAR_IDS[k]);
     if (el) el.style.backgroundImage = layers[k] ? cssUrl(layers[k]) : "none";
   });
+  applyLegLayerOrder(); // renderHomeScene runs on page load + every Profile visit — must re-apply leg stacking
 
   // Home structure
   var homeEl = document.getElementById('hsHome');
@@ -2767,9 +2768,10 @@ function getCharLayers() {
 }
 
 // ── Boot/pants stacking ─────────────────────────────
-// Male/warrior trousers must render BELOW boots (boots cover the trouser cuff,
-// fixes boot bleed-through). Female mage/ranger skirts must render ABOVE boots
-// (the skirt hem hangs below the shirt and would otherwise be clipped by boots).
+// Trousers render BELOW boots (boots cover the trouser cuff, fixes boot
+// bleed-through). Skirts render ABOVE boots (the hem hangs over the boot
+// shaft and must not be clipped). Every female 'pants' item is a skirt
+// (Adventurer / Apprentice / Scout Skirt), so gender alone decides.
 function isSkirtEquipped() {
   var eq = S.profile.equippedItems || {};
   if (!eq.pants) return false;
@@ -2778,31 +2780,31 @@ function isSkirtEquipped() {
   // Only counts if the sprite actually renders (gender matches — see getCharLayers)
   var g = S.customization.gender || 'm';
   if (it.gender && it.gender !== g) return false;
-  return it.slot === 'pants' && it.gender === 'f' && Array.isArray(it.classes) &&
-         (it.classes.indexOf('mage') !== -1 || it.classes.indexOf('ranger') !== -1);
+  return it.slot === 'pants' && it.gender === 'f';
 }
 
-// Reorder the pants/boots DOM nodes in every scene so stacking matches the
-// equipped item type. Runs on every render/equip/customization change.
-var LEG_LAYER_PAIRS = [
-  ['qsPants','qsBoots'],  // quest scene
-  ['hsPants','hsBoots'],  // home scene
-  ['coPants','coBoots'],  // combat overlay
-  ['avPants','avBoots'],  // profile avatar preview
-];
+// Apply explicit inline z-index to every character layer in every scene.
+// z-index (not DOM reordering) so the stacking survives any re-render and
+// never depends on element order. Layers are position:absolute inside a
+// transformed wrap (own stacking context), so these values are self-contained.
+// Bottom→top: skin, legs (pants/boots swap on skirt), shirt, sword, hair, helmet.
+var CHAR_LAYER_PREFIXES = ['qs','hs','co','av'];
 function applyLegLayerOrder() {
   var skirt = isSkirtEquipped();
-  LEG_LAYER_PAIRS.forEach(function(pair) {
-    var pants = document.getElementById(pair[0]);
-    var boots = document.getElementById(pair[1]);
-    if (!pants || !boots || pants.parentNode !== boots.parentNode) return;
-    // Desired DOM order (bottom→top): skirt → boots first, pants(skirt) second;
-    // trousers → pants first, boots second.
-    var lower = skirt ? boots : pants;
-    var upper = skirt ? pants : boots;
-    if (lower.nextElementSibling !== upper) {
-      lower.parentNode.insertBefore(lower, upper);
-    }
+  CHAR_LAYER_PREFIXES.forEach(function(prefix) {
+    var z = {
+      Skin:   1,
+      Pants:  skirt ? 3 : 2,  // skirt hem paints over the boot shaft
+      Boots:  skirt ? 2 : 3,  // trouser cuff tucks under the boot
+      Shirt:  4,
+      Sword:  5,
+      Hair:   6,
+      Helmet: 7,
+    };
+    Object.keys(z).forEach(function(part) {
+      var el = document.getElementById(prefix + part);
+      if (el) el.style.zIndex = String(z[part]);
+    });
   });
 }
 
