@@ -2034,21 +2034,31 @@ var LOOT_TABLE = [
   { id:'helmet_ranger1', name:'Scout Hood',     gender:'m', slot:'helmet', file:'sprites/preview_assets/char/helmet_ranger1.png', level:1, rarity:'common', classes:['ranger'] },
   // ── Mage tier 1 (female): Apprentice Robes ───────────────────────
   { id:'shirt_mage1_f',   name:'Apprentice Robe',     gender:'f', slot:'shirt',  file:'sprites/preview_assets/char/shirt_mage1_f.png',   level:1, rarity:'common', classes:['mage'] },
-  { id:'pants_mage1_f',   name:'Apprentice Skirt',    gender:'f', slot:'pants',  file:'sprites/preview_assets/char/pants_mage1_f.png',   level:1, rarity:'common', classes:['mage'] },
+  { id:'pants_mage1_f',   name:'Apprentice Skirt',    gender:'f', slot:'pants',  skirt:true, file:'sprites/preview_assets/char/pants_mage1_f.png',   level:1, rarity:'common', classes:['mage'] },
   { id:'boots_mage1_f',   name:'Apprentice Boots',    gender:'f', slot:'boots',  file:'sprites/preview_assets/char/boots_mage1_f.png',   level:1, rarity:'common', classes:['mage'] },
   { id:'helmet_mage1_f',  name:'Apprentice Hood',     gender:'f', slot:'helmet', file:'sprites/preview_assets/char/helmet_mage1_f.png',  level:1, rarity:'common', classes:['mage'] },
   // ── Ranger tier 1 (female): Scout Leathers ───────────────────────
   { id:'shirt_ranger1_f',  name:'Scout Tunic',    gender:'f', slot:'shirt',  file:'sprites/preview_assets/char/shirt_ranger1_f.png',  level:1, rarity:'common', classes:['ranger'] },
-  { id:'pants_ranger1_f',  name:'Scout Skirt',    gender:'f', slot:'pants',  file:'sprites/preview_assets/char/pants_ranger1_f.png',  level:1, rarity:'common', classes:['ranger'] },
+  { id:'pants_ranger1_f',  name:'Scout Skirt',    gender:'f', slot:'pants',  skirt:true, file:'sprites/preview_assets/char/pants_ranger1_f.png',  level:1, rarity:'common', classes:['ranger'] },
   { id:'boots_ranger1_f',  name:'Scout Boots',    gender:'f', slot:'boots',  file:'sprites/preview_assets/char/boots_ranger1_f.png',  level:1, rarity:'common', classes:['ranger'] },
   { id:'helmet_ranger1_f', name:'Scout Hood',     gender:'f', slot:'helmet', file:'sprites/preview_assets/char/helmet_ranger1_f.png', level:1, rarity:'common', classes:['ranger'] },
+  // ── Female warrior leggings (leg-fitted versions of the male tiers) ──
+  { id:'leather_pants_1_f', name:'Leather Leggings',         gender:'f', slot:'pants', file:'sprites/preview_assets/char/leather_pants_1_f.png', level:1  },
+  { id:'armor_pants_2_f',   name:'Studded Leather Leggings', gender:'f', slot:'pants', file:'sprites/preview_assets/char/armor_pants_2_f.png',   level:5  },
+  { id:'armor_pants_3_f',   name:'Chainmail Leggings',       gender:'f', slot:'pants', file:'sprites/preview_assets/char/armor_pants_3_f.png',   level:10 },
+  { id:'armor_pants_4_f',   name:'Silver Plate Leggings',    gender:'f', slot:'pants', file:'sprites/preview_assets/char/armor_pants_4_f.png',   level:20 },
+  { id:'armor_pants_5_f',   name:'Gold Plate Leggings',      gender:'f', slot:'pants', file:'sprites/preview_assets/char/armor_pants_5_f.png',   level:30 },
+  { id:'armor_pants_6_f',   name:'Diamond Plate Leggings',   gender:'f', slot:'pants', file:'sprites/preview_assets/char/armor_pants_6_f.png',   level:40 },
+  { id:'pants_rare1_f',     name:'Crimson Sentinel Greaves', gender:'f', slot:'pants', file:'sprites/preview_assets/char/pants_rare1_f.png',     level:25, rarity:'legendary', classes:['warrior'] },
+  { id:'pants_rare2_f',     name:'Shadow Warden Greaves',    gender:'f', slot:'pants', file:'sprites/preview_assets/char/pants_rare2_f.png',     level:25, rarity:'legendary', classes:['warrior'] },
+  { id:'pants_rare3_f',     name:'Solar Paladin Greaves',    gender:'f', slot:'pants', file:'sprites/preview_assets/char/pants_rare3_f.png',     level:25, rarity:'legendary', classes:['warrior'] },
   // ── Female ────────────────────────────────────────
   { id:'f_boots',          name:'Leather Boots',    gender:'f', slot:'boots', file:'sprites/preview_assets/clothing/female/Boots.png',              level:1 },
   { id:'f_socks',          name:'Wool Socks',        gender:'f', slot:'boots', file:'sprites/preview_assets/clothing/female/Socks.png',               level:1 },
   { id:'f_socks_green',    name:'Forest Socks',      gender:'f', slot:'boots', file:'sprites/preview_assets/clothing/female/Green_Socks.png',         level:1 },
   { id:'f_socks_orange',   name:'Ember Socks',       gender:'f', slot:'boots', file:'sprites/preview_assets/clothing/female/Orange_Socks.png',        level:1 },
   { id:'f_socks_purple',   name:'Shadow Socks',      gender:'f', slot:'boots', file:'sprites/preview_assets/clothing/female/Purple_Socks.png',        level:1 },
-  { id:'f_skirt',          name:'Adventurer Skirt',  gender:'f', slot:'pants', file:'sprites/preview_assets/clothing/female/Skirt.png',               level:1 },
+  { id:'f_skirt',          name:'Adventurer Skirt',  gender:'f', slot:'pants', skirt:true, file:'sprites/preview_assets/clothing/female/Skirt.png',               level:1 },
   { id:'f_corset',         name:'Warrior Corset',    gender:'f', slot:'shirt', file:'sprites/preview_assets/clothing/female/Corset.png',              level:1 },
   { id:'f_corset_v2',      name:'Warrior Corset II', gender:'f', slot:'shirt', file:'sprites/preview_assets/clothing/female/Corset_v2.png',           level:1 },
   { id:'f_corset_blue',    name:'Azure Corset',      gender:'f', slot:'shirt', file:'sprites/preview_assets/clothing/female/Blue_Corset.png',         level:1 },
@@ -2770,8 +2780,8 @@ function getCharLayers() {
 // ── Boot/pants stacking ─────────────────────────────
 // Trousers render BELOW boots (boots cover the trouser cuff, fixes boot
 // bleed-through). Skirts render ABOVE boots (the hem hangs over the boot
-// shaft and must not be clipped). Every female 'pants' item is a skirt
-// (Adventurer / Apprentice / Scout Skirt), so gender alone decides.
+// shaft and must not be clipped). Skirt items carry skirt:true in LOOT_TABLE;
+// female leggings/trousers behave like male trousers (tuck under boots).
 function isSkirtEquipped() {
   var eq = S.profile.equippedItems || {};
   if (!eq.pants) return false;
@@ -2780,7 +2790,7 @@ function isSkirtEquipped() {
   // Only counts if the sprite actually renders (gender matches — see getCharLayers)
   var g = S.customization.gender || 'm';
   if (it.gender && it.gender !== g) return false;
-  return it.slot === 'pants' && it.gender === 'f';
+  return it.slot === 'pants' && it.skirt === true;
 }
 
 // Apply explicit inline z-index to every character layer in every scene.
