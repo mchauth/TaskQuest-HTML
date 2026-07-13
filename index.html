@@ -3007,7 +3007,11 @@ setInterval(function() {
       var el = document.getElementById(id);
       if (el) el.style.backgroundPosition = x+'px '+y+'px';
     });
-    var helmetOn = !!(S.profile.equippedItems || {}).helmet;
+    // Hide hair only when the helmet ACTUALLY renders. getCharLayers()
+    // gender-guards and validates the equipped helmet id; the raw
+    // equippedItems.helmet flag desyncs from it (stale/cross-gender helmet
+    // -> no helmet drawn but hair wiped every frame = bald head in combat).
+    var helmetOn = !!getCharLayers().helmet;
     var hairEl = document.getElementById('qsHair');
     if (hairEl && helmetOn) {
       if (qsAnim === 'sleep') {
