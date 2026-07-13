@@ -3060,7 +3060,7 @@ setInterval(function() {
     if (newAnim !== qsAnim) {
       qsAnim = newAnim; qsCharFrame = 0; qsPortalFrame = 0;
       el = document.getElementById('qsLabel');
-      if(el) el.textContent = active > 0 ? '⚔ In combat!' : '💤 Resting by camp';
+      if(el){ el.style.display = active > 0 ? 'none' : ''; el.textContent = '💤 Resting by camp'; }
       // Show fire only when resting
       el = document.querySelector('.qs-fire-wrap');
       if(el) el.style.display = active > 0 ? 'none' : 'block';
