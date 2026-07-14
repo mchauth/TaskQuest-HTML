@@ -19,6 +19,13 @@ arms and merge arm+head into a 13px run, and a per-frame width would make the
 hat flicker. head_top / head_center_x remain per-frame so the hat rides the
 1px idle bob and all walk/slash/jump offsets.
 
+Hat placement follows helmet_rare1.png: that helmet's topmost pixel sits on
+the SAME row as the skull's topmost skin pixel (zero gap) and covers the top
+rows of the head. So the brim here starts at y=head_top (mage: head_top and
+head_top+1; ranger: tilted, down to head_top+2) and the cone/crown rises from
+y=head_top-1 -- the brim overlaps and visually replaces the skull top instead
+of floating 1px above it.
+
 Active frames are taken from the tier-1 helmet sheets (42 frames; sleep 68-69
 stay empty). Run from repo root, then sprite_shade.py + sprite_qa.py --y-min 2.
 """
@@ -128,14 +135,14 @@ def mage_hat(tier, head_top, cx):
     fill, over = {}, {}
     bw = HW + 2 + (4 if P.get('wide') else 0)            # brim width
     bx0 = cx - bw // 2
-    for x in range(bx0, bx0 + bw):                       # brim: 2px tall band
-        fill[(x, head_top - 1)] = P['M']                 # lit top edge
-        fill[(x, head_top)] = P['D']                     # dark underside
+    for x in range(bx0, bx0 + bw):                       # brim: 2px tall band,
+        fill[(x, head_top)] = P['M']                     # lit edge ON skull-top row
+        fill[(x, head_top + 1)] = P['D']                 # underside over forehead
     for x in range(cx - HW // 2, cx + HW // 2 + 1):      # hatband
-        fill[(x, head_top - 2)] = P['A']
+        fill[(x, head_top - 1)] = P['A']
     Hc, lean = P['cone'], P.get('lean', 0)
     for i in range(Hc):                                  # tapering cone
-        y = head_top - 3 - i
+        y = head_top - 2 - i
         t = i / (Hc - 1)
         wdt = max(1, int(round(HW * (1 - t) + 1 * t)))
         rx0 = cx - wdt // 2 + int(round(lean * t))
@@ -143,7 +150,7 @@ def mage_hat(tier, head_top, cx):
             rel = (x - rx0) / max(1, wdt - 1)
             fill[(x, y)] = (P['D'] if rel < 0.33 else    # left third shadow
                             P['L'] if 0.55 <= rel <= 0.85 else P['M'])
-    tip_y = head_top - 2 - Hc
+    tip_y = head_top - 1 - Hc
     tip_x = cx + int(round(lean))
     if P.get('tip_star'):
         over[(tip_x, tip_y)] = P['S']
@@ -152,8 +159,8 @@ def mage_hat(tier, head_top, cx):
         over[(tip_x + 2, tip_y + 1)] = P['S']
     if P.get('gold_rim'):                                # t6 glowing brim rim
         for x in (bx0, bx0 + 1, bx0 + bw - 2, bx0 + bw - 1):
-            over[(x, head_top - 1)] = P['A']
-    return _finish(fill, over, no_outline_below=head_top)
+            over[(x, head_top)] = P['A']
+    return _finish(fill, over, no_outline_below=head_top - 1)   # top outline only
 
 
 def ranger_hat(tier, head_top, cx):
@@ -163,18 +170,18 @@ def ranger_hat(tier, head_top, cx):
     bx0 = cx - bw // 2
     for x in range(bx0, bx0 + bw):                       # tilted brim
         if x < cx:                                       # left side 1px lower
+            fill[(x, head_top + 1)] = P['M']
+            fill[(x, head_top + 2)] = P['D']
+        else:
             fill[(x, head_top)] = P['M']
             fill[(x, head_top + 1)] = P['D']
-        else:
-            fill[(x, head_top - 1)] = P['M']
-            fill[(x, head_top)] = P['D']
     ccx = cx + 1                                         # crown over right half
     cw = HW - 2
     for x in range(ccx - cw // 2, ccx - cw // 2 + cw):   # hatband (darker)
-        fill[(x, head_top - 2)] = P['D']
+        fill[(x, head_top - 1)] = P['D']
     n = P.get('dome', 5)
     for j in range(n):                                   # domed crown
-        y = head_top - 3 - j
+        y = head_top - 2 - j
         wdt = max(2, int(round(cw - (cw - 2) * j / (n - 1))))
         rx0 = ccx - wdt // 2
         for x in range(rx0, rx0 + wdt):
@@ -184,18 +191,18 @@ def ranger_hat(tier, head_top, cx):
                 fill[(x, y)] = P['M']
         if j < n - 1 and rx0 <= ccx < rx0 + wdt:
             fill[(ccx, y)] = P['D']                      # center crease
-    sx, sy = ccx + 3, head_top - n + 1                   # feather up-right 45°
+    sx, sy = ccx + 3, head_top - n + 2                   # feather up-right 45°
     for i, col in enumerate(P['F']):
         over[(sx + min(i, 4), sy - i)] = col
     if len(P['F']) >= 4:                                 # thicker plume base
         over[(sx, sy + 1)] = P['F'][0]
     if 'A' in P:                                         # metal brim rim
-        rim = [(bx0, head_top), (bx0 + bw - 1, head_top - 1)]
+        rim = [(bx0, head_top + 1), (bx0 + bw - 1, head_top)]
         if P.get('rim2'):
-            rim += [(bx0 + 1, head_top), (bx0 + bw - 2, head_top - 1)]
+            rim += [(bx0 + 1, head_top + 1), (bx0 + bw - 2, head_top)]
         for p in rim:
             over[p] = P['A']
-    return _finish(fill, over, no_outline_below=head_top + 1)
+    return _finish(fill, over, no_outline_below=head_top + 2)
 
 
 # ── Sheet composition ────────────────────────────────────────────────────────
