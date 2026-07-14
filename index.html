@@ -2290,7 +2290,7 @@ function renderInventory() {
       + '<div class="inv-grid">';
     items.forEach(function(item) {
       var isEq = eq[item.slot] === item.id;
-      var sprOffsets = { helmet:'0px -19px', shirt:'0px -28px', pants:'0px -38px', boots:'0px -46px' };
+      var sprOffsets = { helmet:'0px -3px', shirt:'0px -28px', pants:'0px -38px', boots:'0px -46px' };
       var sprPos = sprOffsets[item.slot] || '0px 0px';
       html += '<div class="inv-item'+(isEq?' equipped':'')+'" onclick="equipItem(\''+item.id+'\')" title="'+(isEq?'Unequip':'Equip')+': '+item.name+'">'
         + '<div class="inv-item-spr" style="background-image:'+cssUrl(item.file)+';background-position:'+sprPos+'"></div>'

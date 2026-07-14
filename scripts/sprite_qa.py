@@ -26,7 +26,7 @@ FRAME_W, FRAME_H = 80, 64
 
 # Background zone defaults: armor must not bleed outside this box
 BG_X_MIN, BG_X_MAX = 30, 55
-BG_Y_MIN = 16
+BG_Y_MIN_DEFAULT = 16   # use --y-min 2 for tall headgear (wizard/ranger hats)
 BG_Y_MAX_DEFAULT = 52   # use --y-max 62 for pants (legs extend to y≈61)
 
 
@@ -67,7 +67,8 @@ def has_black_neighbor(frame, y, x):
     return False
 
 
-def check_sprite(path, palette_rgba=None, bg_y_max=BG_Y_MAX_DEFAULT):
+def check_sprite(path, palette_rgba=None, bg_y_max=BG_Y_MAX_DEFAULT,
+                 bg_y_min=BG_Y_MIN_DEFAULT):
     issues = []
 
     try:
@@ -95,7 +96,7 @@ def check_sprite(path, palette_rgba=None, bg_y_max=BG_Y_MAX_DEFAULT):
                 issues.append(f"LONE INNER BLACK at ({x},{y}) — isolated #000 not on edge")
 
         # Check 3: armor bleed into background zone (x bounds; y uses per-call limit)
-        in_bg = (x < BG_X_MIN or x > BG_X_MAX or y < BG_Y_MIN or y > bg_y_max)
+        in_bg = (x < BG_X_MIN or x > BG_X_MAX or y < bg_y_min or y > bg_y_max)
         if in_bg:
             issues.append(f"BACKGROUND BLEED at ({x},{y}) color=({r},{g},{b})")
 
@@ -136,6 +137,10 @@ def main():
     parser.add_argument("--y-max", type=int, default=BG_Y_MAX_DEFAULT,
                         metavar="N",
                         help=f"Background zone lower y limit (default {BG_Y_MAX_DEFAULT}; use 62 for pants)")
+    parser.add_argument("--y-min", type=int, default=BG_Y_MIN_DEFAULT,
+                        metavar="N",
+                        help=f"Background zone upper y limit (default {BG_Y_MIN_DEFAULT}; "
+                             "use 2 for tall headgear like wizard hats)")
     args = parser.parse_args()
 
     palette_rgb = None
@@ -150,7 +155,8 @@ def main():
     col_w = max(len(p) for p in args.sprites) + 2
 
     for path in args.sprites:
-        passed, issues = check_sprite(path, palette_rgb, bg_y_max=args.y_max)
+        passed, issues = check_sprite(path, palette_rgb, bg_y_max=args.y_max,
+                                      bg_y_min=args.y_min)
         status = "PASS" if passed else "FAIL"
         if not passed:
             overall_pass = False
