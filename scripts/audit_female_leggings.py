@@ -21,8 +21,27 @@ SPRITES = ['leather_pants_1_f', 'armor_pants_2_f', 'armor_pants_3_f',
            'armor_pants_4_f', 'armor_pants_5_f', 'armor_pants_6_f',
            'pants_rare1_f', 'pants_rare2_f', 'pants_rare3_f']
 
+# Loose-cloth garments (flowing skirt silhouette from the original asset
+# pack). The skirt intentionally flares OUTSIDE the skin silhouette
+# (~4300 px/sheet) and its dither reads as "speckles" (~895 on the default
+# pants — identical count in the untouched original art). Silhouette
+# stray/gap fixes and speckle smoothing MUST NOT be applied here; only
+# truly isolated pixels (no 8-neighbor) are removed. Verified 2026-07-13:
+# the two 4-neighbor "floaters" (frames 12/16, y=44 x=43) are
+# diagonal cloth-spray pixels present in the original art.
+SPRITES_LOOSE = ['pants_mage1_f', 'pants_ranger1_f', 'warrior_pants_default_f']
+
 def lum(c):
     return (3 * int(c[0]) + 6 * int(c[1]) + int(c[2])) / 10.0
+
+def is_accent(c):
+    """Set trim colors (gold/teal/ivory) — intentional 1-2 px details that
+    read as luminance speckles but must never be smoothed away."""
+    r, g, b = int(c[0]), int(c[1]), int(c[2])
+    gold = r >= 200 and g >= 150 and b <= 80
+    teal = g >= 140 and b >= 120 and r <= g
+    ivory = r >= 240 and g >= 235 and b >= 200
+    return gold or teal or ivory
 
 def audit_frame(pf, sf, fix):
     """pf: legging frame RGBA (modified in place if fix), sf: skin alpha mask.
@@ -100,6 +119,8 @@ def audit_frame(pf, sf, fix):
     fixes = []
     ys, xs = np.where(P)
     for y, x in zip(ys, xs):
+        if is_accent(pf[y, x, :3]):
+            continue          # set trim (gold/teal/ivory) is intentional
         nb = []
         for dy in (-1, 0, 1):
             for dx in (-1, 0, 1):
@@ -123,18 +144,33 @@ def audit_frame(pf, sf, fix):
             pf[y, x, 3] = 255
     return n
 
+def audit_loose_frame(pf, fix):
+    """Loose-cloth frame: only remove pixels with NO opaque 8-neighbor."""
+    n = dict(stray=0, floater=0, detached=0, gap=0, speckle=0)
+    P = pf[..., 3] > 0
+    for y, x in zip(*np.where(P)):
+        y0, y1 = max(0, y - 1), y + 2
+        x0, x1 = max(0, x - 1), x + 2
+        if P[y0:y1, x0:x1].sum() == 1:
+            n['floater'] += 1
+            if fix:
+                pf[y, x] = 0
+    return n
+
 def main():
     fix = '--fix' in sys.argv
     skin = np.array(Image.open(CHAR + 'skin_f1.png').convert('RGBA'))[..., 3] > 0
     grand = dict(stray=0, floater=0, detached=0, gap=0, speckle=0)
-    for name in SPRITES:
+    for name in SPRITES + SPRITES_LOOSE:
+        loose = name in SPRITES_LOOSE
         img = np.array(Image.open(CHAR + name + '.png').convert('RGBA'))
         tot = dict(stray=0, floater=0, detached=0, gap=0, speckle=0)
         per_frame = {}
         for fi in range(70):
             r, c = fi // 10, fi % 10
             sl = (slice(r * FH, (r + 1) * FH), slice(c * FW, (c + 1) * FW))
-            res = audit_frame(img[sl], skin[sl], fix)
+            res = (audit_loose_frame(img[sl], fix) if loose
+                   else audit_frame(img[sl], skin[sl], fix))
             if sum(res.values()):
                 per_frame[fi] = res
             for k in tot:
@@ -144,9 +180,10 @@ def main():
         for k in grand:
             grand[k] += tot[k]
         bad_frames = len(per_frame)
+        tag = ' [loose-cloth: 8-neighbor isolation only]' if loose else ''
         print(f"{name}: strays={tot['stray']} floaters={tot['floater']} "
               f"detached={tot['detached']} gaps={tot['gap']} "
-              f"speckles={tot['speckle']}  ({bad_frames} frames affected)")
+              f"speckles={tot['speckle']}  ({bad_frames} frames affected){tag}")
         if not fix and per_frame:
             worst = sorted(per_frame.items(), key=lambda kv: -sum(kv[1].values()))[:5]
             for fi, res in worst:
