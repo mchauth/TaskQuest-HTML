@@ -2350,6 +2350,7 @@ function openCombatOverlay(xpEarned, goldEarned, lootItem) {
     if (el) { el.style.backgroundImage = layers[k] ? cssUrl(layers[k]) : 'none'; el.style.backgroundSize = '800px 448px'; }
   });
   applyLegLayerOrder();
+  applyHairClipToId('coHair');
 
   // Start enemy portal animation
   _coPortalFrame = 0;
@@ -2897,6 +2898,36 @@ function isSkirtEquipped() {
 // transformed wrap (own stacking context), so these values are self-contained.
 // Bottom→top: skin, legs (pants/boots swap on skirt), shirt, sword, hair, helmet.
 var CHAR_LAYER_PREFIXES = ['qs','hs','co','av'];
+
+// Hair file numbers that have pixels above y=20 (i.e. they poke through partial hats).
+// fileNum = ((hairStyle-1)*5) + hairNum.  Male styles 1-5 (m1-m25) and female style 4
+// (f16-f20) were verified tall via PIL pixel analysis (min_y < 20 in frame 0).
+// Brim row: male y=21, female y=22 (exact head_top from skin sprites).
+var TALL_HAIR_NUMS = {
+  m: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25],
+  f: [16,17,18,19,20]
+};
+var BRIM_Y = { m: 21, f: 22 };
+
+// Clip hair element to hide pixels above the hat brim when wearing a partial hat
+// and the current hair style is taller than the brim.  Pass the element id string.
+function applyHairClipToId(hairElId) {
+  var hairEl = document.getElementById(hairElId);
+  if (!hairEl) return;
+  var eq = S.profile.equippedItems || {};
+  var helmetItem = eq.helmet ? LOOT_TABLE.find(function(x){ return x.id === eq.helmet; }) : null;
+  var isPartial = !!(helmetItem && helmetItem.hatType === 'partial');
+  if (!isPartial) { hairEl.style.clipPath = ''; return; }
+  var c = S.customization, g = c.gender || 'm';
+  var fileNum = ((c.hairStyle || 1) - 1) * 5 + (c.hairNum || 1);
+  var tallNums = TALL_HAIR_NUMS[g] || [];
+  if (tallNums.indexOf(fileNum) !== -1) {
+    var brimY = BRIM_Y[g] || 21;
+    hairEl.style.clipPath = 'inset(' + brimY + 'px 0 0 0)';
+  } else {
+    hairEl.style.clipPath = '';
+  }
+}
 function applyLegLayerOrder() {
   var skirt = isSkirtEquipped();
   CHAR_LAYER_PREFIXES.forEach(function(prefix) {
@@ -2933,6 +2964,7 @@ function refreshHomeLayers() {
     if (el) el.style.backgroundImage = layers[k] ? cssUrl(layers[k]) : 'none';
   });
   applyLegLayerOrder();
+  applyHairClipToId('hsHair');
 }
 
 function renderCustomizeUI() {
@@ -2995,6 +3027,7 @@ function refreshSceneLayers() {
     if (el) el.style.backgroundImage = layers[k] ? cssUrl(layers[k]) : 'none';
   });
   applyLegLayerOrder();
+  applyHairClipToId('qsHair');
 }
 
 function saveCustomization() {
@@ -3027,6 +3060,7 @@ function refreshAvatarPreview() {
     }
   });
   applyLegLayerOrder();
+  applyHairClipToId('avHair');
 
   updateHeaderAvatar();
 }
@@ -3122,6 +3156,8 @@ setInterval(function() {
         hairEl.style.backgroundImage = 'none';
       }
     }
+    // Clip tall hair above hat brim for partial hats (mage/ranger hats)
+    applyHairClipToId('qsHair');
   }
 
   function qsSetPortalFrame(f) {

@@ -1,27 +1,21 @@
 #!/usr/bin/env python3
-"""Rebuild mage/ranger tier 1-6 helmets FROM SCRATCH with LOWERED brim.
+"""Rebuild mage/ranger tier 1-6 helmets FROM SCRATCH with MINIMAL brim.
 
-v2 (sized-down hats):
-  brim width  = skull_width + 2 (1px overhang each side instead of 2+)
-  brim height = 2 rows (head_top+2 and head_top+3 only)
-  mage cone heights: t1=6, t2=8, t3=9, t4=10, t5=11, t6=12 rows above brim
-  ranger crown: 4px tall (dome=4)
-  lining fills exact brim footprint (bx0..bx0+bw, head_top..head_top+3)
+v3 (further-reduced hats):
+  brim width  = skull_width only (0px overhang — exact head width)
+  brim height = 1 row (single pixel brim line)
+  mage cone heights: t1=5, t2=6, t3=7, t4=8, t5=9, t6=10 rows above brim
+  ranger crown: 3px tall dome
+  hatband: removed
+  lining fills only the single brim row itself (1px)
 
-Reference image shows the hat brim sitting at EYE/FOREHEAD level, not at the
-skull top.
+NEW layout (all offsets relative to head_top = skull top):
+  head_top     : single brim row (brim width = skull_width, lining color)
+  head_top - 1 : cone base (widest cone row) / dome bottom
+  ...up to tip/top
 
-NEW layout (all offsets relative to head_top):
-  head_top+0 : cone base (widest cone row)
-  head_top+1 : hatband (accent color, skull width)
-  head_top+2 : brim top row (brim width = skull+2, or +4 for wide t6)
-  head_top+3 : brim bottom/shadow row (darkest)
-  head_top+4 : eye row (hat covers everything above this)
-
-Lining fills head_top..head_top+3 at brim footprint (bx0..bx0+bw).
-
-Male skin (skin_m1.png):   head_top=21, eye_row=26
-Female skin (skin_f1.png): head_top=22, eye_row=27
+Male skin (skin_m1.png):   head_top=21
+Female skin (skin_f1.png): head_top=22
 
 Run from repo root, then:
   python3 scripts/sprite_shade.py sprites/preview_assets/char/helmet_*.png
@@ -38,31 +32,31 @@ W, H, COLS, NFR = 80, 64, 10, 70
 # ── Tier palettes (D dark / M mid / L highlight / A accent / S star) ─────────
 
 MAGE_HAT = {
-    1: dict(D=(50, 25, 80),  M=(105, 43, 186), L=(131, 64, 212), A=(192, 192, 192), cone=6),
-    2: dict(D=(60, 16, 102), M=(90, 24, 154),  L=(123, 47, 196), A=(192, 192, 192), cone=8),
-    3: dict(D=(29, 17, 69),  M=(45, 27, 105),  L=(70, 48, 155),  A=(192, 192, 192), cone=9),
+    1: dict(D=(50, 25, 80),  M=(105, 43, 186), L=(131, 64, 212), A=(192, 192, 192), cone=5),
+    2: dict(D=(60, 16, 102), M=(90, 24, 154),  L=(123, 47, 196), A=(192, 192, 192), cone=6),
+    3: dict(D=(29, 17, 69),  M=(45, 27, 105),  L=(70, 48, 155),  A=(192, 192, 192), cone=7),
     4: dict(D=(16, 16, 62),  M=(26, 26, 94),   L=(46, 46, 143),  A=(255, 215, 0),
-            S=(255, 240, 160), cone=10, tip_star=True),
+            S=(255, 240, 160), cone=8, tip_star=True),
     5: dict(D=(8, 8, 28),    M=(13, 13, 43),   L=(58, 40, 110),  A=(255, 215, 0),
-            S=(226, 226, 255), cone=11, lean=-1, sparkles=True),
+            S=(226, 226, 255), cone=9, lean=-1, sparkles=True),
     6: dict(D=(5, 5, 16),    M=(10, 10, 26),   L=(93, 58, 150),  A=(240, 230, 140),
-            S=(255, 240, 160), cone=12, wide=True, gold_rim=True, tip_star=True),
+            S=(255, 240, 160), cone=10, wide=True, gold_rim=True, tip_star=True),
 }
 
 RANGER_HAT = {
     1: dict(D=(45, 72, 31),  M=(72, 108, 61),  L=(90, 151, 76),
-            F=[(139, 105, 20)] * 3),
+            F=[(139, 105, 20)] * 3, dome=3),
     2: dict(D=(36, 66, 31),  M=(58, 107, 53),  L=(79, 143, 73),
-            F=[(139, 105, 20)] * 3),
+            F=[(139, 105, 20)] * 3, dome=3),
     3: dict(D=(18, 41, 14),  M=(31, 71, 24),   L=(50, 109, 40),
-            F=[(184, 134, 11)] * 4),
+            F=[(184, 134, 11)] * 4, dome=3),
     4: dict(D=(14, 33, 16),  M=(26, 58, 21),   L=(44, 92, 36),  A=(184, 115, 51),
-            F=[(232, 232, 232)] * 3 + [(85, 85, 85)], dome=4),
+            F=[(232, 232, 232)] * 3 + [(85, 85, 85)], dome=3),
     5: dict(D=(8, 26, 6),    M=(15, 46, 10),   L=(30, 74, 24),  A=(192, 192, 192),
-            F=[(245, 245, 245)] * 5, dome=4),
+            F=[(245, 245, 245)] * 5, dome=3),
     6: dict(D=(5, 13, 5),    M=(10, 20, 10),   L=(28, 51, 24),  A=(255, 215, 0),
             F=[(45, 90, 39)] * 3 + [(240, 240, 240)] * 2 + [(255, 215, 0)],
-            dome=4, rim2=True),
+            dome=3, rim2=True),
 }
 
 # ── Color helpers ─────────────────────────────────────────────────────────────
@@ -132,14 +126,11 @@ HW = 9   # frame-0 skull width (constant across frames; prevents arm-raise flick
 
 # ── Hat authoring, relative to (head_top, cx) ────────────────────────────────
 #
-# Layout (all offsets relative to head_top):
-#   head_top+0 : cone base (widest cone row)
-#   head_top+1 : hatband (accent color, skull width)
-#   head_top+2 : brim top row
-#   head_top+3 : brim bottom/shadow row (darkest) ← brim_bottom
+# Layout (v3 minimal brim):
+#   head_top     : single brim row (skull_width, lining color)
+#   head_top - 1 : cone/dome base (widest row), going upward
 #
-# Lining fills head_top..head_top+3 at brim footprint (bx0..bx0+bw),
-# so it only blocks hair directly beneath the hat, not at the sides.
+# No hatband. Lining is only the brim row itself.
 
 def _finish(fill, over, no_outline_below):
     """Exterior black outline around fill (restricted to y <= no_outline_below),
@@ -158,31 +149,22 @@ def _finish(fill, over, no_outline_below):
 def mage_hat(tier, head_top, cx):
     P = MAGE_HAT[tier]
     fill, over = {}, {}
-    # brim width: skull+2 (1px overhang each side); wide t6 adds 2 more
-    bw = HW + 2 + (2 if P.get('wide') else 0)
+    # brim width: skull_width only (no overhang); wide t6 gets +2
+    bw = HW + (2 if P.get('wide') else 0)
     bx0 = cx - bw // 2
 
-    # Lining: fills exact brim footprint (head_top..head_top+3, bx0..bx0+bw)
-    # This blocks hair only under the hat, letting sides show through.
+    brim_y = head_top  # single brim row at skull top
+
+    # Lining: just the brim row (1px) in dark-mid color
     lining = scale_v(P['M'], 0.55)
-    for y in range(head_top, head_top + 4):
-        for x in range(bx0, bx0 + bw):
-            fill[(x, y)] = lining
-
-    # Brim: 2 rows at head_top+2..head_top+3, full brim width
     for x in range(bx0, bx0 + bw):
-        fill[(x, head_top + 2)] = P['M']   # brim top
-        fill[(x, head_top + 3)] = P['D']   # brim shadow/bottom (darkest row)
+        fill[(x, brim_y)] = lining
 
-    # Hatband: 1px row at head_top+1, skull width, in accent color
-    for x in range(cx - HW // 2, cx + HW // 2 + 1):
-        fill[(x, head_top + 1)] = P['A']
-
-    # Cone: starts at head_top (= brim_top - 2), tapers to 1px at tip
+    # Cone: starts at head_top-1, tapers to 1px at tip
     Hc, lean = P['cone'], P.get('lean', 0)
     for i in range(Hc):
-        y = head_top - i          # i=0 at head_top, rises upward
-        t = i / (Hc - 1)
+        y = (head_top - 1) - i   # i=0 just above brim, i=Hc-1 at tip
+        t = i / (Hc - 1) if Hc > 1 else 0
         wdt = max(1, int(round(HW * (1 - t) + 1 * t)))
         rx0 = cx - wdt // 2 + int(round(lean * t))
         for x in range(rx0, rx0 + wdt):
@@ -190,8 +172,8 @@ def mage_hat(tier, head_top, cx):
             fill[(x, y)] = (P['D'] if rel < 0.33 else
                             P['L'] if 0.55 <= rel <= 0.85 else P['M'])
 
-    # tip row = head_top - (Hc - 1)
-    tip_y = head_top - Hc + 1
+    # tip row = head_top - 1 - (Hc - 1) = head_top - Hc
+    tip_y = head_top - Hc
     tip_x = cx + int(round(lean))
     if P.get('tip_star'):
         over[(tip_x, tip_y)] = P['S']
@@ -200,71 +182,63 @@ def mage_hat(tier, head_top, cx):
         over[(tip_x + 2, tip_y + 1)] = P['S']
     if P.get('gold_rim'):                        # t6 glowing brim rim accents
         for x in (bx0, bx0 + 1, bx0 + bw - 2, bx0 + bw - 1):
-            over[(x, head_top + 2)] = P['A']
+            over[(x, brim_y)] = P['A']
 
-    # Outline restricted to above hatband (no outline on brim — it sits on head)
-    return _finish(fill, over, no_outline_below=head_top + 1)
+    # Outline above brim only (no outline on/below brim — it sits on head)
+    return _finish(fill, over, no_outline_below=head_top - 1)
 
 
 def ranger_hat(tier, head_top, cx):
     P = RANGER_HAT[tier]
     fill, over = {}, {}
-    # brim width: skull+2 (1px overhang each side)
-    bw = HW + 2
+    # brim width: skull_width only (no overhang)
+    bw = HW
     bx0 = cx - bw // 2
 
-    # Lining: fills exact brim footprint (head_top..head_top+3, bx0..bx0+bw)
-    lining = scale_v(P['M'], 0.55)
-    for y in range(head_top, head_top + 4):
-        for x in range(bx0, bx0 + bw):
-            fill[(x, y)] = lining
+    brim_y = head_top  # single brim row
 
-    # Brim: 2 rows at head_top+2..head_top+3, full width
+    # Lining: just the brim row (1px) in dark-mid color
+    lining = scale_v(P['M'], 0.55)
     for x in range(bx0, bx0 + bw):
-        fill[(x, head_top + 2)] = P['M']
-        fill[(x, head_top + 3)] = P['D']
+        fill[(x, brim_y)] = lining
 
     # Robin Hood tilt: left 2px dip one extra row below brim
     for x in (bx0, bx0 + 1):
-        fill[(x, head_top + 4)] = P['D']
+        fill[(x, brim_y + 1)] = P['D']
 
-    # Crown dome offset right; hatband below dome
+    # Crown dome: centered slightly right; starts at head_top-1, 3 rows tall
     ccx = cx + 1
     cw = HW - 2
-    for x in range(ccx - cw // 2, ccx - cw // 2 + cw):  # hatband at head_top+1
-        fill[(x, head_top + 1)] = P['D']
-
-    n = P.get('dome', 4)
-    for j in range(n):                      # domed crown from head_top upward
-        y = head_top - j
-        wdt = max(2, int(round(cw - (cw - 2) * j / (n - 1))))
+    n = P.get('dome', 3)
+    for j in range(n):                       # j=0 at brim-1, j=n-1 at top
+        y = (head_top - 1) - j
+        wdt = max(2, int(round(cw - (cw - 2) * j / max(1, n - 1))))
         rx0 = ccx - wdt // 2
         for x in range(rx0, rx0 + wdt):
             if j == n - 1 or x == rx0 + wdt - 1:
-                fill[(x, y)] = P['L']      # top row + lit right edge
+                fill[(x, y)] = P['L']        # top row + lit right edge
             else:
                 fill[(x, y)] = P['M']
         if j < n - 1 and rx0 <= ccx < rx0 + wdt:
-            fill[(ccx, y)] = P['D']        # center crease
+            fill[(ccx, y)] = P['D']          # center crease
 
-    # Feather: up-right 45° from crown top-right
-    # dome tip is at y = head_top - (n-1); feather sy offset relative to dome base
+    # Feather: up-right 45° from crown right side near dome base
     sx = ccx + 3
-    sy = head_top - n + 4                  # feather anchor near dome mid-height
+    sy = head_top - 1                        # feather base at dome bottom row
     for i, col in enumerate(P['F']):
         over[(sx + min(i, 4), sy - i)] = col
-    if len(P['F']) >= 4:                   # thicker plume base
+    if len(P['F']) >= 4:                     # thicker plume base
         over[(sx, sy + 1)] = P['F'][0]
 
-    if 'A' in P:                           # metal brim rim at brim corners
-        rim = [(bx0, head_top + 3), (bx0 + bw - 1, head_top + 2)]
+    if 'A' in P:                             # metal brim rim at brim corners
+        rim = [(bx0, brim_y), (bx0 + bw - 1, brim_y)]
         if P.get('rim2'):
-            rim += [(bx0 + 1, head_top + 3), (bx0 + bw - 2, head_top + 2)]
-        for p in rim:
-            over[p] = P['A']
+            rim += [(bx0 + 1, brim_y), (bx0 + bw - 2, brim_y)]
+        for pos in rim:
+            over[pos] = P['A']
 
-    # Outline up to tilt bottom (no outline below tilt — sits on head)
-    return _finish(fill, over, no_outline_below=head_top + 4)
+    # Outline up to tilt bottom (no outline below tilt)
+    return _finish(fill, over, no_outline_below=brim_y + 1)
 
 
 # ── Sheet composition ────────────────────────────────────────────────────────
@@ -294,7 +268,6 @@ def build_sheet(builder, tier, frames, head_dome_fn):
 def main():
     for cls, builder in (('mage', mage_hat), ('ranger', ranger_hat)):
         # ── Male helmets, tiers 1-6 ──────────────────────────────────────────
-        # Read active frames from existing tier-1 file (42 frames; sleep frames empty)
         t1_path = f"{CH}/helmet_{cls}1.png"
         frames_m = get_active_frames(t1_path)
 
