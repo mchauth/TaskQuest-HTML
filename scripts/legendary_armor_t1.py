@@ -86,20 +86,21 @@ OL = (112, 82, 28)                 # exterior outline (shaded, not accent)
 # Mirrored for the left wing (dx -> -dx). Max |dx|=19 -> span x=cx±19,
 # ~13px beyond the body edge (body bbox x=34..46, cx=40).
 WING_ROWS = {
-    0:  range(13, 20),             # outer wingtip elevated — angled top
-    1:  range(10, 20),
-    2:  range(7, 20),
-    3:  range(5, 20),              # full width from here
-    4:  range(5, 20),
-    5:  range(5, 19),
-    6:  range(5, 17),
-    7:  range(5, 15),
-    8:  range(5, 13),
-    9:  [6, 7, 8, 10, 11, 12],     # scallop with 3 notch groups
-    10: [7, 8, 11, 12],            # secondary feather tips
-    11: [8, 11],                   # primary hanging feather tips
+    0:  [19],                      # single outer pixel — sharp tip
+    1:  range(16, 20),             # fast expansion from tip
+    2:  range(12, 20),
+    3:  range(8, 20),
+    4:  range(5, 20),              # full width
+    5:  range(5, 20),
+    6:  range(5, 19),
+    7:  range(5, 17),
+    8:  range(5, 15),
+    9:  range(5, 13),
+    10: [6, 7, 8, 10, 11, 12],     # scallop with 3 notch groups
+    11: [7, 8, 11, 12],            # secondary feather tips
+    12: [8, 11],                   # primary hanging feather tips (pointed)
 }
-WING_H = 12                        # rows 0..11
+WING_H = 13                        # rows 0..12
 
 
 def edge_mask(P):
