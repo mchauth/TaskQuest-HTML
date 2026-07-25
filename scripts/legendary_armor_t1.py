@@ -86,22 +86,18 @@ OL = (112, 82, 28)                 # exterior outline (shaded, not accent)
 # Mirrored for the left wing (dx -> -dx). Max |dx|=19 -> span x=cx±19,
 # ~13px beyond the body edge (body bbox x=34..46, cx=40).
 WING_ROWS = {
-    0:  [10],                      # single-pixel pointed tip
-    1:  range(9, 13),              # fast expansion
-    2:  range(7, 16),
-    3:  range(6, 18),              # nearly full width by row 3
-    4:  range(5, 19),
-    5:  range(5, 20),
-    6:  range(5, 20),              # widest row
-    7:  range(5, 19),
-    8:  range(5, 18),
-    9:  range(5, 16),
-    10: range(5, 14),
-    11: range(5, 12),
-    12: [6, 7, 9, 10],             # scallop notch
-    13: [7, 9],                    # hanging primary feather tips
+    0:  range(5, 19),              # starts at full width immediately
+    1:  range(5, 20),
+    2:  range(5, 20),              # widest row
+    3:  range(5, 19),
+    4:  range(5, 18),
+    5:  range(5, 16),
+    6:  range(5, 14),
+    7:  range(5, 12),
+    8:  [6, 7, 9, 10],             # scallop notch
+    9:  [7, 9],                    # hanging primary feather tips
 }
-WING_H = 14                        # rows 0..13
+WING_H = 10                        # rows 0..9
 
 
 def edge_mask(P):
@@ -175,7 +171,7 @@ def build(base, dome, female):
 
         # ── 1. wings (under the body) — upright frames only ──────────────────
         if not sleeping:
-            wpx = wing_pixels(cx, neck_top - 12)
+            wpx = wing_pixels(cx, neck_top - 8)
             for (x, y), rgb in wpx.items():
                 put(fr, y, x, rgb)
             # exterior 1px outline on transparent 4-neighbors
