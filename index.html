@@ -2173,9 +2173,10 @@ var LOOT_TABLE = [
   // Legendary Hooded Capes (standalone cape shirts, no hood)
   { id:'shirt_mage_legendary_hooded',  name:'Arcane Hooded Cape', gender:'m', slot:'shirt',  file:'sprites/preview_assets/char/shirt_mage_legendary_hooded.png',  level:50, rarity:'legendary', classes:['mage'] },
   { id:'shirt_ranger_legendary_hooded', name:'Shadow Hooded Cape',  gender:'m', slot:'shirt',  file:'sprites/preview_assets/char/shirt_ranger_legendary_hooded.png', level:50, rarity:'legendary', classes:['ranger'] },
-  // Legendary Cowls (helmet slot: hood cap + cape baked in; partial hat so hair shows at sides)
-  { id:'helmet_mage_legendary_cowl', name:'Arcane Cowl', gender:'m', slot:'helmet', hatType:'partial', file:'sprites/preview_assets/char/helmet_mage_legendary_cowl.png', level:50, rarity:'legendary', classes:['mage'] },
-  { id:'helmet_ranger_legendary_cowl', name:'Shadow Cowl', gender:'m', slot:'helmet', hatType:'partial', file:'sprites/preview_assets/char/helmet_ranger_legendary_cowl.png', level:50, rarity:'legendary', classes:['ranger'] },
+  // Legendary Cowls (helmet slot: hood cap + cape baked in; hood type hides long/medium/ponytail
+  // hair via game logic but lets short/mohawk/man-bun hair show at the face opening)
+  { id:'helmet_mage_legendary_cowl', name:'Arcane Cowl', gender:'m', slot:'helmet', hatType:'hood', file:'sprites/preview_assets/char/helmet_mage_legendary_cowl.png', level:50, rarity:'legendary', classes:['mage'] },
+  { id:'helmet_ranger_legendary_cowl', name:'Shadow Cowl', gender:'m', slot:'helmet', hatType:'hood', file:'sprites/preview_assets/char/helmet_ranger_legendary_cowl.png', level:50, rarity:'legendary', classes:['ranger'] },
 
   // ── Female ────────────────────────────────────────
   { id:'f_boots',          name:'Leather Boots',    gender:'f', slot:'boots', file:'sprites/preview_assets/clothing/female/Boots.png',              level:1 },
@@ -2896,13 +2897,19 @@ function getCharLayers() {
   var helmetItem = helmetFile && eq.helmet
     ? LOOT_TABLE.find(function(x){ return x.id === eq.helmet; }) : null;
   var helmetIsPartial = !!(helmetItem && helmetItem.hatType === 'partial');
+  var helmetIsHood    = !!(helmetItem && helmetItem.hatType === 'hood');
+  // Hood hides hair for long/medium/ponytail styles (they'd show behind the cowl);
+  // short hair, mohawk, and man-bun are fine — they sit within the face opening.
+  var hoodHidesHair = helmetIsHood && (HOOD_LONG_STYLES[g]||[]).indexOf(c.hairStyle||1) !== -1;
+  // Show hair when: no full helmet, OR partial, OR hood with a short-ish style
+  var hideHair = helmetFile && !helmetIsPartial && (!helmetIsHood || hoodHidesHair);
   return {
     boots: lootFile('boots') || null,
     pants: lootFile('pants') || null,
     shirt: lootFile('shirt') || null,
     skin:  p + 'skin_' + g + sn + '.png',
     sword: p + 'sword_' + g + '.png',
-    hair:  (helmetFile && !helmetIsPartial) ? null : p + 'hair_' + g + (((c.hairStyle||1) - 1) * 5 + hn) + '.png',
+    hair:  hideHair ? null : p + 'hair_' + g + (((c.hairStyle||1) - 1) * 5 + hn) + '.png',
     helmet: helmetFile,
   };
 }
@@ -2929,6 +2936,11 @@ function isSkirtEquipped() {
 // transformed wrap (own stacking context), so these values are self-contained.
 // Bottom→top: skin, legs (pants/boots swap on skirt), shirt, sword, hair, helmet.
 var CHAR_LAYER_PREFIXES = ['qs','hs','co','av'];
+
+// Hair styles that extend behind the head and must be hidden by hood helmets (hatType:'hood').
+// These styles flow down the back and peek out behind a cowl; short/mohawk/man-bun are fine.
+// hairStyle values: 1=short, 2=long, 3=medium, 4=ponytail(m)/braid(f), 5=mohawk, 6=man-bun.
+var HOOD_LONG_STYLES = { m: [2, 3, 4], f: [2, 3] };
 
 // Hair file numbers that have pixels above y=20 (i.e. they poke through partial hats).
 // fileNum = ((hairStyle-1)*5) + hairNum.  Male styles 1-5 (m1-m25) and female style 4
@@ -2992,10 +3004,13 @@ function applyHairClipToId(hairElId) {
   var eq = S.profile.equippedItems || {};
   var helmetItem = eq.helmet ? LOOT_TABLE.find(function(x){ return x.id === eq.helmet; }) : null;
   var isPartial = !!(helmetItem && helmetItem.hatType === 'partial');
+  var isHood    = !!(helmetItem && helmetItem.hatType === 'hood');
   var c = S.customization, g = c.gender || 'm';
   var fileNum = ((c.hairStyle || 1) - 1) * 5 + (c.hairNum || 1);
   var tallNums = TALL_HAIR_NUMS[g] || [];
-  var needMask = isPartial && tallNums.indexOf(fileNum) !== -1;
+  // Hood that isn't hiding this hair style acts like a partial hat (apply skull-zone mask).
+  var hoodShowsHair = isHood && (HOOD_LONG_STYLES[g]||[]).indexOf(c.hairStyle||1) === -1;
+  var needMask = (isPartial || hoodShowsHair) && tallNums.indexOf(fileNum) !== -1;
   if (!needMask) {
     hairEl.style.clipPath = '';
     // If a masked sheet is still applied (hat unequipped / hair changed),
@@ -3245,15 +3260,20 @@ setInterval(function() {
       var el = document.getElementById(id);
       if (el) el.style.backgroundPosition = x+'px '+y+'px';
     });
-    // Hide hair only for FULL helmets. Partial hats (mage/ranger cones & Robin
-    // Hood hats) only cover the top, so hair shows at the sides.
+    // Hide hair for FULL helmets. Partial hats show hair. Hood helmets hide hair
+    // only for long/medium/ponytail styles (hatType:'hood' logic mirrors getCharLayers).
     var helmetOn = !!getCharLayers().helmet;
     var _heq = S.profile.equippedItems || {};
     var _hItem = helmetOn && _heq.helmet
       ? LOOT_TABLE.find(function(x){ return x.id === _heq.helmet; }) : null;
     var helmetIsPartial = !!(_hItem && _hItem.hatType === 'partial');
+    var helmetIsHood    = !!(_hItem && _hItem.hatType === 'hood');
+    var _g = S.customization.gender || 'm';
+    var hoodHidesHair = helmetIsHood && (HOOD_LONG_STYLES[_g]||[]).indexOf(S.customization.hairStyle||1) !== -1;
+    // Hides hair when: full helmet, OR hood with long/medium/ponytail style
+    var shouldHideHair = helmetOn && !helmetIsPartial && (!helmetIsHood || hoodHidesHair);
     var hairEl = document.getElementById('qsHair');
-    if (hairEl && helmetOn && !helmetIsPartial) {
+    if (hairEl && shouldHideHair) {
       if (qsAnim === 'sleep') {
         var c = S.customization, g = c.gender || 'm', hn = c.hairNum || 1;
         var hairUrl = 'sprites/preview_assets/char/hair_' + g + (((c.hairStyle||1) - 1) * 5 + hn) + '.png';
