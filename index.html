@@ -2898,11 +2898,8 @@ function getCharLayers() {
     ? LOOT_TABLE.find(function(x){ return x.id === eq.helmet; }) : null;
   var helmetIsPartial = !!(helmetItem && helmetItem.hatType === 'partial');
   var helmetIsHood    = !!(helmetItem && helmetItem.hatType === 'hood');
-  // Hood hides hair for long/medium/ponytail styles (they'd show behind the cowl);
-  // short hair, mohawk, and man-bun are fine — they sit within the face opening.
-  var hoodHidesHair = helmetIsHood && (HOOD_LONG_STYLES[g]||[]).indexOf(c.hairStyle||1) !== -1;
-  // Show hair when: no full helmet, OR partial, OR hood with a short-ish style
-  var hideHair = helmetFile && !helmetIsPartial && (!helmetIsHood || hoodHidesHair);
+  // Hood helmets use per-pixel canvas masking in applyHairClipToId — always include hair.
+  var hideHair = helmetFile && !helmetIsPartial && !helmetIsHood;
   return {
     boots: lootFile('boots') || null,
     pants: lootFile('pants') || null,
@@ -2936,11 +2933,6 @@ function isSkirtEquipped() {
 // transformed wrap (own stacking context), so these values are self-contained.
 // Bottom→top: skin, legs (pants/boots swap on skirt), shirt, sword, hair, helmet.
 var CHAR_LAYER_PREFIXES = ['qs','hs','co','av'];
-
-// Hair styles that extend behind the head and must be hidden by hood helmets (hatType:'hood').
-// These styles flow down the back and peek out behind a cowl; short/mohawk/man-bun are fine.
-// hairStyle values: 1=short, 2=long, 3=medium, 4=ponytail(m)/braid(f), 5=mohawk, 6=man-bun.
-var HOOD_LONG_STYLES = { m: [2, 3, 4], f: [2, 3] };
 
 // Hair file numbers that have pixels above y=20 (i.e. they poke through partial hats).
 // fileNum = ((hairStyle-1)*5) + hairNum.  Male styles 1-5 (m1-m25) and female style 4
@@ -2995,6 +2987,73 @@ function buildMaskedHairSheet(url, g, done) {
   img.src = url;
 }
 
+// Build a hair sheet masked against the hood sprite geometry.
+// For each animation frame: per row, find the leftmost opaque pixel in the hood sprite.
+// Erase hair pixels to the LEFT of that boundary (they're behind the hood back panel).
+// Also erase hair pixels coinciding with opaque hood pixels (belt-and-suspenders).
+// Hair in the transparent face-opening area (right of the boundary) is preserved.
+// Operates on raw pixel data — no clearRect per pixel — so it's fast enough to run once.
+function buildHoodMaskedHairSheet(hairUrl, hoodUrl, done) {
+  var hairImg = new Image(), hoodImg = new Image();
+  var loadCount = 0;
+  function tryBuild() {
+    if (++loadCount < 2) return;
+    try {
+      var FW = 80, FH = 64;
+      var W = hairImg.naturalWidth, H = hairImg.naturalHeight;
+      // Draw hair to get pixel data
+      var cv = document.createElement('canvas');
+      cv.width = W; cv.height = H;
+      var ctx = cv.getContext('2d');
+      ctx.drawImage(hairImg, 0, 0);
+      var hairData = ctx.getImageData(0, 0, W, H);
+      var hp = hairData.data;
+      // Read hood pixels (same 80x64 frame layout, may differ in sheet height)
+      var hoodCv = document.createElement('canvas');
+      hoodCv.width  = hoodImg.naturalWidth;
+      hoodCv.height = hoodImg.naturalHeight;
+      var hoodCtx = hoodCv.getContext('2d');
+      hoodCtx.drawImage(hoodImg, 0, 0);
+      var hoodRaw = hoodCtx.getImageData(0, 0, hoodCv.width, hoodCv.height).data;
+      var hW = hoodCv.width, hH = hoodCv.height;
+      var fCols = Math.floor(W / FW);
+      var fRows = Math.floor(H / FH);
+      for (var fr = 0; fr < fRows; fr++) {
+        for (var fc = 0; fc < fCols; fc++) {
+          for (var ly = 0; ly < FH; ly++) {
+            var absY = fr * FH + ly;
+            if (absY >= hH) continue;
+            // Find leftmost opaque hood pixel in this row/frame cell
+            var leftmost = -1;
+            for (var lx = 0; lx < FW; lx++) {
+              if (hoodRaw[(absY * hW + fc * FW + lx) * 4 + 3] > 0) { leftmost = lx; break; }
+            }
+            if (leftmost < 0) continue; // no hood in this row — leave hair alone
+            // Erase hair to the left of the hood's back edge (hidden behind the hood)
+            for (var ex = 0; ex < leftmost; ex++) {
+              hp[(absY * W + fc * FW + ex) * 4 + 3] = 0;
+            }
+            // Also erase hair pixels coinciding with opaque hood pixels
+            for (var ox = leftmost; ox < FW; ox++) {
+              var absX = fc * FW + ox;
+              if (absX >= hW) break;
+              if (hoodRaw[(absY * hW + absX) * 4 + 3] > 0) {
+                hp[(absY * W + absX) * 4 + 3] = 0;
+              }
+            }
+          }
+        }
+      }
+      ctx.putImageData(hairData, 0, 0);
+      done(cv.toDataURL());
+    } catch(err) { done(null); }
+  }
+  hairImg.onload = hoodImg.onload = tryBuild;
+  hairImg.onerror = hoodImg.onerror = function() { done(null); };
+  hairImg.src = hairUrl;
+  hoodImg.src = hoodUrl;
+}
+
 // Mask the hair layer under partial hats (mage cones / ranger Robin Hood hats).
 // Keeps the legacy name — callers pass the hair element id. Cheap when cached;
 // called every animation tick.
@@ -3008,9 +3067,32 @@ function applyHairClipToId(hairElId) {
   var c = S.customization, g = c.gender || 'm';
   var fileNum = ((c.hairStyle || 1) - 1) * 5 + (c.hairNum || 1);
   var tallNums = TALL_HAIR_NUMS[g] || [];
-  // Hood that isn't hiding this hair style acts like a partial hat (apply skull-zone mask).
-  var hoodShowsHair = isHood && (HOOD_LONG_STYLES[g]||[]).indexOf(c.hairStyle||1) === -1;
-  var needMask = (isPartial || hoodShowsHair) && tallNums.indexOf(fileNum) !== -1;
+  // Hood: per-pixel masking against the hood sprite geometry (separate from partial logic).
+  if (isHood) {
+    hairEl.style.clipPath = '';
+    var hairUrl = 'sprites/preview_assets/char/hair_' + g + fileNum + '.png';
+    var hoodUrl = helmetItem.file;
+    var ck = 'hood|' + hoodUrl + '|' + hairUrl;
+    var cached = _maskedHairCache[ck];
+    if (typeof cached === 'string' && cached.indexOf('data:') === 0) {
+      if (hairEl.dataset.maskedHair !== ck ||
+          hairEl.style.backgroundImage.indexOf('data:') === -1) {
+        hairEl.style.backgroundImage = "url('" + cached + "')";
+        hairEl.dataset.maskedHair = ck;
+      }
+    } else if (cached === undefined) {
+      _maskedHairCache[ck] = 'pending';
+      buildHoodMaskedHairSheet(hairUrl, hoodUrl, function(dataUrl) {
+        _maskedHairCache[ck] = dataUrl || 'failed';
+        applyHairClipToId(hairElId);
+      });
+    } else if (cached === 'failed') {
+      // Canvas unavailable — leave hair unmasked (visible > invisible)
+      if (hairEl.dataset.maskedHair) { delete hairEl.dataset.maskedHair; }
+    }
+    return;
+  }
+  var needMask = isPartial && tallNums.indexOf(fileNum) !== -1;
   if (!needMask) {
     hairEl.style.clipPath = '';
     // If a masked sheet is still applied (hat unequipped / hair changed),
@@ -3260,18 +3342,14 @@ setInterval(function() {
       var el = document.getElementById(id);
       if (el) el.style.backgroundPosition = x+'px '+y+'px';
     });
-    // Hide hair for FULL helmets. Partial hats show hair. Hood helmets hide hair
-    // only for long/medium/ponytail styles (hatType:'hood' logic mirrors getCharLayers).
+    // Hide hair for FULL helmets only. Partial/hood hats use applyHairClipToId below.
     var helmetOn = !!getCharLayers().helmet;
     var _heq = S.profile.equippedItems || {};
     var _hItem = helmetOn && _heq.helmet
       ? LOOT_TABLE.find(function(x){ return x.id === _heq.helmet; }) : null;
     var helmetIsPartial = !!(_hItem && _hItem.hatType === 'partial');
     var helmetIsHood    = !!(_hItem && _hItem.hatType === 'hood');
-    var _g = S.customization.gender || 'm';
-    var hoodHidesHair = helmetIsHood && (HOOD_LONG_STYLES[_g]||[]).indexOf(S.customization.hairStyle||1) !== -1;
-    // Hides hair when: full helmet, OR hood with long/medium/ponytail style
-    var shouldHideHair = helmetOn && !helmetIsPartial && (!helmetIsHood || hoodHidesHair);
+    var shouldHideHair = helmetOn && !helmetIsPartial && !helmetIsHood;
     var hairEl = document.getElementById('qsHair');
     if (hairEl && shouldHideHair) {
       if (qsAnim === 'sleep') {
