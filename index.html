@@ -1915,7 +1915,7 @@ function hsDoSlash() {
   var cls = (S.customization && S.customization.charClass) || 'warrior';
   // Warriors: full 6-frame sword swing. Mage/ranger: extend arm using only
   // the last 2 frames (fr54→fr55) — arm raises to mid-height and lowers back.
-  var frameSeq = (cls === 'warrior') ? [0,1,2,3,4,5] : (cls === 'ranger') ? [0,5,4,1,2,3,5,0] : [0,5,4,4,5,0];
+  var frameSeq = (cls === 'warrior') ? [0,1,2,3,4,5] : [0,5,4,4,5,0];
   var seqIdx = 0;
   clearInterval(_hsSlashTimer);
   _hsSlashTimer = setInterval(function() {
@@ -3229,7 +3229,7 @@ function openCombatOverlay(xpEarned, goldEarned, lootItem) {
 
   // Start hero slash animation (class-aware: warrior=full swing, mage/ranger=extend only)
   var _coCls = (S.customization && S.customization.charClass) || 'warrior';
-  var _coFrameSeq = (_coCls === 'warrior') ? [0,1,2,3,4,5] : (_coCls === 'ranger') ? [0,5,4,1,2,3,5,0] : [0,5,4,4,5,0];
+  var _coFrameSeq = (_coCls === 'warrior') ? [0,1,2,3,4,5] : [0,5,4,4,5,0];
   var _coSeqIdx = 0;
   clearInterval(_coSlashTimer);
   _coSlashTimer = setInterval(function() {
@@ -3892,7 +3892,7 @@ function applyLegLayerOrder() {
       Pants:  skirt ? 3 : 2,  // skirt hem paints over the boot shaft
       Boots:  skirt ? 2 : 3,  // trouser cuff tucks under the boot
       Shirt:  4,
-      Sword:  bowBehind ? 3 : 5,  // bow behind shirt for ranger; sword in front for warrior/mage
+      Sword:  bowBehind ? 0 : 5,  // bow z=0 for ranger: arm/skin (z=1) covers grip, limbs poke out
       Hair:   6,
       Helmet: 7,
     };
@@ -4145,8 +4145,7 @@ setInterval(function() {
           qsCharFrame = (qsCharFrame + 1) % anim.frames;
           var displayFrame = qsCharFrame;
           if (_qsCls2 !== 'warrior') {
-            var _qsSeq = (S.customization && S.customization.charClass) === 'ranger' ? [0,5,4,1,2,3,5,0] : [0,5,4,4,5,0];
-            displayFrame = _qsSeq[qsCharFrame % _qsSeq.length];
+            displayFrame = [0,5,4,4,5,0][qsCharFrame % 6];
           }
           qsSetCharFrame(anim, displayFrame);
           if (qsCharFrame === anim.frames - 1) {
