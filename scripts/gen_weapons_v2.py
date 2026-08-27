@@ -444,38 +444,51 @@ def _bresenham(x0,y0,x1,y1):
     return pts
 
 def make_clean_bow_f0(dark, mid, light, hi, grip_col, str_col, recurve=False):
-    """C-shaped bow: upper tip ~(50,24), grip ~(40,44), lower tip ~(48,62)."""
+    """Diagonal bow: upper tip upper-right (52,17), lower tip lower-left (30,61).
+    Single continuous arc; grip is an inline color band at the midpoint.
+    Limbs curve LEFT in PNG → after game scaleX(-1) flip they face right (toward enemy).
+    String on the RIGHT in PNG (facing character in game).
+    `recurve` and `hi` are accepted for API compatibility but not used in this design.
+    """
     pix = {}
-    UPPER_TIP = (50,24); GRIP_CX = (40,44); LOWER_TIP = (48,62)
-    UP_CTRL  = (18,38) if not recurve else (14,37)
-    LO_CTRL  = (22,56) if not recurve else (18,57)
-    upper_pts = _bezier2(UPPER_TIP, UP_CTRL, GRIP_CX)
-    lower_pts = _bezier2(GRIP_CX, LO_CTRL, LOWER_TIP)
-    for pts_list, (ca, cb) in [(upper_pts,(light,mid)), (lower_pts,(mid,light))]:
-        for i,(x,y) in enumerate(pts_list):
-            t = i/max(1,len(pts_list)-1)
-            if 0<=x<FW and 0<=y<FH:
-                pix[(x,y)] = ca if t<0.5 else cb
-                if 0.1<t<0.9 and x+1<FW: pix.setdefault((x+1,y), light)
-    if recurve:
-        for (tx,ty),(ox,oy) in [((UPPER_TIP),(4,-2)),((LOWER_TIP),(4,1))]:
-            for (x,y) in _bresenham(tx,ty,tx+ox,ty+oy):
-                if 0<=x<FW and 0<=y<FH: pix[(x,y)] = hi
-    # Grip wrap
-    for x in range(38,44):
-        for y in range(42,48): pix[(x,y)] = grip_col
-    for x in range(37,45): pix.setdefault((x,41),dark); pix.setdefault((x,48),dark)
-    for y in range(41,49): pix.setdefault((37,y),dark); pix.setdefault((44,y),dark)
-    # Outline limbs
-    limb_pts = set(upper_pts)|set(lower_pts)
-    for (x,y) in list(limb_pts):
-        for ox,oy in [(-1,0),(1,0),(0,-1),(0,1)]:
-            nx,ny=x+ox,y+oy
-            if 0<=nx<FW and 0<=ny<FH and (nx,ny) not in limb_pts and (nx,ny) not in pix:
-                pix[(nx,ny)] = dark
-    # String
-    for (x,y) in _bresenham(UPPER_TIP[0]+1,UPPER_TIP[1]+1,LOWER_TIP[0]+1,LOWER_TIP[1]-1):
-        if 0<=x<FW and 0<=y<FH and (x,y) not in pix: pix[(x,y)] = str_col
+    UPPER_TIP = (52, 17)
+    LOWER_TIP = (30, 61)
+    GRIP_MID  = (36, 39)
+
+    upper_pts = _bezier2(UPPER_TIP, (43, 27), GRIP_MID)
+    lower_pts = _bezier2(GRIP_MID,  (32, 51), LOWER_TIP)
+    all_pts   = upper_pts + lower_pts[1:]   # single continuous arc
+
+    n_total = max(1, len(all_pts) - 1)
+    for i, (x, y) in enumerate(all_pts):
+        t = i / n_total
+        # Middle 15% of arc → grip color band
+        if 0.43 < t < 0.57:
+            col = grip_col
+        elif t < 0.25:
+            col = light
+        elif t < 0.5:
+            col = mid
+        elif t < 0.75:
+            col = mid
+        else:
+            col = light
+        if 0 <= x < FW and 0 <= y < FH:
+            pix[(x, y)] = col
+
+    # 1px dark outline along the full arc
+    limb_pts = set(all_pts)
+    for (x, y) in list(limb_pts):
+        for ox, oy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+            nx, ny = x + ox, y + oy
+            if 0 <= nx < FW and 0 <= ny < FH and (nx, ny) not in limb_pts and (nx, ny) not in pix:
+                pix[(nx, ny)] = dark
+
+    # String: straight line tip-to-tip, +1px offset toward concave/inner side
+    for (x, y) in _bresenham(UPPER_TIP[0] + 1, UPPER_TIP[1] + 1,
+                              LOWER_TIP[0] + 1, LOWER_TIP[1] - 1):
+        if 0 <= x < FW and 0 <= y < FH and (x, y) not in pix:
+            pix[(x, y)] = str_col
     return pix
 
 def scale_pixels(pix, scale, cx=None, cy=None):
@@ -552,20 +565,15 @@ for tier in ['t1','t2','t3','t4','t5','t6']:
                     trail_c=tc, trail_e=te)
 
 # ── Generate all bows ─────────────────────────────────────────────────────────
-# Use clean Bezier-based bow design (C-shape, no blotchiness) scaled to 0.85x.
-# make_clean_bow_f0 generates a smooth ')'-shaped bow (C opening right, string
-# on right; after game's scaleX(-1) flip → limbs face enemy on right side).
+# Generate from make_clean_bow_f0: compact C-curve, small grip, per-tier colors.
+# To lock in a design: switch back to extract_f0(fname) after generating once.
 print("\n=== Bows ===")
-BOW_SCALE = 0.85   # slightly smaller than full gen_bows_v3 size
 
 for tier in ['t1','t2','t3','t4','t5','t6']:
     palette = BOW_PALETTES.get(tier, BOW_PALETTES['t1'])
-    f0_raw = make_clean_bow_f0(**palette)
-    f0 = scale_pixels(f0_raw, BOW_SCALE)
+    f0 = make_clean_bow_f0(**palette)
     for g in ['m','f']:
         fname = f'{OUT_DIR}bow_ranger_{tier}_{g}.png'
-        if not os.path.exists(fname):
-            print(f"  SKIP (not found): {fname}"); continue
         build_sheet(f0, SRC_PATH, fname, weapon_type='bow',
                     trail_c=(220,200,140,255), trail_e=(180,160,100,255))
 
