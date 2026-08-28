@@ -50,6 +50,14 @@ for fi in range(COLS * ROWS):
 
 print("Slash angle deltas:", {k: f"{v:.1f}°" for k,v in SLASH_ANGLES.items()})
 
+# Bow grip positions — where the sword hand actually contacts the grip per frame.
+# Computed from nearest sword pixel to skin pixel (actual hand position, not centroid).
+# For non-slash frames the bow uses the fr50 grip as the idle anchor.
+BOW_GRIP_CX = {50: 41, 51: 49, 52: 54, 53: 56, 54: 27, 55: 33}
+BOW_GRIP_CY = {50: 44, 51: 21, 52: 20, 53: 20, 54: 41, 55: 42}
+BOW_IDLE_GX = 41   # grip x for all non-slash frames (idle/walk)
+BOW_IDLE_GY = 44   # grip y for all non-slash frames
+
 # Pre-compute extend positions: only use fr54 and fr55 (last 2 frames, reversed)
 # fr54 = "extended/raised" position; fr55 = "idle/resting" position
 DX_FR54 = round(SLASH_CX[54] - src_cx0)
@@ -221,17 +229,24 @@ def build_sheet(f0, source_path, out_path, weapon_type='sword',
             # Characters are displayed with scaleX(-1), so LEFT in PNG = RIGHT on screen.
             # For slash frames use the slash centroid table; for all other frames use
             # the sword's per-frame centroid directly (absolute, not delta).
-            if 50 <= fi <= 55:
-                target_cx = SLASH_CX.get(fi, cx_src)
-                target_cy = SLASH_CY.get(fi, cy_src)
+            if weapon_type == 'bow':
+                # Bow uses actual grip positions (where hand meets weapon) not sword centroid.
+                # Sword centroid tracks the blade arc, not the grip — causing the bow to float.
+                if 50 <= fi <= 55:
+                    target_cx = BOW_GRIP_CX.get(fi, BOW_IDLE_GX)
+                    target_cy = BOW_GRIP_CY.get(fi, BOW_IDLE_GY)
+                else:
+                    target_cx = BOW_IDLE_GX
+                    target_cy = BOW_IDLE_GY
             else:
-                target_cx = cx_src   # sword centroid at this frame (absolute)
-                target_cy = cy_src
+                if 50 <= fi <= 55:
+                    target_cx = SLASH_CX.get(fi, cx_src)
+                    target_cy = SLASH_CY.get(fi, cy_src)
+                else:
+                    target_cx = cx_src   # sword centroid at this frame (absolute)
+                    target_cy = cy_src
             actual_dx = round(target_cx - cx0_f0)
             actual_dy = round(target_cy - cy0_f0)
-            # Bow grip sits ~5px above centroid; shift up to place grip in hand.
-            if weapon_type == 'bow':
-                actual_dy -= 5
             pix = translate_pixels(f0, actual_dx, actual_dy)
             stamp(out, pix, gx, gy)
 
@@ -565,13 +580,26 @@ for tier in ['t1','t2','t3','t4','t5','t6']:
                     trail_c=tc, trail_e=te)
 
 # ── Generate all bows ─────────────────────────────────────────────────────────
-# Generate from make_clean_bow_f0: compact C-curve, small grip, per-tier colors.
-# To lock in a design: switch back to extract_f0(fname) after generating once.
+# LOCKED DESIGN: diagonal bow rotated 90° CW before build_sheet.
+# Game applies scaleX(-1) so the bow appears horizontal/correct on screen.
+# Do NOT change make_clean_bow_f0 params or the rotate_90cw call without re-approving.
 print("\n=== Bows ===")
+
+def rotate_90cw(pix):
+    """90° clockwise in screen coords: (x,y) → ((y-cy)+cx, -(x-cx)+cy)"""
+    if not pix: return {}
+    xs=[p[0] for p in pix]; ys=[p[1] for p in pix]
+    cx,cy=float(np.mean(xs)),float(np.mean(ys))
+    result={}
+    for (x,y),col in pix.items():
+        nx=round((y-cy)+cx); ny=round(-(x-cx)+cy)
+        if 0<=nx<FW and 0<=ny<FH and (nx,ny) not in result:
+            result[(nx,ny)]=col
+    return result
 
 for tier in ['t1','t2','t3','t4','t5','t6']:
     palette = BOW_PALETTES.get(tier, BOW_PALETTES['t1'])
-    f0 = make_clean_bow_f0(**palette)
+    f0 = rotate_90cw(make_clean_bow_f0(**palette))
     for g in ['m','f']:
         fname = f'{OUT_DIR}bow_ranger_{tier}_{g}.png'
         build_sheet(f0, SRC_PATH, fname, weapon_type='bow',
