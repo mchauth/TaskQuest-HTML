@@ -1,5 +1,0 @@
-== SURVIVAL through the finishing pass (reported, local contrast)
-   chest   clasp still lighter than the cloth around it:  3469/3495  ( 99%)
-   legs    clasp still lighter than the cloth around it:  5162/5162  (100%)
-   boots   clasp still lighter than the cloth around it:   356/356   (100%)
-   helmet  clasp still lighter than the cloth around it:  2428/2527  ( 96%)
