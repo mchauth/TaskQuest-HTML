@@ -177,7 +177,7 @@ def make_trail_frame55(trail_color_center, trail_color_edge):
 # ── Centroid-propagate pixels across all frames ───────────────────────────────
 
 def build_sheet(f0, source_path, out_path, weapon_type='sword',
-                trail_c=None, trail_e=None):
+                trail_c=None, trail_e=None, skin_mask_path=None):
     """
     f0: dict of {(x,y): rgba_tuple} for frame 0
     source_path: reference sprite for centroid tracking (sword.png)
@@ -186,6 +186,7 @@ def build_sheet(f0, source_path, out_path, weapon_type='sword',
     """
     src_arr = np.array(Image.open(source_path).convert('RGBA'))
     out = np.zeros((ROWS*FH, COLS*FW, 4), dtype=np.uint8)
+    skin_arr = np.array(Image.open(skin_mask_path).convert('RGBA')) if skin_mask_path else None
 
     cx0_src, cy0_src = get_centroid(src_arr, 0)
     cx0_f0, cy0_f0   = centroid_of(f0)
@@ -249,6 +250,14 @@ def build_sheet(f0, source_path, out_path, weapon_type='sword',
             actual_dy = round(target_cy - cy0_f0)
             pix = translate_pixels(f0, actual_dx, actual_dy)
             stamp(out, pix, gx, gy)
+
+            # Arm masking for bow: punch out skin pixels so the arm appears in front.
+            # The skin layer renders at z=1 (below bow at z=5); making bow pixels transparent
+            # where the arm is lets the skin show through naturally.
+            if weapon_type == 'bow' and skin_arr is not None:
+                skin_frame = skin_arr[gy:gy+FH, gx:gx+FW]
+                arm_mask = skin_frame[..., 3] > 0
+                out[gy:gy+FH, gx:gx+FW][arm_mask] = [0, 0, 0, 0]
 
             # Arrow on fr54 only — the frame shown when mage/ranger arm is fully raised.
             # Tip at far LEFT in PNG → far RIGHT on screen (toward enemy) after scaleX(-1).
@@ -597,12 +606,19 @@ def rotate_90cw(pix):
             result[(nx,ny)]=col
     return result
 
+SKIN_PATHS = {
+    'm': f'{OUT_DIR}skin.png',
+    'f': f'{OUT_DIR}skin_f1.png',  # default female skin tone
+}
+
 for tier in ['t1','t2','t3','t4','t5','t6']:
     palette = BOW_PALETTES.get(tier, BOW_PALETTES['t1'])
     f0 = rotate_90cw(make_clean_bow_f0(**palette))
     for g in ['m','f']:
         fname = f'{OUT_DIR}bow_ranger_{tier}_{g}.png'
+        skin_path = SKIN_PATHS.get(g)
         build_sheet(f0, SRC_PATH, fname, weapon_type='bow',
-                    trail_c=(220,200,140,255), trail_e=(180,160,100,255))
+                    trail_c=(220,200,140,255), trail_e=(180,160,100,255),
+                    skin_mask_path=skin_path)
 
 print("\nDone.")
