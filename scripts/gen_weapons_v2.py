@@ -251,13 +251,17 @@ def build_sheet(f0, source_path, out_path, weapon_type='sword',
             pix = translate_pixels(f0, actual_dx, actual_dy)
             stamp(out, pix, gx, gy)
 
-            # Arm masking for bow: punch out skin pixels so the arm appears in front.
-            # The skin layer renders at z=1 (below bow at z=5); making bow pixels transparent
-            # where the arm is lets the skin show through naturally.
+            # Arm masking for bow: only punch out skin pixels that are ADJACENT to bow pixels.
+            # This masks just the hand/forearm area where it meets the bow grip,
+            # not the entire torso — so bow still appears in front of the body.
             if weapon_type == 'bow' and skin_arr is not None:
+                from scipy.ndimage import binary_dilation
                 skin_frame = skin_arr[gy:gy+FH, gx:gx+FW]
-                arm_mask = skin_frame[..., 3] > 0
-                out[gy:gy+FH, gx:gx+FW][arm_mask] = [0, 0, 0, 0]
+                bow_frame = out[gy:gy+FH, gx:gx+FW, 3] > 0
+                # Dilate bow mask by 4px to find skin pixels that touch the bow
+                bow_dilated = binary_dilation(bow_frame, iterations=4)
+                skin_near_bow = (skin_frame[..., 3] > 0) & bow_dilated
+                out[gy:gy+FH, gx:gx+FW][skin_near_bow] = [0, 0, 0, 0]
 
             # Arrow on fr54 only — the frame shown when mage/ranger arm is fully raised.
             # Tip at far LEFT in PNG → far RIGHT on screen (toward enemy) after scaleX(-1).
