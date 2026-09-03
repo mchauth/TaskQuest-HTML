@@ -417,6 +417,7 @@ hr{border:none;border-top:1px solid var(--border)}
         <div class="qs-char-layer" id="qsBoots"></div>
         <div class="qs-char-layer" id="qsShirt"></div>
         <div class="qs-char-layer" id="qsSword"></div>
+        <div class="qs-char-layer" id="qsArm"></div>
         <div class="qs-char-layer" id="qsHair"></div>
         <div class="qs-char-layer" id="qsHelmet"></div>
       </div>
@@ -544,6 +545,7 @@ hr{border:none;border-top:1px solid var(--border)}
         <div class="hs-char-layer" id="hsBoots"></div>
         <div class="hs-char-layer" id="hsShirt"></div>
         <div class="hs-char-layer" id="hsSword"></div>
+        <div class="hs-char-layer" id="hsArm"></div>
         <div class="hs-char-layer" id="hsHair"></div>
         <div class="hs-char-layer" id="hsHelmet"></div>
       </div>
@@ -624,6 +626,7 @@ hr{border:none;border-top:1px solid var(--border)}
       <div class="co-hero-layer" id="coBoots"></div>
       <div class="co-hero-layer" id="coShirt"></div>
       <div class="co-hero-layer" id="coSword"></div>
+      <div class="co-hero-layer" id="coArm"></div>
       <div class="co-hero-layer" id="coHair"></div>
       <div class="co-hero-layer" id="coHelmet"></div>
     </div>
@@ -1810,7 +1813,7 @@ var HOME_TIERS = [
 var HS_CF_SRCS = Array.from({length:16}, function(_,f){ return 'sprites/preview_assets/anim/fire_f'+f+'.png'; });
 var hsCfFrame = 0, hsCfLast = 0, hsCharFrame = 0, hsCharLast = 0, hsSceneRunning = false;
 var HS_BG = [1,2,3,4,5].map(function(i){ return 'sprites/preview_assets/bg/layer'+i+'.png'; });
-var HS_CHAR_IDS = { boots:'hsBoots', pants:'hsPants', shirt:'hsShirt', skin:'hsSkin', sword:'hsSword', hair:'hsHair', helmet:'hsHelmet' };
+var HS_CHAR_IDS = { boots:'hsBoots', pants:'hsPants', shirt:'hsShirt', skin:'hsSkin', sword:'hsSword', arm:'hsArm', hair:'hsHair', helmet:'hsHelmet' };
 var HS_ANIM = { idle:{row:0,frames:5,fps:6}, walk:{row:1,frames:8,fps:10} };
 
 function renderHomeScene() {
@@ -3210,7 +3213,7 @@ function openCombatOverlay(xpEarned, goldEarned, lootItem) {
 
   // Wire hero layers with current char appearance
   var layers = getCharLayers();
-  var heroMap = { boots:'coBoots', pants:'coPants', shirt:'coShirt', skin:'coSkin', sword:'coSword', hair:'coHair', helmet:'coHelmet' };
+  var heroMap = { boots:'coBoots', pants:'coPants', shirt:'coShirt', skin:'coSkin', sword:'coSword', arm:'coArm', hair:'coHair', helmet:'coHelmet' };
   Object.keys(heroMap).forEach(function(k) {
     var el = document.getElementById(heroMap[k]);
     if (el) { el.style.backgroundImage = layers[k] ? cssUrl(layers[k]) : 'none'; el.style.backgroundSize = '800px 448px'; }
@@ -3750,6 +3753,7 @@ function getCharLayers() {
     shirt: lootFile('shirt') || null,
     skin:  p + 'skin_' + g + sn + '.png',
     sword: swordFile,
+    arm:   cls === 'ranger' ? (p + 'skin_arm_' + g + sn + '.png') : null,
     hair:  hideHair ? null : p + 'hair_' + g + ((hoodStyle - 1) * 5 + hn) + '.png',
     helmet: helmetFile,
   };
@@ -3891,6 +3895,7 @@ function applyLegLayerOrder() {
       Boots:  skirt ? 2 : 3,  // trouser cuff tucks under the boot
       Shirt:  4,
       Sword:  5,
+      Arm:    8,
       Hair:   6,
       Helmet: 7,
     };
@@ -3975,7 +3980,7 @@ function renderCustomizeUI() {
 // Refresh the quest scene character layers after customization change
 function refreshSceneLayers() {
   var layers = getCharLayers();
-  var idMap = { boots:'qsBoots', pants:'qsPants', shirt:'qsShirt', skin:'qsSkin', sword:'qsSword', hair:'qsHair', helmet:'qsHelmet' };
+  var idMap = { boots:'qsBoots', pants:'qsPants', shirt:'qsShirt', skin:'qsSkin', sword:'qsSword', arm:'qsArm', hair:'qsHair', helmet:'qsHelmet' };
   Object.keys(idMap).forEach(function(k) {
     var el = document.getElementById(idMap[k]);
     if (el) el.style.backgroundImage = layers[k] ? cssUrl(layers[k]) : 'none';
@@ -3997,7 +4002,7 @@ function refreshAvatarPreview() {
 
   // Build sprite layer structure once
   if (!document.getElementById('avSkin')) {
-    var LAYER_IDS = ['avSkin','avPants','avBoots','avShirt','avSword','avHair','avHelmet'];
+    var LAYER_IDS = ['avSkin','avPants','avBoots','avShirt','avSword','avArm','avHair','avHelmet'];
     big.innerHTML = '<div class="av-char-wrap">' +
       LAYER_IDS.map(function(id) { return '<div class="av-layer" id="'+id+'"></div>'; }).join('') +
       '</div>';
@@ -4005,7 +4010,7 @@ function refreshAvatarPreview() {
 
   // Update layers to match current customization
   var layers = getCharLayers();
-  var AV_MAP = { boots:'avBoots', pants:'avPants', shirt:'avShirt', skin:'avSkin', sword:'avSword', hair:'avHair', helmet:'avHelmet' };
+  var AV_MAP = { boots:'avBoots', pants:'avPants', shirt:'avShirt', skin:'avSkin', sword:'avSword', arm:'avArm', hair:'avHair', helmet:'avHelmet' };
   Object.keys(AV_MAP).forEach(function(k) {
     var el = document.getElementById(AV_MAP[k]);
     if (el) {
@@ -4055,7 +4060,7 @@ setInterval(function() {
 // ── QUEST SCENE ANIMATION ──
 (function() {
   var BG_LAYERS = [1,2,3,4,5].map(function(i){ return 'sprites/preview_assets/bg/layer'+i+'.png'; });
-  var CHAR_IDS = { boots:'qsBoots', pants:'qsPants', shirt:'qsShirt', skin:'qsSkin', sword:'qsSword', hair:'qsHair', helmet:'qsHelmet' };
+  var CHAR_IDS = { boots:'qsBoots', pants:'qsPants', shirt:'qsShirt', skin:'qsSkin', sword:'qsSword', arm:'qsArm', hair:'qsHair', helmet:'qsHelmet' };
   var ANIM = {
     idle:   { row:0, frames:5, fps:6 },
     walk:   { row:1, frames:8, fps:10 },
