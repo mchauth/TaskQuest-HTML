@@ -58,6 +58,10 @@ BOW_GRIP_CY = {50: 44, 51: 21, 52: 20, 53: 20, 54: 41, 55: 42}
 BOW_IDLE_GX = 41   # grip x for all non-slash frames (idle/walk)
 BOW_IDLE_GY = 44   # grip y for all non-slash frames
 
+# Per-frame extra rotation for bow (degrees, applied around bow centroid before translating to grip).
+# Positive = clockwise in image coords (y-down). Ramps up to fr54 (full draw) then back down.
+BOW_EXTRA_ROTATION = {50: 0, 51: 21, 52: 37, 53: 48, 54: 60, 55: 33}
+
 # Pre-compute extend positions: only use fr54 and fr55 (last 2 frames, reversed)
 # fr54 = "extended/raised" position; fr55 = "idle/resting" position
 DX_FR54 = round(SLASH_CX[54] - src_cx0)
@@ -177,7 +181,8 @@ def make_trail_frame55(trail_color_center, trail_color_edge):
 # ── Centroid-propagate pixels across all frames ───────────────────────────────
 
 def build_sheet(f0, source_path, out_path, weapon_type='sword',
-                trail_c=None, trail_e=None, skin_mask_path=None):
+                trail_c=None, trail_e=None, skin_mask_path=None,
+                string_tips=None, bow_str_col=None):
     """
     f0: dict of {(x,y): rgba_tuple} for frame 0
     source_path: reference sprite for centroid tracking (sword.png)
@@ -237,8 +242,9 @@ def build_sheet(f0, source_path, out_path, weapon_type='sword',
                     target_cx = BOW_GRIP_CX.get(fi, BOW_IDLE_GX)
                     target_cy = BOW_GRIP_CY.get(fi, BOW_IDLE_GY)
                 else:
-                    target_cx = BOW_IDLE_GX
-                    target_cy = BOW_IDLE_GY
+                    # Bob with character animation using sword centroid delta
+                    target_cx = BOW_IDLE_GX + round(cx_src - cx0_src)
+                    target_cy = BOW_IDLE_GY + round(cy_src - cy0_src)
             else:
                 if 50 <= fi <= 55:
                     target_cx = SLASH_CX.get(fi, cx_src)
@@ -246,22 +252,58 @@ def build_sheet(f0, source_path, out_path, weapon_type='sword',
                 else:
                     target_cx = cx_src   # sword centroid at this frame (absolute)
                     target_cy = cy_src
-            actual_dx = round(target_cx - cx0_f0)
-            actual_dy = round(target_cy - cy0_f0)
-            pix = translate_pixels(f0, actual_dx, actual_dy)
+            rot_angle = BOW_EXTRA_ROTATION.get(fi, 0) if weapon_type == 'bow' else 0
+            if rot_angle:
+                f0_rot = rotate_pixels(f0, rot_angle, cx0_f0, cy0_f0)
+                rot_cx, rot_cy = centroid_of(f0_rot)
+                actual_dx = round(target_cx - rot_cx)
+                actual_dy = round(target_cy - rot_cy)
+                pix = translate_pixels(f0_rot, actual_dx, actual_dy)
+            else:
+                actual_dx = round(target_cx - cx0_f0)
+                actual_dy = round(target_cy - cy0_f0)
+                pix = translate_pixels(f0, actual_dx, actual_dy)
             stamp(out, pix, gx, gy)
 
-            # Arm masking for bow: only punch out skin pixels that are ADJACENT to bow pixels.
-            # This masks just the hand/forearm area where it meets the bow grip,
-            # not the entire torso — so bow still appears in front of the body.
-            if weapon_type == 'bow' and skin_arr is not None:
-                from scipy.ndimage import binary_dilation
+            # Bow string gap fill: re-draw a clean Bresenham line between the two string
+            # tip positions (tracked through any rotation+translation) to eliminate the
+            # zig-zag aliasing that appears when the bow is rotated in attack frames.
+            # Only fills transparent pixels so it never overwrites limb/skin pixels.
+            if weapon_type == 'bow' and string_tips is not None and bow_str_col is not None:
+                tip1_f0, tip2_f0 = string_tips
+                if rot_angle:
+                    rad_a = np.radians(rot_angle)
+                    cos_a, sin_a = np.cos(rad_a), np.sin(rad_a)
+                    def _rtip(px, py):
+                        dx2, dy2 = px - cx0_f0, py - cy0_f0
+                        rx2 = cos_a * dx2 - sin_a * dy2 + cx0_f0
+                        ry2 = sin_a * dx2 + cos_a * dy2 + cy0_f0
+                        return round(rx2) + actual_dx, round(ry2) + actual_dy
+                    lt1 = _rtip(tip1_f0[0], tip1_f0[1])
+                    lt2 = _rtip(tip2_f0[0], tip2_f0[1])
+                else:
+                    lt1 = (tip1_f0[0] + actual_dx, tip1_f0[1] + actual_dy)
+                    lt2 = (tip2_f0[0] + actual_dx, tip2_f0[1] + actual_dy)
+                for (sx, sy) in _bresenham(lt1[0], lt1[1], lt2[0], lt2[1]):
+                    if 0 <= sx < FW and 0 <= sy < FH and out[gy + sy, gx + sx, 3] == 0:
+                        out[gy + sy, gx + sx] = bow_str_col
+
+            # Bow arm-crossing erase: remove string pixels in the arm-limb zone only.
+            # x>=43 stays clear of the torso (string remains visible in front of chest).
+            # The y-bounds shift per frame with the bow bob so no pixel slips in/out.
+            if weapon_type == 'bow' and skin_arr is not None and not (50 <= fi <= 55):
+                bow_frame  = out[gy:gy+FH, gx:gx+FW]
                 skin_frame = skin_arr[gy:gy+FH, gx:gx+FW]
-                bow_frame = out[gy:gy+FH, gx:gx+FW, 3] > 0
-                # Dilate bow mask by 4px to find skin pixels that touch the bow
-                bow_dilated = binary_dilation(bow_frame, iterations=4)
-                skin_near_bow = (skin_frame[..., 3] > 0) & bow_dilated
-                out[gy:gy+FH, gx:gx+FW][skin_near_bow] = [0, 0, 0, 0]
+                xx = np.arange(FW)[None, :]
+                yy = np.arange(FH)[:, None]
+                bright = ((bow_frame[...,0].astype(int) + bow_frame[...,1].astype(int) +
+                           bow_frame[...,2].astype(int)) > 300) & (bow_frame[...,3] > 0)
+                # Shift erase zone y-bounds by same delta as the bow bob this frame
+                dy_shift = int(target_cy) - BOW_IDLE_GY
+                arm_cross = (xx >= 42) & (yy >= 38 + dy_shift) & (yy <= 52 + dy_shift)
+                skin_sil  = skin_frame[...,3] > 0
+                erase_mask = bright & arm_cross & skin_sil
+                out[gy:gy+FH, gx:gx+FW][erase_mask] = [0, 0, 0, 0]
 
             # Arrow on fr54 only — the frame shown when mage/ranger arm is fully raised.
             # Tip at far LEFT in PNG → far RIGHT on screen (toward enemy) after scaleX(-1).
@@ -512,7 +554,7 @@ def make_clean_bow_f0(dark, mid, light, hi, grip_col, str_col, recurve=False):
             if 0 <= nx < FW and 0 <= ny < FH and (nx, ny) not in limb_pts and (nx, ny) not in pix:
                 pix[(nx, ny)] = dark
 
-    # String: straight line tip-to-tip, +1px offset toward concave/inner side
+    # String: 1px tip-to-tip line (+1px offset toward concave/inner side)
     for (x, y) in _bresenham(UPPER_TIP[0] + 1, UPPER_TIP[1] + 1,
                               LOWER_TIP[0] + 1, LOWER_TIP[1] - 1):
         if 0 <= x < FW and 0 <= y < FH and (x, y) not in pix:
@@ -617,12 +659,29 @@ SKIN_PATHS = {
 
 for tier in ['t1','t2','t3','t4','t5','t6']:
     palette = BOW_PALETTES.get(tier, BOW_PALETTES['t1'])
-    f0 = rotate_90cw(make_clean_bow_f0(**palette))
+    diag_bow = make_clean_bow_f0(**palette)
+    # Compute string tip positions after rotate_90cw so we can track them
+    # through per-frame rotation/translation and redraw a clean Bresenham string.
+    xs_d = [p[0] for p in diag_bow.keys()]
+    ys_d = [p[1] for p in diag_bow.keys()]
+    cx_d = float(np.mean(xs_d))
+    cy_d = float(np.mean(ys_d))
+    # String endpoints in diagonal bow: bresenham(53,18, 31,60)
+    # Apply rotate_90cw formula: nx=(y-cy)+cx, ny=-(x-cx)+cy
+    str_t1_diag = (53, 18)   # UPPER_TIP+(1,+1)
+    str_t2_diag = (31, 60)   # LOWER_TIP+(1,-1)
+    tip1_f0 = (round((str_t1_diag[1] - cy_d) + cx_d),
+               round(-(str_t1_diag[0] - cx_d) + cy_d))
+    tip2_f0 = (round((str_t2_diag[1] - cy_d) + cx_d),
+               round(-(str_t2_diag[0] - cx_d) + cy_d))
+    bow_str_col = np.array(palette['str_col'], dtype=np.uint8)  # str_col is (R,G,B,A)
+    f0 = rotate_90cw(diag_bow)
     for g in ['m','f']:
         fname = f'{OUT_DIR}bow_ranger_{tier}_{g}.png'
         skin_path = SKIN_PATHS.get(g)
         build_sheet(f0, SRC_PATH, fname, weapon_type='bow',
                     trail_c=(220,200,140,255), trail_e=(180,160,100,255),
-                    skin_mask_path=skin_path)
+                    skin_mask_path=skin_path,
+                    string_tips=(tip1_f0, tip2_f0), bow_str_col=bow_str_col)
 
 print("\nDone.")
