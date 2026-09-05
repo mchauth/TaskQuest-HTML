@@ -265,10 +265,10 @@ def build_sheet(f0, source_path, out_path, weapon_type='sword',
                 pix = translate_pixels(f0, actual_dx, actual_dy)
             stamp(out, pix, gx, gy)
 
-            # Bow string gap fill: re-draw a clean Bresenham line between the two string
-            # tip positions (tracked through any rotation+translation) to eliminate the
-            # zig-zag aliasing that appears when the bow is rotated in attack frames.
-            # Only fills transparent pixels so it never overwrites limb/skin pixels.
+            # Bow string fix: redraw a clean Bresenham line between the transformed tip
+            # positions to eliminate rotation aliasing (zig-zag / doubled pixels).
+            # For attack frames (rotated): clear existing string-colored pixels first,
+            # then redraw a single-pixel-wide line. For idle/walk: only fill gaps.
             if weapon_type == 'bow' and string_tips is not None and bow_str_col is not None:
                 tip1_f0, tip2_f0 = string_tips
                 if rot_angle:
@@ -281,12 +281,28 @@ def build_sheet(f0, source_path, out_path, weapon_type='sword',
                         return round(rx2) + actual_dx, round(ry2) + actual_dy
                     lt1 = _rtip(tip1_f0[0], tip1_f0[1])
                     lt2 = _rtip(tip2_f0[0], tip2_f0[1])
+                    # Clear existing string pixels (within tolerance) before redrawing
+                    # so rotation-aliased clusters don't create a zig-zag.
+                    sr2, sg2, sb2 = int(bow_str_col[0]), int(bow_str_col[1]), int(bow_str_col[2])
+                    fv = out[gy:gy+FH, gx:gx+FW]
+                    cmatch = (
+                        (np.abs(fv[...,0].astype(int) - sr2) < 40) &
+                        (np.abs(fv[...,1].astype(int) - sg2) < 40) &
+                        (np.abs(fv[...,2].astype(int) - sb2) < 40) &
+                        (fv[...,3] > 0)
+                    )
+                    out[gy:gy+FH, gx:gx+FW][cmatch] = [0, 0, 0, 0]
+                    # Redraw clean single-pixel Bresenham
+                    for (sx, sy) in _bresenham(lt1[0], lt1[1], lt2[0], lt2[1]):
+                        if 0 <= sx < FW and 0 <= sy < FH:
+                            out[gy + sy, gx + sx] = bow_str_col
                 else:
                     lt1 = (tip1_f0[0] + actual_dx, tip1_f0[1] + actual_dy)
                     lt2 = (tip2_f0[0] + actual_dx, tip2_f0[1] + actual_dy)
-                for (sx, sy) in _bresenham(lt1[0], lt1[1], lt2[0], lt2[1]):
-                    if 0 <= sx < FW and 0 <= sy < FH and out[gy + sy, gx + sx, 3] == 0:
-                        out[gy + sy, gx + sx] = bow_str_col
+                    # Idle/walk: only fill transparent gaps (no clearing needed)
+                    for (sx, sy) in _bresenham(lt1[0], lt1[1], lt2[0], lt2[1]):
+                        if 0 <= sx < FW and 0 <= sy < FH and out[gy + sy, gx + sx, 3] == 0:
+                            out[gy + sy, gx + sx] = bow_str_col
 
             # Bow arm-crossing erase: remove string pixels in the arm-limb zone only.
             # x>=43 stays clear of the torso (string remains visible in front of chest).
