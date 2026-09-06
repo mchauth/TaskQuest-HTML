@@ -304,22 +304,10 @@ def build_sheet(f0, source_path, out_path, weapon_type='sword',
                         if 0 <= sx < FW and 0 <= sy < FH and out[gy + sy, gx + sx, 3] == 0:
                             out[gy + sy, gx + sx] = bow_str_col
 
-            # Bow arm-crossing erase: remove string pixels in the arm-limb zone only.
-            # x>=43 stays clear of the torso (string remains visible in front of chest).
-            # The y-bounds shift per frame with the bow bob so no pixel slips in/out.
-            if weapon_type == 'bow' and skin_arr is not None and not (50 <= fi <= 55):
-                bow_frame  = out[gy:gy+FH, gx:gx+FW]
-                skin_frame = skin_arr[gy:gy+FH, gx:gx+FW]
-                xx = np.arange(FW)[None, :]
-                yy = np.arange(FH)[:, None]
-                bright = ((bow_frame[...,0].astype(int) + bow_frame[...,1].astype(int) +
-                           bow_frame[...,2].astype(int)) > 300) & (bow_frame[...,3] > 0)
-                # Shift erase zone y-bounds by same delta as the bow bob this frame
-                dy_shift = int(target_cy) - BOW_IDLE_GY
-                arm_cross = (xx >= 42) & (yy >= 38 + dy_shift) & (yy <= 52 + dy_shift)
-                skin_sil  = skin_frame[...,3] > 0
-                erase_mask = bright & arm_cross & skin_sil
-                out[gy:gy+FH, gx:gx+FW][erase_mask] = [0, 0, 0, 0]
+            # No erase needed: bow is z=5, arm overlay is z=6.
+            # The game's z-ordering already hides the string behind the arm wherever
+            # the arm overlay has pixels. Erasing here created gaps where the arm
+            # didn't fully cover, causing the "missing pixel" blink.
 
             # Arrow on fr54 only — the frame shown when mage/ranger arm is fully raised.
             # Tip at far LEFT in PNG → far RIGHT on screen (toward enemy) after scaleX(-1).
@@ -672,6 +660,13 @@ SKIN_PATHS = {
     'm': f'{OUT_DIR}skin.png',
     'f': f'{OUT_DIR}skin_f1.png',  # default female skin tone
 }
+# Use the arm OVERLAY sprite (not full body skin) as erase mask for the bow.
+# The arm overlay is exactly what renders above the bow in-game (z=6 > bow z=5),
+# so erasing only where the arm overlay has pixels prevents gaps in the string.
+ARM_PATHS = {
+    'm': f'{OUT_DIR}skin_arm.png',
+    'f': f'{OUT_DIR}skin_arm_f1.png',
+}
 
 for tier in ['t1','t2','t3','t4','t5','t6']:
     palette = BOW_PALETTES.get(tier, BOW_PALETTES['t1'])
@@ -694,7 +689,7 @@ for tier in ['t1','t2','t3','t4','t5','t6']:
     f0 = rotate_90cw(diag_bow)
     for g in ['m','f']:
         fname = f'{OUT_DIR}bow_ranger_{tier}_{g}.png'
-        skin_path = SKIN_PATHS.get(g)
+        skin_path = ARM_PATHS.get(g)   # arm overlay for erase mask (not full body skin)
         build_sheet(f0, SRC_PATH, fname, weapon_type='bow',
                     trail_c=(220,200,140,255), trail_e=(180,160,100,255),
                     skin_mask_path=skin_path,
