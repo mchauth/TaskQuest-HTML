@@ -695,7 +695,7 @@ for tier in ['t1','t2','t3','t4','t5','t6']:
     str_t1_diag = (53, 18)   # UPPER_TIP+(1,+1)
     str_t2_diag = (31, 60)   # LOWER_TIP+(1,-1)
     tip1_f0 = (round((str_t1_diag[1] - cy_d) + cx_d),
-               round(-(str_t1_diag[0] - cx_d) + cy_d))
+               round(-(str_t1_diag[0] - cx_d) + cy_d) - 1)  # -1: raises upper tip for correct slope
     tip2_f0 = (round((str_t2_diag[1] - cy_d) + cx_d),
                round(-(str_t2_diag[0] - cx_d) + cy_d))
     bow_str_col = np.array(palette['str_col'], dtype=np.uint8)  # str_col is (R,G,B,A)
