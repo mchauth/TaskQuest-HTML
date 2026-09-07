@@ -312,21 +312,6 @@ def build_sheet(f0, source_path, out_path, weapon_type='sword',
                     for (sx, sy) in _bresenham(lt1[0], lt1[1], lt2[0], lt2[1]):
                         if 0 <= sx < FW and 0 <= sy < FH and out[gy + sy, gx + sx, 3] == 0:
                             out[gy + sy, gx + sx] = bow_str_col
-                    # Raise lower string pixels (x>=48) up 1 to straighten slope.
-                    # Collect first, then apply moves to avoid cascade.
-                    sr2, sg2, sb2 = int(bow_str_col[0]), int(bow_str_col[1]), int(bow_str_col[2])
-                    lower_str = []
-                    for sy in range(FH):
-                        for sx in range(48, FW):
-                            cur = out[gy + sy, gx + sx]
-                            if cur[3] > 0 and (abs(int(cur[0])-sr2)+abs(int(cur[1])-sg2)+abs(int(cur[2])-sb2)) < 80:
-                                lower_str.append((sx, sy, cur.copy()))
-                    for (sx, sy, col) in lower_str:
-                        out[gy + sy, gx + sx] = [0, 0, 0, 0]
-                        if sy > 0 and out[gy + sy - 1, gx + sx, 3] == 0:
-                            out[gy + sy - 1, gx + sx] = col
-                        else:
-                            out[gy + sy, gx + sx] = col  # restore if blocked
 
             # Bow arm-crossing erase: remove string pixels in the arm/sleeve zone.
             # Uses the full skin silhouette (not just arm overlay) to catch the
