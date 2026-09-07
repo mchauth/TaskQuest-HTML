@@ -304,43 +304,23 @@ def build_sheet(f0, source_path, out_path, weapon_type='sword',
                         if 0 <= sx < FW and 0 <= sy < FH and out[gy + sy, gx + sx, 3] == 0:
                             out[gy + sy, gx + sx] = bow_str_col
 
-            # Bow arm-crossing erase: remove string pixels where the arm overlay
-            # actually has pixels (arm overlay mask, not full body skin).
-            # After erase, fill any single-pixel gaps at the arm boundary so the
-            # string looks continuous on both sides of the arm crossing.
+            # Bow arm-crossing erase: remove string pixels in the arm/sleeve zone.
+            # Uses the full skin silhouette (not just arm overlay) to catch the
+            # shirt sleeve too. x>=42 limits this to the arm side, leaving the
+            # string visible in front of the torso. Bob-synced y-bounds prevent
+            # border pixels from blinking across frames.
             if weapon_type == 'bow' and skin_arr is not None and not (50 <= fi <= 55):
                 bow_frame  = out[gy:gy+FH, gx:gx+FW]
-                arm_frame  = skin_arr[gy:gy+FH, gx:gx+FW]
+                skin_frame = skin_arr[gy:gy+FH, gx:gx+FW]
+                xx = np.arange(FW)[None, :]
+                yy = np.arange(FH)[:, None]
                 bright = ((bow_frame[...,0].astype(int) + bow_frame[...,1].astype(int) +
                            bow_frame[...,2].astype(int)) > 300) & (bow_frame[...,3] > 0)
-                arm_sil = arm_frame[...,3] > 0
-                erase_mask = bright & arm_sil
+                dy_shift = int(target_cy) - BOW_IDLE_GY
+                arm_cross = (xx >= 44) & (yy >= 38 + dy_shift) & (yy <= 52 + dy_shift)
+                skin_sil  = skin_frame[...,3] > 0
+                erase_mask = bright & arm_cross & skin_sil
                 out[gy:gy+FH, gx:gx+FW][erase_mask] = [0, 0, 0, 0]
-                # After erase, find and fill single-pixel gaps in the string so the
-                # line looks continuous on either side of the arm crossing.
-                if string_tips is not None and bow_str_col is not None:
-                    tip1_f0b, tip2_f0b = string_tips
-                    lt1b = (tip1_f0b[0] + actual_dx, tip1_f0b[1] + actual_dy)
-                    lt2b = (tip2_f0b[0] + actual_dx, tip2_f0b[1] + actual_dy)
-                    bres_pts = list(_bresenham(lt1b[0], lt1b[1], lt2b[0], lt2b[1]))
-                    for idx in range(1, len(bres_pts) - 1):
-                        sx, sy = bres_pts[idx]
-                        if not (0 <= sx < FW and 0 <= sy < FH):
-                            continue
-                        cur = out[gy + sy, gx + sx]
-                        if cur[3] > 0:  # pixel present, no gap
-                            continue
-                        # Gap: check if arm doesn't cover this position and neighbours have string
-                        if arm_frame[sy, sx, 3] > 0:  # arm covers it → correct to be empty
-                            continue
-                        px1, py1 = bres_pts[idx - 1]
-                        px2, py2 = bres_pts[idx + 1]
-                        before_ok = (0 <= px1 < FW and 0 <= py1 < FH and
-                                     out[gy + py1, gx + px1, 3] > 0)
-                        after_ok  = (0 <= px2 < FW and 0 <= py2 < FH and
-                                     out[gy + py2, gx + px2, 3] > 0)
-                        if before_ok and after_ok:
-                            out[gy + sy, gx + sx] = bow_str_col
 
             # Arrow on fr54 only — the frame shown when mage/ranger arm is fully raised.
             # Tip at far LEFT in PNG → far RIGHT on screen (toward enemy) after scaleX(-1).
@@ -722,7 +702,7 @@ for tier in ['t1','t2','t3','t4','t5','t6']:
     f0 = rotate_90cw(diag_bow)
     for g in ['m','f']:
         fname = f'{OUT_DIR}bow_ranger_{tier}_{g}.png'
-        skin_path = ARM_PATHS.get(g)   # arm overlay for erase mask (not full body skin)
+        skin_path = SKIN_PATHS.get(g)  # full body skin silhouette for arm-zone erase
         build_sheet(f0, SRC_PATH, fname, weapon_type='bow',
                     trail_c=(220,200,140,255), trail_e=(180,160,100,255),
                     skin_mask_path=skin_path,
