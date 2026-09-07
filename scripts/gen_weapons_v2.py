@@ -317,7 +317,7 @@ def build_sheet(f0, source_path, out_path, weapon_type='sword',
                 bright = ((bow_frame[...,0].astype(int) + bow_frame[...,1].astype(int) +
                            bow_frame[...,2].astype(int)) > 300) & (bow_frame[...,3] > 0)
                 dy_shift = int(target_cy) - BOW_IDLE_GY
-                arm_cross = (xx >= 44) & (yy >= 38 + dy_shift) & (yy <= 52 + dy_shift)
+                arm_cross = (xx >= 46) & (yy >= 38 + dy_shift) & (yy <= 52 + dy_shift)
                 skin_sil  = skin_frame[...,3] > 0
                 erase_mask = bright & arm_cross & skin_sil
                 out[gy:gy+FH, gx:gx+FW][erase_mask] = [0, 0, 0, 0]
