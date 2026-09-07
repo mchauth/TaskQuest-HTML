@@ -328,7 +328,10 @@ def build_sheet(f0, source_path, out_path, weapon_type='sword',
                 bright = ((bow_frame[...,0].astype(int) + bow_frame[...,1].astype(int) +
                            bow_frame[...,2].astype(int)) > 300) & (bow_frame[...,3] > 0)
                 dy_shift = int(target_cy) - BOW_IDLE_GY
-                arm_cross = (xx >= 46) & (yy >= 38 + dy_shift) & (yy <= 52 + dy_shift)
+                # x=42 is the grip-side edge where the arm alternately covers and
+                # reveals the string across bob frames, causing a blink.  Erase it
+                # consistently alongside x>=46 so the gap is fixed, not animated.
+                arm_cross = ((xx >= 46) | (xx == 42)) & (yy >= 38 + dy_shift) & (yy <= 52 + dy_shift)
                 skin_sil  = skin_frame[...,3] > 0
                 erase_mask = bright & arm_cross & skin_sil
                 out[gy:gy+FH, gx:gx+FW][erase_mask] = [0, 0, 0, 0]
