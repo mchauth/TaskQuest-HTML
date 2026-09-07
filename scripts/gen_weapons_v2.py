@@ -182,6 +182,7 @@ def make_trail_frame55(trail_color_center, trail_color_edge):
 
 def build_sheet(f0, source_path, out_path, weapon_type='sword',
                 trail_c=None, trail_e=None, skin_mask_path=None,
+                arm_mask_path=None,
                 string_tips=None, bow_str_col=None):
     """
     f0: dict of {(x,y): rgba_tuple} for frame 0
@@ -192,6 +193,7 @@ def build_sheet(f0, source_path, out_path, weapon_type='sword',
     src_arr = np.array(Image.open(source_path).convert('RGBA'))
     out = np.zeros((ROWS*FH, COLS*FW, 4), dtype=np.uint8)
     skin_arr = np.array(Image.open(skin_mask_path).convert('RGBA')) if skin_mask_path else None
+    arm_arr  = np.array(Image.open(arm_mask_path).convert('RGBA'))  if arm_mask_path  else None
 
     cx0_src, cy0_src = get_centroid(src_arr, 0)
     cx0_f0, cy0_f0   = centroid_of(f0)
@@ -330,6 +332,25 @@ def build_sheet(f0, source_path, out_path, weapon_type='sword',
                 skin_sil  = skin_frame[...,3] > 0
                 erase_mask = bright & arm_cross & skin_sil
                 out[gy:gy+FH, gx:gx+FW][erase_mask] = [0, 0, 0, 0]
+
+            # Crossing fallback: ensure arm-covered string pixels at x=43-44
+            # always have a visible backup pixel at y+1 in the bow sprite.
+            # The arm overlay (z=6) can cover the Bresenham path in certain bob
+            # frames; this guarantees at least one pixel per column is visible
+            # without adding extra pixels in frames where the arm doesn't cover.
+            if weapon_type == 'bow' and arm_arr is not None and not (50 <= fi <= 55) \
+                    and bow_str_col is not None:
+                bf = out[gy:gy+FH, gx:gx+FW]
+                af = arm_arr[gy:gy+FH, gx:gx+FW]
+                for x in range(43, 45):
+                    for y in range(35, 55):
+                        bp = bf[y, x]
+                        is_str = (bp[3] > 0 and
+                                  int(bp[0])+int(bp[1])+int(bp[2]) > 300)
+                        if is_str and af[y, x, 3] > 0:
+                            # Arm will cover this pixel — add backup at y+1
+                            if y + 1 < FH and bf[y+1, x, 3] == 0:
+                                out[gy+y+1, gx+x] = bow_str_col
 
             # Arrow on fr54 only — the frame shown when mage/ranger arm is fully raised.
             # Tip at far LEFT in PNG → far RIGHT on screen (toward enemy) after scaleX(-1).
@@ -686,7 +707,7 @@ SKIN_PATHS = {
 # The arm overlay is exactly what renders above the bow in-game (z=6 > bow z=5),
 # so erasing only where the arm overlay has pixels prevents gaps in the string.
 ARM_PATHS = {
-    'm': f'{OUT_DIR}skin_arm.png',
+    'm': f'{OUT_DIR}skin_arm_m1.png',
     'f': f'{OUT_DIR}skin_arm_f1.png',
 }
 
@@ -712,9 +733,10 @@ for tier in ['t1','t2','t3','t4','t5','t6']:
     for g in ['m','f']:
         fname = f'{OUT_DIR}bow_ranger_{tier}_{g}.png'
         skin_path = SKIN_PATHS.get(g)  # full body skin silhouette for arm-zone erase
+        arm_path  = ARM_PATHS.get(g)   # arm overlay for crossing-fallback pixels
         build_sheet(f0, SRC_PATH, fname, weapon_type='bow',
                     trail_c=(220,200,140,255), trail_e=(180,160,100,255),
-                    skin_mask_path=skin_path,
+                    skin_mask_path=skin_path, arm_mask_path=arm_path,
                     string_tips=(tip1_f0, tip2_f0), bow_str_col=bow_str_col)
 
 print("\nDone.")
