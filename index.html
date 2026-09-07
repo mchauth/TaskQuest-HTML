@@ -3083,8 +3083,9 @@ function addToInventory(item) {
 }
 
 // Encode spaces in file paths for CSS url()
+const SPRITE_VER = 'dd5c9ca';
 function cssUrl(path) {
-  return "url('" + path.replace(/ /g, '%20') + "')";
+  return "url('" + path.replace(/ /g, '%20') + '?v=' + SPRITE_VER + "')";
 }
 
 function equipItem(itemId) {
