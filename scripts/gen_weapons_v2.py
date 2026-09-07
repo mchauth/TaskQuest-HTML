@@ -304,10 +304,43 @@ def build_sheet(f0, source_path, out_path, weapon_type='sword',
                         if 0 <= sx < FW and 0 <= sy < FH and out[gy + sy, gx + sx, 3] == 0:
                             out[gy + sy, gx + sx] = bow_str_col
 
-            # No erase needed: bow is z=5, arm overlay is z=6.
-            # The game's z-ordering already hides the string behind the arm wherever
-            # the arm overlay has pixels. Erasing here created gaps where the arm
-            # didn't fully cover, causing the "missing pixel" blink.
+            # Bow arm-crossing erase: remove string pixels where the arm overlay
+            # actually has pixels (arm overlay mask, not full body skin).
+            # After erase, fill any single-pixel gaps at the arm boundary so the
+            # string looks continuous on both sides of the arm crossing.
+            if weapon_type == 'bow' and skin_arr is not None and not (50 <= fi <= 55):
+                bow_frame  = out[gy:gy+FH, gx:gx+FW]
+                arm_frame  = skin_arr[gy:gy+FH, gx:gx+FW]
+                bright = ((bow_frame[...,0].astype(int) + bow_frame[...,1].astype(int) +
+                           bow_frame[...,2].astype(int)) > 300) & (bow_frame[...,3] > 0)
+                arm_sil = arm_frame[...,3] > 0
+                erase_mask = bright & arm_sil
+                out[gy:gy+FH, gx:gx+FW][erase_mask] = [0, 0, 0, 0]
+                # After erase, find and fill single-pixel gaps in the string so the
+                # line looks continuous on either side of the arm crossing.
+                if string_tips is not None and bow_str_col is not None:
+                    tip1_f0b, tip2_f0b = string_tips
+                    lt1b = (tip1_f0b[0] + actual_dx, tip1_f0b[1] + actual_dy)
+                    lt2b = (tip2_f0b[0] + actual_dx, tip2_f0b[1] + actual_dy)
+                    bres_pts = list(_bresenham(lt1b[0], lt1b[1], lt2b[0], lt2b[1]))
+                    for idx in range(1, len(bres_pts) - 1):
+                        sx, sy = bres_pts[idx]
+                        if not (0 <= sx < FW and 0 <= sy < FH):
+                            continue
+                        cur = out[gy + sy, gx + sx]
+                        if cur[3] > 0:  # pixel present, no gap
+                            continue
+                        # Gap: check if arm doesn't cover this position and neighbours have string
+                        if arm_frame[sy, sx, 3] > 0:  # arm covers it → correct to be empty
+                            continue
+                        px1, py1 = bres_pts[idx - 1]
+                        px2, py2 = bres_pts[idx + 1]
+                        before_ok = (0 <= px1 < FW and 0 <= py1 < FH and
+                                     out[gy + py1, gx + px1, 3] > 0)
+                        after_ok  = (0 <= px2 < FW and 0 <= py2 < FH and
+                                     out[gy + py2, gx + px2, 3] > 0)
+                        if before_ok and after_ok:
+                            out[gy + sy, gx + sx] = bow_str_col
 
             # Arrow on fr54 only — the frame shown when mage/ranger arm is fully raised.
             # Tip at far LEFT in PNG → far RIGHT on screen (toward enemy) after scaleX(-1).
