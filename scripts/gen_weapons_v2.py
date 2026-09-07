@@ -335,22 +335,29 @@ def build_sheet(f0, source_path, out_path, weapon_type='sword',
 
             # Crossing fallback: ensure arm-covered string pixels at x=43-44
             # always have a visible backup pixel at y+1 in the bow sprite.
-            # The arm overlay (z=6) can cover the Bresenham path in certain bob
-            # frames; this guarantees at least one pixel per column is visible
-            # without adding extra pixels in frames where the arm doesn't cover.
+            # Condition: only add if y+1 is ALSO not arm-covered — prevents
+            # the cascade where multiple covered rows keep shifting the pixel
+            # down until it escapes the arm zone as a stray.
+            # Collect-then-apply prevents the loop from seeing its own additions.
             if weapon_type == 'bow' and arm_arr is not None and not (50 <= fi <= 55) \
                     and bow_str_col is not None:
                 bf = out[gy:gy+FH, gx:gx+FW]
                 af = arm_arr[gy:gy+FH, gx:gx+FW]
+                to_add = []
                 for x in range(43, 45):
                     for y in range(35, 55):
                         bp = bf[y, x]
                         is_str = (bp[3] > 0 and
                                   int(bp[0])+int(bp[1])+int(bp[2]) > 300)
                         if is_str and af[y, x, 3] > 0:
-                            # Arm will cover this pixel — add backup at y+1
-                            if y + 1 < FH and bf[y+1, x, 3] == 0:
-                                out[gy+y+1, gx+x] = bow_str_col
+                            # Arm covers this pixel — add backup at y+1 ONLY
+                            # if y+1 is transparent and the arm doesn't cover
+                            # y+1 either (prevents cascade).
+                            if (y + 1 < FH and bf[y+1, x, 3] == 0
+                                    and af[y+1, x, 3] == 0):
+                                to_add.append((x, y + 1))
+                for (x, y) in to_add:
+                    out[gy+y, gx+x] = bow_str_col
 
             # Arrow on fr54 only — the frame shown when mage/ranger arm is fully raised.
             # Tip at far LEFT in PNG → far RIGHT on screen (toward enemy) after scaleX(-1).
