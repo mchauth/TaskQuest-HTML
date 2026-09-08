@@ -333,7 +333,7 @@ def build_sheet(f0, source_path, out_path, weapon_type='sword',
                 dy_shift = int(target_cy) - BOW_IDLE_GY
                 y_in_zone = (yy >= 38 + dy_shift) & (yy <= 52 + dy_shift)
                 grip_cross  = (xx >= 42) & (xx <= 45) & y_in_zone   # unconditional
-                sleeve_zone = (xx >= 46) & y_in_zone                 # skin-gated
+                sleeve_zone = (xx >= 48) & y_in_zone                 # skin-gated (x=46-47 left visible to bridge gap)
                 skin_sil    = skin_frame[...,3] > 0
                 erase_mask  = bright & (grip_cross | (sleeve_zone & skin_sil))
                 out[gy:gy+FH, gx:gx+FW][erase_mask] = [0, 0, 0, 0]
