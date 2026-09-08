@@ -316,10 +316,13 @@ def build_sheet(f0, source_path, out_path, weapon_type='sword',
                             out[gy + sy, gx + sx] = bow_str_col
 
             # Bow arm-crossing erase: remove string pixels in the arm/sleeve zone.
-            # Uses the full skin silhouette (not just arm overlay) to catch the
-            # shirt sleeve too. x>=42 limits this to the arm side, leaving the
-            # string visible in front of the torso. Bob-synced y-bounds prevent
-            # border pixels from blinking across frames.
+            # Two zones:
+            #   grip_cross (x=42-45): erase unconditionally — the string passes in
+            #     front of the skin here so skin_sil=F at some positions and won't
+            #     catch them, but we still want a clean gap through the arm grip.
+            #   sleeve_zone (x>=46): erase only where body silhouette confirms we're
+            #     behind the shirt sleeve.
+            # Bob-synced y-bounds keep the gap stable across all idle frames.
             if weapon_type == 'bow' and skin_arr is not None and not (50 <= fi <= 55):
                 bow_frame  = out[gy:gy+FH, gx:gx+FW]
                 skin_frame = skin_arr[gy:gy+FH, gx:gx+FW]
@@ -328,12 +331,11 @@ def build_sheet(f0, source_path, out_path, weapon_type='sword',
                 bright = ((bow_frame[...,0].astype(int) + bow_frame[...,1].astype(int) +
                            bow_frame[...,2].astype(int)) > 300) & (bow_frame[...,3] > 0)
                 dy_shift = int(target_cy) - BOW_IDLE_GY
-                # x=42 is the grip-side edge where the arm alternately covers and
-                # reveals the string across bob frames, causing a blink.  Erase it
-                # consistently alongside x>=46 so the gap is fixed, not animated.
-                arm_cross = ((xx >= 46) | (xx == 42)) & (yy >= 38 + dy_shift) & (yy <= 52 + dy_shift)
-                skin_sil  = skin_frame[...,3] > 0
-                erase_mask = bright & arm_cross & skin_sil
+                y_in_zone = (yy >= 38 + dy_shift) & (yy <= 52 + dy_shift)
+                grip_cross  = (xx >= 42) & (xx <= 45) & y_in_zone   # unconditional
+                sleeve_zone = (xx >= 46) & y_in_zone                 # skin-gated
+                skin_sil    = skin_frame[...,3] > 0
+                erase_mask  = bright & (grip_cross | (sleeve_zone & skin_sil))
                 out[gy:gy+FH, gx:gx+FW][erase_mask] = [0, 0, 0, 0]
 
             # Crossing fallback: ensure arm-covered string pixels at x=43-44
