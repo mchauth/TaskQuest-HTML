@@ -431,6 +431,8 @@ hr{border:none;border-top:1px solid var(--border)}
       <div class="qs-enemy-wrap" id="qsEnemyWrap" style="display:none">
         <div class="qs-enemy" id="qsEnemy"></div>
       </div>
+      <!-- Projectile overlay for ranger (arrow) and mage (orb) attacks -->
+      <canvas id="qsProjectile" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9;display:none"></canvas>
     </div>
   </div>
 
@@ -4082,6 +4084,9 @@ setInterval(function() {
   var qsSlashCooldown = 0; // timestamp after which next slash cycle may begin
   var qsIdleLast = 0, qsIdleFrame = 0; // idle animation state during combat cooldown
   var QS_SLASH_PAUSE = 1500; // ms pause between slash cycles
+  var qsProjectileActive = false; // is a projectile currently in flight?
+  var qsProjectileStart = 0;      // timestamp when projectile was launched
+  var QS_PROJECTILE_DUR = 300;    // ms for projectile to travel to enemy
 
   function qsInit() {
     BG_LAYERS.forEach(function(src, i) {
@@ -4132,6 +4137,52 @@ setInterval(function() {
     if (el) el.style.backgroundPosition = (-f * 128) + 'px 0px';
   }
 
+  function qsDrawProjectile(ts) {
+    var canvas = document.getElementById('qsProjectile');
+    if (!canvas) return;
+    var cls = (S.customization && S.customization.charClass) || 'warrior';
+    if (cls === 'warrior' || qsAnim !== 'combat') { canvas.style.display = 'none'; qsProjectileActive = false; return; }
+    if (!qsProjectileActive) { canvas.style.display = 'none'; return; }
+    var elapsed = ts - qsProjectileStart;
+    var t = Math.min(elapsed / QS_PROJECTILE_DUR, 1);
+    if (t >= 1) { qsProjectileActive = false; canvas.style.display = 'none'; return; }
+    // Sync canvas buffer size to its CSS display size
+    var W = canvas.offsetWidth || 360;
+    var H = canvas.offsetHeight || 180;
+    if (canvas.width !== W || canvas.height !== H) { canvas.width = W; canvas.height = H; }
+    canvas.style.display = 'block';
+    var ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, W, H);
+    // Start: character hand in scene coords
+    // .qs-char-wrap: left:60px, width:80px, scale(2) scaleX(-1), transform-origin:bottom center
+    // Center of element at screen-x=100. Weapon tip at ~sprite-local-x=10 → screen-x=100+(40-10)*2=160
+    // Arm mid-height: bottom at 180-28=152px, scale(2)×64=128px tall, hand ~sprite-y=38 → 152-(64-38)*2=100
+    var startX = 155, startY = 100;
+    // End: center of .qs-enemy (right:8px, width:128px → left=W-136, center-x=W-72; center-y≈88)
+    var endX = W - 72, endY = 88;
+    var px = startX + (endX - startX) * t;
+    var py = startY + (endY - startY) * t;
+    ctx.save();
+    if (cls === 'ranger') {
+      // Arrow: dark wood shaft + grey metal tip, ~14px total, horizontal
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#7B4A1A';
+      ctx.beginPath(); ctx.moveTo(px - 5, py); ctx.lineTo(px + 5, py); ctx.stroke();
+      ctx.strokeStyle = '#b0b0b0';
+      ctx.beginPath(); ctx.moveTo(px + 5, py); ctx.lineTo(px + 9, py); ctx.stroke();
+    } else {
+      // Mage orb: purple/blue radial glow, grows slightly as it travels
+      var r = 3 + t * 3;
+      var grd = ctx.createRadialGradient(px, py, 0, px, py, r * 2.5);
+      grd.addColorStop(0, 'rgba(230, 130, 255, 0.95)');
+      grd.addColorStop(0.4, 'rgba(140, 60, 220, 0.7)');
+      grd.addColorStop(1, 'rgba(60, 20, 140, 0)');
+      ctx.fillStyle = grd;
+      ctx.beginPath(); ctx.arc(px, py, r * 2.5, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.restore();
+  }
+
   function qsLoop(ts) {
     var anim = ANIM[qsAnim];
     var _qsCls2 = (S.customization && S.customization.charClass) || 'warrior';
@@ -4155,6 +4206,11 @@ setInterval(function() {
             displayFrame = [0,5,4,4,5,0][qsCharFrame % 6];
           }
           qsSetCharFrame(anim, displayFrame);
+          // Launch projectile at start of attack swing (mage/ranger only)
+          if (_qsCls2 !== 'warrior' && qsCharFrame === 1) {
+            qsProjectileActive = true;
+            qsProjectileStart = ts;
+          }
           if (qsCharFrame === anim.frames - 1) {
             qsSlashCooldown = ts + QS_SLASH_PAUSE;
             qsCharFrame = 0;
@@ -4179,6 +4235,7 @@ setInterval(function() {
       qsPortalLast = ts;
       qsSetPortalFrame(qsPortalFrame);
     }
+    qsDrawProjectile(ts);
     requestAnimationFrame(qsLoop);
   }
 
