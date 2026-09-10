@@ -20,6 +20,19 @@ def get_centroid(arr, fi):
     if len(op) == 0: return None, None
     return float(np.mean(op[:,1])), float(np.mean(op[:,0]))
 
+def get_body_centroid(arr, fi, bright_thresh=400):
+    """Centroid excluding bright trail-arc pixels (white/lavender swing trails).
+    Used so staff slash frames track the hand grip, not the arc centre-of-mass."""
+    r, c = fi // COLS, fi % COLS
+    sl = arr[r*FH:(r+1)*FH, c*FW:(c+1)*FW]
+    op = np.argwhere(sl[..., 3] > 0)
+    if len(op) == 0: return None, None
+    dark = [(y, x) for y, x in op
+            if int(sl[y,x,0]) + int(sl[y,x,1]) + int(sl[y,x,2]) < bright_thresh]
+    if not dark:
+        return float(np.mean(op[:,1])), float(np.mean(op[:,0]))
+    return float(np.mean([p[1] for p in dark])), float(np.mean([p[0] for p in dark]))
+
 def get_angle(arr, fi):
     r, c = fi // COLS, fi % COLS
     sl = arr[r*FH:(r+1)*FH, c*FW:(c+1)*FW]
@@ -42,11 +55,18 @@ SLASH_ANGLES = {}
 for fi in [51, 52, 53, 55]:
     SLASH_ANGLES[fi] = get_angle(SRC, fi) - src_ang0
 
-# Slash centroids from source
+# Slash centroids from source (all pixels — used for sword)
 SLASH_CX = {}; SLASH_CY = {}
 for fi in range(COLS * ROWS):
     cx, cy = get_centroid(SRC, fi)
     if cx is not None: SLASH_CX[fi] = cx; SLASH_CY[fi] = cy
+
+# Hand/grip centroids (dark pixels only, excludes trail arc) — used for staff alignment
+# so that fr54/fr55 track the actual hand position, not the swing-arc centre-of-mass.
+HAND_CX = {}; HAND_CY = {}
+for fi in range(COLS * ROWS):
+    cx, cy = get_body_centroid(SRC, fi)
+    if cx is not None: HAND_CX[fi] = cx; HAND_CY[fi] = cy
 
 print("Slash angle deltas:", {k: f"{v:.1f}°" for k,v in SLASH_ANGLES.items()})
 
@@ -249,8 +269,10 @@ def build_sheet(f0, source_path, out_path, weapon_type='sword',
                     target_cy = BOW_IDLE_GY + round(cy_src - cy0_src)
             else:
                 if 50 <= fi <= 55:
-                    target_cx = SLASH_CX.get(fi, cx_src)
-                    target_cy = SLASH_CY.get(fi, cy_src)
+                    # Use body-only centroid (excludes trail arc) so the staff
+                    # tracks the hand grip position, not the swing-arc centroid.
+                    target_cx = HAND_CX.get(fi, cx_src)
+                    target_cy = HAND_CY.get(fi, cy_src)
                 else:
                     target_cx = cx_src   # sword centroid at this frame (absolute)
                     target_cy = cy_src
@@ -690,6 +712,15 @@ for tier in ['t1','t2','t3','t4','t5','t6']:
         if not os.path.exists(fname):
             print(f"  SKIP: {fname}"); continue
         f0 = extract_f0(fname)
+        # Strip any baked orb pixels from fr0 so they don't propagate to all frames.
+        # Orb pixels share colors with the tier's trail center/edge colors (±60 tolerance).
+        def _is_orb(rgba, core=tc, glow=te, tol=60):
+            return (all(abs(int(rgba[i]) - int(core[i])) <= tol for i in range(3)) or
+                    all(abs(int(rgba[i]) - int(glow[i])) <= tol for i in range(3)))
+        orb_stripped = sum(1 for v in f0.values() if _is_orb(v))
+        f0 = {k: v for k, v in f0.items() if not _is_orb(v)}
+        if orb_stripped:
+            print(f"    stripped {orb_stripped} orb pixels from fr0 of {fname.split('/')[-1]}")
         build_sheet(f0, SRC_PATH, fname, weapon_type='staff',
                     trail_c=tc, trail_e=te)
 
