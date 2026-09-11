@@ -276,7 +276,12 @@ def build_sheet(f0, source_path, out_path, weapon_type='sword',
                 else:
                     target_cx = cx_src   # sword centroid at this frame (absolute)
                     target_cy = cy_src
-            rot_angle = BOW_EXTRA_ROTATION.get(fi, 0) if weapon_type == 'bow' else 0
+            if weapon_type == 'bow':
+                rot_angle = BOW_EXTRA_ROTATION.get(fi, 0)
+            elif weapon_type == 'staff' and (fi <= 4 or 50 <= fi <= 55):
+                rot_angle = -45  # tip points upper-right (counterclockwise)
+            else:
+                rot_angle = 0
             if rot_angle:
                 f0_rot = rotate_pixels(f0, rot_angle, cx0_f0, cy0_f0)
                 rot_cx, rot_cy = centroid_of(f0_rot)
