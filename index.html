@@ -4201,6 +4201,9 @@ setInterval(function() {
           qsIdleLast = ts;
           qsIdleFrame = (qsIdleFrame + 1) % idleAnim.frames;
           qsSetCharFrame(idleAnim, qsIdleFrame);
+          // Clear wand rotation during idle
+          var _qsSwordElIdle = document.getElementById('qsSword');
+          if (_qsSwordElIdle) _qsSwordElIdle.style.transform = '';
         }
       } else {
         // Attack cycle at combat fps
@@ -4212,6 +4215,12 @@ setInterval(function() {
             displayFrame = [0,5,4,4,5,0][qsCharFrame % 6];
           }
           qsSetCharFrame(anim, displayFrame);
+          // Tilt wand upward on mage raised-arm frames (fr54/fr55)
+          var _qsSwordEl = document.getElementById('qsSword');
+          if (_qsSwordEl) {
+            _qsSwordEl.style.transform = (_qsCls2 === 'mage' && (displayFrame === 4 || displayFrame === 5))
+              ? 'rotate(45deg)' : '';
+          }
           // Launch projectile at start of attack swing (mage/ranger only)
           if (_qsCls2 !== 'warrior' && qsCharFrame === 1) {
             qsProjectileActive = true;
