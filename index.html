@@ -4164,12 +4164,12 @@ setInterval(function() {
     var py = startY + (endY - startY) * t;
     ctx.save();
     if (cls === 'ranger') {
-      // Arrow: dark wood shaft + grey metal tip, ~14px total, horizontal
+      // Arrow: dark wood shaft + grey metal tip, ~16px total, horizontal
       ctx.lineWidth = 2;
       ctx.strokeStyle = '#7B4A1A';
-      ctx.beginPath(); ctx.moveTo(px - 5, py); ctx.lineTo(px + 5, py); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(px - 6, py); ctx.lineTo(px + 6, py); ctx.stroke();
       ctx.strokeStyle = '#b0b0b0';
-      ctx.beginPath(); ctx.moveTo(px + 5, py); ctx.lineTo(px + 9, py); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(px + 6, py); ctx.lineTo(px + 10, py); ctx.stroke();
     } else {
       // Mage orb: purple/blue radial glow, grows slightly as it travels
       var r = 3 + t * 3;
