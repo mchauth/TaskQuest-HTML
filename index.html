@@ -3810,7 +3810,7 @@ function getCharLayers() {
     shirt: lootFile('shirt') || null,
     skin:  p + 'skin_' + g + sn + '.png',
     sword: swordFile,
-    arm:   cls === 'ranger' ? (p + 'skin_arm_' + g + sn + '.png') : null,
+    arm:   (cls === 'ranger' || cls === 'warrior') ? (p + 'skin_arm_' + g + sn + '.png') : null,
     hair:  hideHair ? null : p + 'hair_' + g + ((hoodStyle - 1) * 5 + hn) + '.png',
     helmet: helmetFile,
   };
