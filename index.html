@@ -3139,7 +3139,7 @@ function addToInventory(item) {
 }
 
 // Encode spaces in file paths for CSS url()
-const SPRITE_VER = 'e5a3c068';
+const SPRITE_VER = 'f1b4d279';
 function cssUrl(path) {
   return "url('" + path.replace(/ /g, '%20') + '?v=' + SPRITE_VER + "')";
 }
@@ -3951,9 +3951,9 @@ function applyLegLayerOrder() {
       Pants:  skirt ? 3 : 2,  // skirt hem paints over the boot shaft
       Boots:  skirt ? 2 : 3,  // trouser cuff tucks under the boot
       Shirt:  4,
-      Sword:  5,
-      Arm:    6,
-      Hair:   7,
+      Hair:   5,   // hair behind sword so blade doesn't disappear behind head
+      Sword:  6,
+      Arm:    7,
       Helmet: 8,
     };
     Object.keys(z).forEach(function(part) {
