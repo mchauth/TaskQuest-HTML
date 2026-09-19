@@ -1,0 +1,6 @@
+COWORK_HANDOFF.md
+fix_swords_v5.py
+.cowork_secrets
+__pycache__/
+*.pyc
+.DS_Store
