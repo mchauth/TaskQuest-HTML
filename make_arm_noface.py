@@ -20,7 +20,13 @@ def comps(m):
                     seen[yy, xx] = True; q.append((yy, xx))
         res.append(cc)
     return res
+import importlib.util
+_spec = importlib.util.spec_from_file_location('v8', os.path.join(os.path.dirname(os.path.abspath(__file__)), 'fix_swords_v8.py'))
+v8 = importlib.util.module_from_spec(_spec); _spec.loader.exec_module(v8)
+HAND_R = 4.5                  # keep only arm pieces touching this radius around the detected hand
+
 for g in 'mf':
+    H = v8.hands(g)           # per-frame hand centre (idle, walk, attack)
     for n in range(1, 6):
         a = np.array(Image.open(f'{CH}/skin_arm_{g}{n}.png').convert('RGBA'))
         removed = 0
@@ -32,6 +38,16 @@ for g in 'mf':
                 fist = max(cs, key=lambda cc: np.mean([p[1] for p in cc]))   # right-most piece = the raised fist
                 for cc in cs:
                     if cc is not fist:
+                        for y, x in cc: f[y, x, 3] = 0
+                        removed += len(cc)
+                continue
+            if idx in H:                                        # fist only: drop belt line, briefs, neck bits
+                hx, hy = H[idx][0]
+                for cc in cs:
+                    near = min(np.hypot(x - hx, y - hy) for y, x in cc) <= HAND_R
+                    rgb = np.array([f[y, x, :3] for y, x in cc], int)
+                    cloth = int((rgb[:, 2] > rgb[:, 0] + 15).sum()) >= 3   # blue-grey waistband / briefs
+                    if not near or cloth:
                         for y, x in cc: f[y, x, 3] = 0
                         removed += len(cc)
                 continue
