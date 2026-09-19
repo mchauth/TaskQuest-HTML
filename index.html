@@ -147,6 +147,8 @@ hr{border:none;border-top:1px solid var(--border)}
 .qs-ground{position:absolute;bottom:0;left:0;right:0;height:32px;z-index:6;background-image:url('sprites/preview_assets/ground.png');background-repeat:repeat-x;background-size:288px 576px;background-position:0 0;image-rendering:pixelated}
 .qs-char-wrap{position:absolute;bottom:28px;left:60px;width:80px;height:64px;z-index:8;transform:scale(2) scaleX(-1);transform-origin:bottom center}
 .qs-char-layer{position:absolute;top:0;left:0;width:80px;height:64px;background-repeat:no-repeat;image-rendering:pixelated;background-size:800px 448px}
+/* Big swords (t7-t20): 128x112 padded frames so the blade can extend past the 80x64 character box */
+.big-sword{width:128px!important;height:112px!important;margin-left:-24px;margin-top:-24px;background-size:1280px 784px!important}
 .qs-fire-wrap{position:absolute;bottom:12px;right:40px;width:72px;height:72px;z-index:7}
 #qsFireImg{position:absolute;bottom:0;left:0;width:72px;height:72px;image-rendering:pixelated;display:block}
 .qs-pills{position:absolute;top:8px;left:0;right:0;display:flex;justify-content:space-around;z-index:10;padding:0 12px}
@@ -1837,7 +1839,7 @@ function renderHomeScene() {
   var layers = getCharLayers();
   Object.keys(HS_CHAR_IDS).forEach(function(k) {
     var el = document.getElementById(HS_CHAR_IDS[k]);
-    if (el) el.style.backgroundImage = layers[k] ? cssUrl(layers[k]) : "none";
+    if (el) { el.style.backgroundImage = layers[k] ? cssUrl(layers[k]) : "none"; markBigSword(el, layers[k]); }
   });
   applyLegLayerOrder(); // renderHomeScene runs on page load + every Profile visit — must re-apply leg stacking
 
@@ -1906,11 +1908,22 @@ function renderHomeScene() {
   hsSetCharFrame(HS_ANIM.idle, 0);
 }
 
+// ── Big sword sheets (t7-t20 use 128x112 frames, 24px padding around the 80x64 box) ──
+var BIG_SWORD_RE = /sword_warrior_t([7-9]|1[0-9]|20)_[mf]\.png/;
+function isBigSword(url) { return !!url && BIG_SWORD_RE.test(url); }
+function markBigSword(el, url) { if (el) el.classList.toggle('big-sword', isBigSword(url)); }
+// x,y are in the standard 80x64 grid; converted for big-sword layers
+function setLayerPos(el, x, y) {
+  if (!el) return;
+  if (el.classList.contains('big-sword')) { x = x / 80 * 128; y = y / 64 * 112; }
+  el.style.backgroundPosition = x + 'px ' + y + 'px';
+}
+
 function hsSetCharFrame(anim, f) {
   var x = -(f * 80), y = -(anim.row * 64);
   Object.values(HS_CHAR_IDS).forEach(function(id) {
     var el = document.getElementById(id);
-    if (el) el.style.backgroundPosition = x + 'px ' + y + 'px';
+    setLayerPos(el, x, y);
   });
 }
 
@@ -3139,7 +3152,7 @@ function addToInventory(item) {
 }
 
 // Encode spaces in file paths for CSS url()
-const SPRITE_VER = 'c5462bad';
+const SPRITE_VER = 'a2b7634f';
 function cssUrl(path) {
   return "url('" + path.replace(/ /g, '%20') + '?v=' + SPRITE_VER + "')";
 }
@@ -3218,6 +3231,7 @@ function renderInventory() {
       var isEq = eq[item.slot] === item.id;
       var sprOffsets = { helmet:'0px -3px', shirt:'0px -28px', pants:'0px -38px', boots:'0px -46px' };
       var sprPos = sprOffsets[item.slot] || '0px 0px';
+      if (isBigSword(item.file)) sprPos = '3px 0px;background-size:640px 392px'; // fit full 128x112 frame
       html += '<div class="inv-item'+(isEq?' equipped':'')+'" onclick="equipItem(\''+item.id+'\')" title="'+(isEq?'Unequip':'Equip')+': '+item.name+'">'
         + '<div class="inv-item-spr" style="background-image:'+cssUrl(item.file)+';background-position:'+sprPos+'"></div>'
         + '<div class="inv-item-lbl">'+(isEq?'✓ ':'')+item.name+'</div>'
@@ -3273,7 +3287,7 @@ function openCombatOverlay(xpEarned, goldEarned, lootItem) {
   var heroMap = { boots:'coBoots', pants:'coPants', shirt:'coShirt', skin:'coSkin', sword:'coSword', arm:'coArm', hair:'coHair', helmet:'coHelmet' };
   Object.keys(heroMap).forEach(function(k) {
     var el = document.getElementById(heroMap[k]);
-    if (el) { el.style.backgroundImage = layers[k] ? cssUrl(layers[k]) : 'none'; el.style.backgroundSize = '800px 448px'; }
+    if (el) { el.style.backgroundImage = layers[k] ? cssUrl(layers[k]) : 'none'; el.style.backgroundSize = '800px 448px'; markBigSword(el, layers[k]); }
   });
   applyLegLayerOrder();
   applyHairClipToId('coHair');
@@ -3298,7 +3312,7 @@ function openCombatOverlay(xpEarned, goldEarned, lootItem) {
     var x = -f * 80, y = -(_coSlashAnim.row * 64);
     Object.keys(heroMap).forEach(function(k) {
       var el = document.getElementById(heroMap[k]);
-      if (el) el.style.backgroundPosition = x+'px '+y+'px';
+      setLayerPos(el, x, y);
     });
   }, 200); // 5fps — matches quest scene combat loop pace
 
@@ -3315,7 +3329,7 @@ function openCombatOverlay(xpEarned, goldEarned, lootItem) {
       var idleX = 0, idleY = 0; // row 0 frame 0
       Object.keys(heroMap).forEach(function(k) {
         var el = document.getElementById(heroMap[k]);
-        if (el) el.style.backgroundPosition = idleX+'px '+idleY+'px';
+        setLayerPos(el, idleX, idleY);
       });
 
       // XP flash
@@ -3977,7 +3991,7 @@ function refreshHomeLayers() {
   var layers = getCharLayers();
   Object.keys(HS_CHAR_IDS).forEach(function(k) {
     var el = document.getElementById(HS_CHAR_IDS[k]);
-    if (el) el.style.backgroundImage = layers[k] ? cssUrl(layers[k]) : 'none';
+    if (el) { el.style.backgroundImage = layers[k] ? cssUrl(layers[k]) : 'none'; markBigSword(el, layers[k]); }
   });
   applyLegLayerOrder();
   applyHairClipToId('hsHair');
@@ -4040,7 +4054,7 @@ function refreshSceneLayers() {
   var idMap = { boots:'qsBoots', pants:'qsPants', shirt:'qsShirt', skin:'qsSkin', sword:'qsSword', arm:'qsArm', hair:'qsHair', helmet:'qsHelmet' };
   Object.keys(idMap).forEach(function(k) {
     var el = document.getElementById(idMap[k]);
-    if (el) el.style.backgroundImage = layers[k] ? cssUrl(layers[k]) : 'none';
+    if (el) { el.style.backgroundImage = layers[k] ? cssUrl(layers[k]) : 'none'; markBigSword(el, layers[k]); }
   });
   applyLegLayerOrder();
   applyHairClipToId('qsHair');
@@ -4072,6 +4086,7 @@ function refreshAvatarPreview() {
     var el = document.getElementById(AV_MAP[k]);
     if (el) {
       el.style.backgroundImage = layers[k] ? cssUrl(layers[k]) : 'none';
+      markBigSword(el, layers[k]);
       el.style.backgroundPosition = '0px 0px'; // idle frame 0
     }
   });
@@ -4147,7 +4162,7 @@ setInterval(function() {
     var layers = getCharLayers();
     Object.keys(CHAR_IDS).forEach(function(k) {
       var el = document.getElementById(CHAR_IDS[k]);
-      if (el) el.style.backgroundImage = layers[k] ? cssUrl(layers[k]) : 'none';
+      if (el) { el.style.backgroundImage = layers[k] ? cssUrl(layers[k]) : 'none'; markBigSword(el, layers[k]); }
     });
     applyLegLayerOrder();
     qsSetCharFrame(ANIM.idle, 0);
@@ -4159,7 +4174,7 @@ setInterval(function() {
     var x = -((anim.startCol || 0) + f) * 80, y = -(anim.row * 64);
     Object.values(CHAR_IDS).forEach(function(id) {
       var el = document.getElementById(id);
-      if (el) el.style.backgroundPosition = x+'px '+y+'px';
+      setLayerPos(el, x, y);
     });
     // Hide hair for FULL helmets only. Partial/hood hats use applyHairClipToId below.
     var helmetOn = !!getCharLayers().helmet;
