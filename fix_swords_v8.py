@@ -33,7 +33,7 @@ IDLE_ANGLE = 0                # idle + walk: blade level and forward (chest/armo
 # Tiers that keep ONLY the original diagonal art (the horizontal redraw lost too much detail).
 # Their idle stays as drawn (45 deg); attack frames at 0/90/180 are rotated from the original (brief frames).
 ORIGINAL_ONLY = {'t8', 't10', 't13'}
-ORIGINAL_IDLE_ANGLE = 135     # resting up over the back: exact 90-deg turn of the original art
+ORIGINAL_IDLE_ANGLE = 45      # as drawn: the original art, untouched
 
 POSE_ROWS = (0, 1)            # row 0 idle, row 1 walk
 

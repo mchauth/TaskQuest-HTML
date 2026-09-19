@@ -1842,6 +1842,7 @@ function renderHomeScene() {
     if (el) { el.style.backgroundImage = layers[k] ? cssUrl(layers[k]) : "none"; markBigSword(el, layers[k]); }
   });
   applyLegLayerOrder(); // renderHomeScene runs on page load + every Profile visit — must re-apply leg stacking
+  applyHairClipToId('hsHair'); // also applies the arm-layer face fix (bangs)
 
   // Home structure
   var homeEl = document.getElementById('hsHome');
@@ -3152,7 +3153,7 @@ function addToInventory(item) {
 }
 
 // Encode spaces in file paths for CSS url()
-const SPRITE_VER = 'a2b7634f';
+const SPRITE_VER = 'b0a6d8a4';
 function cssUrl(path) {
   return "url('" + path.replace(/ /g, '%20') + '?v=' + SPRITE_VER + "')";
 }
@@ -3824,7 +3825,9 @@ function getCharLayers() {
     shirt: lootFile('shirt') || null,
     skin:  p + 'skin_' + g + sn + '.png',
     sword: swordFile,
-    arm:   (cls === 'ranger' || cls === 'warrior') ? (p + 'skin_arm_' + g + sn + '.png') : null,
+    // Weapons are held in the outer hand and may cross the face; the arm layer only
+    // needs the fist over the grip -> use the variant without the face/head copy.
+    arm:   (cls === 'ranger' || cls === 'warrior') ? (p + 'skin_arm_' + g + sn + '_noface.png') : null,
     hair:  hideHair ? null : p + 'hair_' + g + ((hoodStyle - 1) * 5 + hn) + '.png',
     helmet: helmetFile,
   };
@@ -3906,12 +3909,67 @@ function buildMaskedHairSheet(url, g, done) {
   img.src = url;
 }
 
+// ── Arm-layer face fix ──────────────────────────────────────────────
+// skin_arm_* sheets carry a copy of the FACE so weapons pass behind the head.
+// That copy also painted over the front of the hair (bangs). Build a per-
+// (arm, skin, hair) version of the arm sheet with the face-copy pixels removed
+// wherever the equipped hair has pixels. Cached; falls back to the plain sheet.
+var _armFaceFixCache = {};
+function applyArmFaceFix(hairElId) {
+  var armEl = document.getElementById(hairElId.replace(/Hair$/, 'Arm'));
+  if (!armEl) return;
+  var L = getCharLayers();
+  if (!L.arm) return;                                   // mage: no arm layer
+  var plain = cssUrl(L.arm);
+  if (!L.hair || !L.skin) {                             // hair hidden (full helmet)
+    if (armEl.dataset.faceFix) { delete armEl.dataset.faceFix; armEl.style.backgroundImage = plain; }
+    return;
+  }
+  var key = L.arm + '|' + L.skin + '|' + L.hair;
+  var cached = _armFaceFixCache[key];
+  if (typeof cached === 'string' && cached.indexOf('data:') === 0) {
+    if (armEl.dataset.faceFix !== key || armEl.style.backgroundImage.indexOf('data:') === -1) {
+      armEl.style.backgroundImage = "url('" + cached + "')";
+      armEl.dataset.faceFix = key;
+    }
+    return;
+  }
+  if (cached !== undefined) return;                     // pending or failed -> plain sheet stays
+  _armFaceFixCache[key] = 'pending';
+  var srcs = [L.arm, L.skin, L.hair], imgs = [], left = 3, failed = false;
+  srcs.forEach(function(src, i) {
+    var im = new Image();
+    im.onload = function() { if (--left === 0 && !failed) build(); };
+    im.onerror = function() { failed = true; _armFaceFixCache[key] = 'failed'; };
+    im.src = src + '?v=' + SPRITE_VER;
+    imgs[i] = im;
+  });
+  function build() {
+    try {
+      var w = imgs[0].naturalWidth, h = imgs[0].naturalHeight;
+      var cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+      var ctx = cv.getContext('2d', { willReadFrequently: true });
+      function px(im) { ctx.clearRect(0, 0, w, h); ctx.drawImage(im, 0, 0); return ctx.getImageData(0, 0, w, h); }
+      var hair = px(imgs[2]).data, skin = px(imgs[1]).data, armD = px(imgs[0]);
+      var a = armD.data;
+      for (var i = 0; i < a.length; i += 4) {
+        if (a[i+3] > 50 && hair[i+3] > 50 && skin[i+3] > 50 &&
+            a[i] === skin[i] && a[i+1] === skin[i+1] && a[i+2] === skin[i+2]) a[i+3] = 0;
+      }
+      ctx.putImageData(armD, 0, 0);
+      _armFaceFixCache[key] = cv.toDataURL();
+    } catch (err) { _armFaceFixCache[key] = 'failed'; return; }   // tainted canvas etc.
+    applyArmFaceFix(hairElId);
+  }
+}
+
 // Mask the hair layer under partial hats (mage cones / ranger Robin Hood hats).
 // Keeps the legacy name — callers pass the hair element id. Cheap when cached;
 // called every animation tick.
 function applyHairClipToId(hairElId) {
   var hairEl = document.getElementById(hairElId);
   if (!hairEl) return;
+  applyArmFaceFix(hairElId);   // keep the bangs visible over the arm layer's face copy
   var eq = S.profile.equippedItems || {};
   var helmetItem = eq.helmet ? LOOT_TABLE.find(function(x){ return x.id === eq.helmet; }) : null;
   var isPartial = !!(helmetItem && helmetItem.hatType === 'partial');
