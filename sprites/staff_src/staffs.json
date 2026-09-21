@@ -1,132 +1,111 @@
 [
  {
   "tier": "t7",
-  "name": "Sunburst Staff",
-  "level": 45,
-  "rarity": "legendary",
-  "from": "staff_src_v16/t7"
- },
- {
-  "tier": "t8",
   "name": "Dawnspire Staff",
-  "level": 48,
+  "level": 45,
   "rarity": "legendary",
   "from": "staff_src_v16/t8"
  },
  {
-  "tier": "t9",
+  "tier": "t8",
   "name": "Solar Disc Staff",
-  "level": 51,
+  "level": 49,
   "rarity": "legendary",
   "from": "staff_src_v16/t9"
  },
  {
-  "tier": "t10",
+  "tier": "t9",
   "name": "Verdant Staff",
-  "level": 54,
+  "level": 52,
   "rarity": "legendary",
   "from": "staff_src_v16/t10"
  },
  {
-  "tier": "t11",
+  "tier": "t10",
   "name": "Rootbound Staff",
-  "level": 57,
+  "level": 56,
   "rarity": "legendary",
   "from": "staff_src_v16/t11"
  },
  {
-  "tier": "t12",
+  "tier": "t11",
   "name": "Void Crystal Staff",
   "level": 60,
   "rarity": "legendary",
   "from": "staff_new5/void_a"
  },
  {
-  "tier": "t13",
+  "tier": "t12",
   "name": "Shadow Orb Staff",
   "level": 63,
   "rarity": "legendary",
   "from": "staff_new5/void_i"
  },
  {
-  "tier": "t14",
+  "tier": "t13",
   "name": "Nether Cage Staff",
-  "level": 66,
+  "level": 67,
   "rarity": "legendary",
   "from": "staff_new5/void_p"
  },
  {
-  "tier": "t15",
+  "tier": "t14",
   "name": "Ruby Claw Staff",
-  "level": 69,
+  "level": 71,
   "rarity": "legendary",
   "from": "staff_src_v16/t14"
  },
  {
-  "tier": "t16",
+  "tier": "t15",
   "name": "Bloodhorn Staff",
-  "level": 72,
+  "level": 74,
   "rarity": "legendary",
   "from": "staff_src_v16/t15"
  },
  {
-  "tier": "t17",
+  "tier": "t16",
   "name": "Crimson Talon Staff",
-  "level": 75,
+  "level": 78,
   "rarity": "legendary",
   "from": "staff_src_v16/t16"
  },
  {
-  "tier": "t18",
-  "name": "Serpent Prism Staff",
-  "level": 78,
-  "rarity": "legendary",
-  "from": "staff_new5/prism_7"
- },
- {
-  "tier": "t19",
-  "name": "Crescent Prism Staff",
-  "level": 81,
-  "rarity": "legendary",
-  "from": "staff_new5/prism_16"
- },
- {
-  "tier": "t20",
+  "tier": "t17",
   "name": "Frostspire Staff",
-  "level": 84,
+  "level": 82,
   "rarity": "legendary",
   "from": "staff_src_v16/t17"
  },
  {
-  "tier": "t21",
+  "tier": "t18",
   "name": "Glacial Branch Staff",
-  "level": 87,
+  "level": 85,
   "rarity": "legendary",
   "from": "staff_src_v16/t18"
  },
  {
-  "tier": "t22",
+  "tier": "t19",
   "name": "Icecrown Staff",
-  "level": 90,
+  "level": 89,
   "rarity": "legendary",
   "from": "staff_src_v16/t19"
  },
  {
-  "tier": "t23",
+  "tier": "t20",
   "name": "Stormcaller Staff",
   "level": 93,
   "rarity": "legendary",
   "from": "staff_src_v16/t20"
  },
  {
-  "tier": "t24",
+  "tier": "t21",
   "name": "Tempest Staff",
   "level": 96,
   "rarity": "legendary",
   "from": "staff_src_v16/t21"
  },
  {
-  "tier": "t25",
+  "tier": "t22",
   "name": "Phoenix Staff",
   "level": 100,
   "rarity": "epic",

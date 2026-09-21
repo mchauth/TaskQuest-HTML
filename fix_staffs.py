@@ -1,4 +1,4 @@
-"""Mage staff sheets t7-t25 — zero resampling, same system as fix_swords_v8.py.
+"""Mage staff sheets t7-t22 — zero resampling, same system as fix_swords_v8.py.
 
 Art (sprites/staff_src/):  tN_vert.png  upright PixelLab staff     -> 0 / 90 / 180 / 270 deg
                            tN_diag.png  45-deg PixelLab redraw      -> 45 / 135 / 225 / 315 deg
@@ -13,7 +13,7 @@ _s = importlib.util.spec_from_file_location('v8', f'{ROOT}/fix_swords_v8.py'); v
 CH, BW, BH, PAD, FW, FH = v8.CH, v8.BW, v8.BH, v8.PAD, v8.FW, v8.FH
 SRC = f'{ROOT}/sprites/staff_src'
 GRIP = 0.46                                  # hand position up the shaft (higher = head sits lower, away from the face)
-POSE = {'idle': 45, 50: 45, 51: 90, 52: 90, 53: 90, 54: 90, 55: 45}   # 54 = cast (staff raised upright)
+POSE = {'idle': 45, 50: 45, 51: 45, 52: 45, 53: 45, 54: 45, 55: 45}   # same 45-deg art in every held frame (cast included)
 SLEEP = {'frames': (68, 69), 'angle': 0, 'centre': (36, 59)}         # lying on the ground beside the sleeper
 
 def prep(path, upright):
@@ -65,7 +65,7 @@ def build(tier, g):
 
 if __name__ == '__main__':
     outdir = sys.argv[1] if len(sys.argv) > 1 else CH
-    tiers = sys.argv[2].split(',') if len(sys.argv) > 2 else [f't{i}' for i in range(7, 26)]
+    tiers = sys.argv[2].split(',') if len(sys.argv) > 2 else [f't{i}' for i in range(7, 23)]
     os.makedirs(outdir, exist_ok=True)
     for t in tiers:
         for g in 'mf': build(t, g).save(f'{outdir}/staff_mage_{t}_{g}.png')
