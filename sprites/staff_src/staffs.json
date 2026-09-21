@@ -1,0 +1,98 @@
+[
+ {
+  "tier": "t7",
+  "name": "Sunburst Staff",
+  "diag_from": "pl1",
+  "vert": "slim8/t7_1.png"
+ },
+ {
+  "tier": "t8",
+  "name": "Dawnspire Staff",
+  "diag_from": "pl",
+  "vert": "slim8/t7_2.png"
+ },
+ {
+  "tier": "t9",
+  "name": "Solar Disc Staff",
+  "diag_from": "pl1",
+  "vert": "slim8/t7_3.png"
+ },
+ {
+  "tier": "t10",
+  "name": "Verdant Staff",
+  "diag_from": "pl",
+  "vert": "slim8/t8_6.png"
+ },
+ {
+  "tier": "t11",
+  "name": "Rootbound Staff",
+  "diag_from": "pl",
+  "vert": "slim8/t8_7.png"
+ },
+ {
+  "tier": "t12",
+  "name": "Void Crystal Staff",
+  "diag_from": "pl1",
+  "vert": "med/t9_6.png"
+ },
+ {
+  "tier": "t13",
+  "name": "Nether Wisp Staff",
+  "diag_from": "pl1",
+  "vert": "med/t9_15.png"
+ },
+ {
+  "tier": "t14",
+  "name": "Ruby Claw Staff",
+  "diag_from": "pl",
+  "vert": "slim8/t10_5.png"
+ },
+ {
+  "tier": "t15",
+  "name": "Bloodhorn Staff",
+  "diag_from": "pl1",
+  "vert": "slim8/t10_6.png"
+ },
+ {
+  "tier": "t16",
+  "name": "Crimson Talon Staff",
+  "diag_from": "pl1",
+  "vert": "slim8/t10_8.png"
+ },
+ {
+  "tier": "t17",
+  "name": "Frostspire Staff",
+  "diag_from": "pl1",
+  "vert": "slim8/t12_2.png"
+ },
+ {
+  "tier": "t18",
+  "name": "Glacial Branch Staff",
+  "diag_from": "rough",
+  "vert": "slim8/t12_4.png"
+ },
+ {
+  "tier": "t19",
+  "name": "Icecrown Staff",
+  "diag_from": "pl1",
+  "vert": "slim8/t12_5.png"
+ },
+ {
+  "tier": "t20",
+  "name": "Stormcaller Staff",
+  "diag_from": "pl",
+  "vert": "slim8/t13_7.png"
+ },
+ {
+  "tier": "t21",
+  "name": "Tempest Staff",
+  "diag_from": "pl",
+  "vert": "slim8/t13_8.png"
+ },
+ {
+  "tier": "t22",
+  "name": "Phoenix Staff",
+  "diag_from": "pl",
+  "vert": "med/t14_12.png"
+ }
+]

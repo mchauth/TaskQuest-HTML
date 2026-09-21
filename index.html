@@ -1910,7 +1910,7 @@ function renderHomeScene() {
 }
 
 // ── Big sword sheets (t7-t20 use 128x112 frames, 24px padding around the 80x64 box) ──
-var BIG_SWORD_RE = /sword_warrior_t([7-9]|1[0-9]|20)_[mf]\.png/;
+var BIG_SWORD_RE = /(sword_warrior_t([7-9]|1[0-9]|20)|staff_mage_t([7-9]|1[0-9]|2[0-2]))_[mf]\.png/;   // 128x112 padded sheets
 function isBigSword(url) { return !!url && BIG_SWORD_RE.test(url); }
 function markBigSword(el, url) { if (el) el.classList.toggle('big-sword', isBigSword(url)); }
 // x,y are in the standard 80x64 grid; converted for big-sword layers
@@ -2160,16 +2160,38 @@ var LOOT_TABLE = [
   { id:'sword_warrior_t20',   name:'Flamebrand',           gender:'m', slot:'weapon', file:'sprites/preview_assets/char/sword_warrior_t20_m.png', level:100, rarity:'epic',      classes:['warrior'] },
   { id:'sword_warrior_t20_f', name:'Flamebrand',           gender:'f', slot:'weapon', file:'sprites/preview_assets/char/sword_warrior_t20_f.png', level:100, rarity:'epic',      classes:['warrior'] },
   // ── Mage tier 7-11: Legendary/Mythic Staffs ────────────────────────
-  { id:'staff_mage_t7',   name:'Solar Disc Staff',   gender:'m', slot:'weapon', file:'sprites/preview_assets/char/staff_mage_t7_m.png', level:50, rarity:'legendary', classes:['mage'] },
-  { id:'staff_mage_t7_f', name:'Solar Disc Staff',   gender:'f', slot:'weapon', file:'sprites/preview_assets/char/staff_mage_t7_f.png', level:50, rarity:'legendary', classes:['mage'] },
-  { id:'staff_mage_t8',   name:'Branch Staff',       gender:'m', slot:'weapon', file:'sprites/preview_assets/char/staff_mage_t8_m.png', level:60, rarity:'legendary', classes:['mage'] },
-  { id:'staff_mage_t8_f', name:'Branch Staff',       gender:'f', slot:'weapon', file:'sprites/preview_assets/char/staff_mage_t8_f.png', level:60, rarity:'legendary', classes:['mage'] },
-  { id:'staff_mage_t9',   name:'Void Crystal Staff', gender:'m', slot:'weapon', file:'sprites/preview_assets/char/staff_mage_t9_m.png', level:70, rarity:'legendary', classes:['mage'] },
-  { id:'staff_mage_t9_f', name:'Void Crystal Staff', gender:'f', slot:'weapon', file:'sprites/preview_assets/char/staff_mage_t9_f.png', level:70, rarity:'legendary', classes:['mage'] },
-  { id:'staff_mage_t10',   name:'Ruby Claw Staff',   gender:'m', slot:'weapon', file:'sprites/preview_assets/char/staff_mage_t10_m.png', level:85, rarity:'legendary', classes:['mage'] },
-  { id:'staff_mage_t10_f', name:'Ruby Claw Staff',   gender:'f', slot:'weapon', file:'sprites/preview_assets/char/staff_mage_t10_f.png', level:85, rarity:'legendary', classes:['mage'] },
-  { id:'staff_mage_t11',   name:'Arcane Prism Staff',gender:'m', slot:'weapon', file:'sprites/preview_assets/char/staff_mage_t11_m.png', level:100, rarity:'legendary', classes:['mage'] },
-  { id:'staff_mage_t11_f', name:'Arcane Prism Staff',gender:'f', slot:'weapon', file:'sprites/preview_assets/char/staff_mage_t11_f.png', level:100, rarity:'legendary', classes:['mage'] },
+  { id:'staff_mage_t7',   name:'Sunburst Staff',        gender:'m', slot:'weapon', file:'sprites/preview_assets/char/staff_mage_t7_m.png', level:45, rarity:'legendary', classes:['mage'] },
+  { id:'staff_mage_t7_f', name:'Sunburst Staff',        gender:'f', slot:'weapon', file:'sprites/preview_assets/char/staff_mage_t7_f.png', level:45, rarity:'legendary', classes:['mage'] },
+  { id:'staff_mage_t8',   name:'Dawnspire Staff',       gender:'m', slot:'weapon', file:'sprites/preview_assets/char/staff_mage_t8_m.png', level:49, rarity:'legendary', classes:['mage'] },
+  { id:'staff_mage_t8_f', name:'Dawnspire Staff',       gender:'f', slot:'weapon', file:'sprites/preview_assets/char/staff_mage_t8_f.png', level:49, rarity:'legendary', classes:['mage'] },
+  { id:'staff_mage_t9',   name:'Solar Disc Staff',      gender:'m', slot:'weapon', file:'sprites/preview_assets/char/staff_mage_t9_m.png', level:52, rarity:'legendary', classes:['mage'] },
+  { id:'staff_mage_t9_f', name:'Solar Disc Staff',      gender:'f', slot:'weapon', file:'sprites/preview_assets/char/staff_mage_t9_f.png', level:52, rarity:'legendary', classes:['mage'] },
+  { id:'staff_mage_t10',   name:'Verdant Staff',         gender:'m', slot:'weapon', file:'sprites/preview_assets/char/staff_mage_t10_m.png', level:56, rarity:'legendary', classes:['mage'] },
+  { id:'staff_mage_t10_f', name:'Verdant Staff',         gender:'f', slot:'weapon', file:'sprites/preview_assets/char/staff_mage_t10_f.png', level:56, rarity:'legendary', classes:['mage'] },
+  { id:'staff_mage_t11',   name:'Rootbound Staff',       gender:'m', slot:'weapon', file:'sprites/preview_assets/char/staff_mage_t11_m.png', level:60, rarity:'legendary', classes:['mage'] },
+  { id:'staff_mage_t11_f', name:'Rootbound Staff',       gender:'f', slot:'weapon', file:'sprites/preview_assets/char/staff_mage_t11_f.png', level:60, rarity:'legendary', classes:['mage'] },
+  { id:'staff_mage_t12',   name:'Void Crystal Staff',    gender:'m', slot:'weapon', file:'sprites/preview_assets/char/staff_mage_t12_m.png', level:63, rarity:'legendary', classes:['mage'] },
+  { id:'staff_mage_t12_f', name:'Void Crystal Staff',    gender:'f', slot:'weapon', file:'sprites/preview_assets/char/staff_mage_t12_f.png', level:63, rarity:'legendary', classes:['mage'] },
+  { id:'staff_mage_t13',   name:'Nether Wisp Staff',     gender:'m', slot:'weapon', file:'sprites/preview_assets/char/staff_mage_t13_m.png', level:67, rarity:'legendary', classes:['mage'] },
+  { id:'staff_mage_t13_f', name:'Nether Wisp Staff',     gender:'f', slot:'weapon', file:'sprites/preview_assets/char/staff_mage_t13_f.png', level:67, rarity:'legendary', classes:['mage'] },
+  { id:'staff_mage_t14',   name:'Ruby Claw Staff',       gender:'m', slot:'weapon', file:'sprites/preview_assets/char/staff_mage_t14_m.png', level:71, rarity:'legendary', classes:['mage'] },
+  { id:'staff_mage_t14_f', name:'Ruby Claw Staff',       gender:'f', slot:'weapon', file:'sprites/preview_assets/char/staff_mage_t14_f.png', level:71, rarity:'legendary', classes:['mage'] },
+  { id:'staff_mage_t15',   name:'Bloodhorn Staff',       gender:'m', slot:'weapon', file:'sprites/preview_assets/char/staff_mage_t15_m.png', level:74, rarity:'legendary', classes:['mage'] },
+  { id:'staff_mage_t15_f', name:'Bloodhorn Staff',       gender:'f', slot:'weapon', file:'sprites/preview_assets/char/staff_mage_t15_f.png', level:74, rarity:'legendary', classes:['mage'] },
+  { id:'staff_mage_t16',   name:'Crimson Talon Staff',   gender:'m', slot:'weapon', file:'sprites/preview_assets/char/staff_mage_t16_m.png', level:78, rarity:'legendary', classes:['mage'] },
+  { id:'staff_mage_t16_f', name:'Crimson Talon Staff',   gender:'f', slot:'weapon', file:'sprites/preview_assets/char/staff_mage_t16_f.png', level:78, rarity:'legendary', classes:['mage'] },
+  { id:'staff_mage_t17',   name:'Frostspire Staff',      gender:'m', slot:'weapon', file:'sprites/preview_assets/char/staff_mage_t17_m.png', level:82, rarity:'legendary', classes:['mage'] },
+  { id:'staff_mage_t17_f', name:'Frostspire Staff',      gender:'f', slot:'weapon', file:'sprites/preview_assets/char/staff_mage_t17_f.png', level:82, rarity:'legendary', classes:['mage'] },
+  { id:'staff_mage_t18',   name:'Glacial Branch Staff',  gender:'m', slot:'weapon', file:'sprites/preview_assets/char/staff_mage_t18_m.png', level:85, rarity:'legendary', classes:['mage'] },
+  { id:'staff_mage_t18_f', name:'Glacial Branch Staff',  gender:'f', slot:'weapon', file:'sprites/preview_assets/char/staff_mage_t18_f.png', level:85, rarity:'legendary', classes:['mage'] },
+  { id:'staff_mage_t19',   name:'Icecrown Staff',        gender:'m', slot:'weapon', file:'sprites/preview_assets/char/staff_mage_t19_m.png', level:89, rarity:'legendary', classes:['mage'] },
+  { id:'staff_mage_t19_f', name:'Icecrown Staff',        gender:'f', slot:'weapon', file:'sprites/preview_assets/char/staff_mage_t19_f.png', level:89, rarity:'legendary', classes:['mage'] },
+  { id:'staff_mage_t20',   name:'Stormcaller Staff',     gender:'m', slot:'weapon', file:'sprites/preview_assets/char/staff_mage_t20_m.png', level:93, rarity:'legendary', classes:['mage'] },
+  { id:'staff_mage_t20_f', name:'Stormcaller Staff',     gender:'f', slot:'weapon', file:'sprites/preview_assets/char/staff_mage_t20_f.png', level:93, rarity:'legendary', classes:['mage'] },
+  { id:'staff_mage_t21',   name:'Tempest Staff',         gender:'m', slot:'weapon', file:'sprites/preview_assets/char/staff_mage_t21_m.png', level:96, rarity:'legendary', classes:['mage'] },
+  { id:'staff_mage_t21_f', name:'Tempest Staff',         gender:'f', slot:'weapon', file:'sprites/preview_assets/char/staff_mage_t21_f.png', level:96, rarity:'legendary', classes:['mage'] },
+  { id:'staff_mage_t22',   name:'Phoenix Staff',         gender:'m', slot:'weapon', file:'sprites/preview_assets/char/staff_mage_t22_m.png', level:100, rarity:'epic', classes:['mage'] },
+  { id:'staff_mage_t22_f', name:'Phoenix Staff',         gender:'f', slot:'weapon', file:'sprites/preview_assets/char/staff_mage_t22_f.png', level:100, rarity:'epic', classes:['mage'] },
   // ── Ranger tier 7-11: Legendary/Mythic Bows ────────────────────────
   { id:'bow_ranger_t7',   name:'Split-Limb Recurve', gender:'m', slot:'weapon', file:'sprites/preview_assets/char/bow_ranger_t7_m.png', level:50, rarity:'legendary', classes:['ranger'] },
   { id:'bow_ranger_t7_f', name:'Split-Limb Recurve', gender:'f', slot:'weapon', file:'sprites/preview_assets/char/bow_ranger_t7_f.png', level:50, rarity:'legendary', classes:['ranger'] },
@@ -3153,7 +3175,7 @@ function addToInventory(item) {
 }
 
 // Encode spaces in file paths for CSS url()
-const SPRITE_VER = '5a4c4aea';
+const SPRITE_VER = '32cf4906';
 function cssUrl(path) {
   return "url('" + path.replace(/ /g, '%20') + '?v=' + SPRITE_VER + "')";
 }
@@ -4342,7 +4364,8 @@ setInterval(function() {
           // Tilt wand upward on mage raised-arm frames (fr54/fr55)
           var _qsSwordEl = document.getElementById('qsSword');
           if (_qsSwordEl) {
-            if (_qsCls2 === 'mage' && (displayFrame === 4 || displayFrame === 5)) {
+            // Big staff sheets (t7+) have the raised cast pose baked in -> no CSS rotation
+            if (_qsCls2 === 'mage' && (displayFrame === 4 || displayFrame === 5) && !_qsSwordEl.classList.contains('big-sword')) {
               _qsSwordEl.style.transform = 'translateX(-5px) rotate(45deg)';
               _qsSwordEl.style.transformOrigin = '26.6px 41.5px';
             } else {
