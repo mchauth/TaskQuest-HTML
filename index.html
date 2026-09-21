@@ -3175,7 +3175,7 @@ function addToInventory(item) {
 }
 
 // Encode spaces in file paths for CSS url()
-const SPRITE_VER = '5e26de75';
+const SPRITE_VER = '6a9e6595';
 function cssUrl(path) {
   return "url('" + path.replace(/ /g, '%20') + '?v=' + SPRITE_VER + "')";
 }
@@ -4283,6 +4283,12 @@ setInterval(function() {
     if (el) el.style.backgroundPosition = (-f * 128) + 'px 0px';
   }
 
+  var _qsOrbImg = null;
+  function qsOrbImg() {
+    if (!_qsOrbImg) { _qsOrbImg = new Image(); _qsOrbImg.src = 'sprites/preview_assets/fx/mage_orb.png?v=' + SPRITE_VER; }
+    return _qsOrbImg;
+  }
+  qsOrbImg();   // preload so the first cast already has its sprite
   function qsDrawProjectile(ts) {
     var canvas = document.getElementById('qsProjectile');
     if (!canvas) return;
@@ -4323,14 +4329,22 @@ setInterval(function() {
       ctx.fillStyle = '#b0b0b0';
       ctx.beginPath(); ctx.moveTo(px + 8, py - 2.5); ctx.lineTo(px + 13, py); ctx.lineTo(px + 8, py + 2.5); ctx.closePath(); ctx.fill();
     } else {
-      // Mage orb: purple/blue radial glow, grows slightly as it travels
-      var r = 3 + t * 3;
-      var grd = ctx.createRadialGradient(px, py, 0, px, py, r * 2.5);
-      grd.addColorStop(0, 'rgba(230, 130, 255, 0.95)');
-      grd.addColorStop(0.4, 'rgba(140, 60, 220, 0.7)');
-      grd.addColorStop(1, 'rgba(60, 20, 140, 0)');
-      ctx.fillStyle = grd;
-      ctx.beginPath(); ctx.arc(px, py, r * 2.5, 0, Math.PI * 2); ctx.fill();
+      // Mage orb: pixel-art sprite (4 quarter-turn frames = spin) with a short fading trail.
+      // Drawn at 2x like the character, snapped to the 2px grid, no smoothing -> stays crisp.
+      var orb = qsOrbImg();
+      if (orb && orb.complete && orb.naturalWidth) {
+        ctx.imageSmoothingEnabled = false;
+        var FS = orb.naturalHeight, D = FS * 2;
+        var frame = Math.floor(elapsed / 60);
+        [[2, 0.18], [1, 0.4], [0, 1]].forEach(function(g) {
+          var tt = Math.max(0, t - g[0] * 0.06);
+          var gx = startX + (endX - startX) * tt, gy = startY + (endY - startY) * tt;
+          ctx.globalAlpha = g[1];
+          ctx.drawImage(orb, ((frame - g[0]) & 3) * FS, 0, FS, FS,
+                        Math.round((gx - D / 2) / 2) * 2, Math.round((gy - D / 2) / 2) * 2, D, D);
+        });
+        ctx.globalAlpha = 1;
+      }
     }
     ctx.restore();
   }
