@@ -2369,8 +2369,8 @@ var LOOT_TABLE = [
   { id:'f_corset_purple2', name:'Shadow Corset II',  gender:'f', slot:'shirt', file:'sprites/preview_assets/clothing/female/Purple_Corset_v2.png',    level:1 },
 
   // ── Deployed Legendary Sets (auto-generated) ──────────────────────────────
-  { id:'helmet_mage_legendary_arcanist', name:'Arcanist Hood', gender:'m', slot:'helmet', file:'sprites/preview_assets/char/helmet_mage_legendary_arcanist.png', level:60, rarity:'legendary', classes:['mage'] },
-  { id:'helmet_mage_legendary_arcanist_f', name:'Arcanist Hood', gender:'f', slot:'helmet', file:'sprites/preview_assets/char/helmet_mage_legendary_arcanist_f.png', level:60, rarity:'legendary', classes:['mage'] },
+  { id:'helmet_mage_legendary_arcanist', name:'Arcanist Hood', gender:'m', slot:'helmet', hatType:'hood', file:'sprites/preview_assets/char/helmet_mage_legendary_arcanist.png', level:60, rarity:'legendary', classes:['mage'] },
+  { id:'helmet_mage_legendary_arcanist_f', name:'Arcanist Hood', gender:'f', slot:'helmet', hatType:'hood', file:'sprites/preview_assets/char/helmet_mage_legendary_arcanist_f.png', level:60, rarity:'legendary', classes:['mage'] },
   { id:'shirt_mage_legendary_arcanist', name:'Arcanist Robe', gender:'m', slot:'shirt', file:'sprites/preview_assets/char/shirt_mage_legendary_arcanist.png', level:60, rarity:'legendary', classes:['mage'] },
   { id:'shirt_mage_legendary_arcanist_f', name:'Arcanist Robe', gender:'f', slot:'shirt', file:'sprites/preview_assets/char/shirt_mage_legendary_arcanist_f.png', level:60, rarity:'legendary', classes:['mage'] },
   { id:'pants_mage_legendary_arcanist', name:'Arcanist Leggings', gender:'m', slot:'pants', file:'sprites/preview_assets/char/pants_mage_legendary_arcanist.png', level:60, rarity:'legendary', classes:['mage'] },
@@ -3205,7 +3205,7 @@ function addToInventory(item) {
 }
 
 // Encode spaces in file paths for CSS url()
-const SPRITE_VER = '8a076090';
+const SPRITE_VER = 'c65de386';
 function cssUrl(path) {
   return "url('" + path.replace(/ /g, '%20') + '?v=' + SPRITE_VER + "')";
 }
