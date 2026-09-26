@@ -2533,6 +2533,18 @@ var LOOT_TABLE = [
   { id:'shirt_warrior_legendary_dread', name:'Dreadplate Cuirass', gender:'m', slot:'shirt', file:'sprites/preview_assets/char/shirt_warrior_legendary_dread.png', level:80, rarity:'legendary', classes:['warrior'] },
   { id:'pants_warrior_legendary_dread', name:'Dreadplate Greaves', gender:'m', slot:'pants', file:'sprites/preview_assets/char/pants_warrior_legendary_dread.png', level:80, rarity:'legendary', classes:['warrior'] },
   { id:'boots_warrior_legendary_dread', name:'Dreadplate Sabatons', gender:'m', slot:'boots', file:'sprites/preview_assets/char/boots_warrior_legendary_dread.png', level:80, rarity:'legendary', classes:['warrior'] },
+  { id:'helmet_warrior_rare_bronzeguard', name:'Bronzeguard Barbute', gender:'m', slot:'helmet', file:'sprites/preview_assets/char/helmet_warrior_rare_bronzeguard.png', level:25, rarity:'rare', classes:['warrior'] },
+  { id:'shirt_warrior_rare_bronzeguard', name:'Bronzeguard Cuirass', gender:'m', slot:'shirt', file:'sprites/preview_assets/char/shirt_warrior_rare_bronzeguard.png', level:25, rarity:'rare', classes:['warrior'] },
+  { id:'pants_warrior_rare_bronzeguard', name:'Bronzeguard Greaves', gender:'m', slot:'pants', file:'sprites/preview_assets/char/pants_warrior_rare_bronzeguard.png', level:25, rarity:'rare', classes:['warrior'] },
+  { id:'boots_warrior_rare_bronzeguard', name:'Bronzeguard Boots', gender:'m', slot:'boots', file:'sprites/preview_assets/char/boots_warrior_rare_bronzeguard.png', level:25, rarity:'rare', classes:['warrior'] },
+  { id:'helmet_warrior_legendary_diamondplate', name:'Diamondplate Helm', gender:'m', slot:'helmet', file:'sprites/preview_assets/char/helmet_warrior_legendary_diamondplate.png', level:90, rarity:'legendary', classes:['warrior'] },
+  { id:'shirt_warrior_legendary_diamondplate', name:'Diamondplate Cuirass', gender:'m', slot:'shirt', file:'sprites/preview_assets/char/shirt_warrior_legendary_diamondplate.png', level:90, rarity:'legendary', classes:['warrior'] },
+  { id:'pants_warrior_legendary_diamondplate', name:'Diamondplate Greaves', gender:'m', slot:'pants', file:'sprites/preview_assets/char/pants_warrior_legendary_diamondplate.png', level:90, rarity:'legendary', classes:['warrior'] },
+  { id:'boots_warrior_legendary_diamondplate', name:'Diamondplate Sabatons', gender:'m', slot:'boots', file:'sprites/preview_assets/char/boots_warrior_legendary_diamondplate.png', level:90, rarity:'legendary', classes:['warrior'] },
+  { id:'helmet_warrior_legendary_prismguard', name:'Prismguard Helm', gender:'m', slot:'helmet', file:'sprites/preview_assets/char/helmet_warrior_legendary_prismguard.png', level:95, rarity:'legendary', classes:['warrior'] },
+  { id:'shirt_warrior_legendary_prismguard', name:'Prismguard Cuirass', gender:'m', slot:'shirt', file:'sprites/preview_assets/char/shirt_warrior_legendary_prismguard.png', level:95, rarity:'legendary', classes:['warrior'] },
+  { id:'pants_warrior_legendary_prismguard', name:'Prismguard Greaves', gender:'m', slot:'pants', file:'sprites/preview_assets/char/pants_warrior_legendary_prismguard.png', level:95, rarity:'legendary', classes:['warrior'] },
+  { id:'boots_warrior_legendary_prismguard', name:'Prismguard Sabatons', gender:'m', slot:'boots', file:'sprites/preview_assets/char/boots_warrior_legendary_prismguard.png', level:95, rarity:'legendary', classes:['warrior'] },
   { id:'boots_warrior_legendary_ajoure', name:'Ajoure Sabatons', gender:'m', slot:'boots', file:'sprites/preview_assets/char/boots_warrior_legendary_ajoure.png', level:50, rarity:'legendary', classes:['warrior'] },
   { id:'boots_warrior_legendary_ajoure_f', name:'Ajoure Sabatons', gender:'f', slot:'boots', file:'sprites/preview_assets/char/boots_warrior_legendary_ajoure_f.png', level:50, rarity:'legendary', classes:['warrior'] },
   { id:'boots_warrior_legendary_ashlar', name:'Ashlar Sabatons', gender:'m', slot:'boots', file:'sprites/preview_assets/char/boots_warrior_legendary_ashlar.png', level:50, rarity:'legendary', classes:['warrior'] },
@@ -3221,7 +3233,7 @@ function addToInventory(item) {
 }
 
 // Encode spaces in file paths for CSS url()
-const SPRITE_VER = '0a329947';
+const SPRITE_VER = 'a137fb53';
 function cssUrl(path) {
   return "url('" + path.replace(/ /g, '%20') + '?v=' + SPRITE_VER + "')";
 }
