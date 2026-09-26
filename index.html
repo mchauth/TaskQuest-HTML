@@ -2517,6 +2517,14 @@ var LOOT_TABLE = [
   { id:'pants_warrior_legendary_sunforged_f', name:'Sunforged Greaves', gender:'f', slot:'pants', file:'sprites/preview_assets/char/pants_warrior_legendary_sunforged_f.png', level:60, rarity:'legendary', classes:['warrior'] },
   { id:'boots_warrior_legendary_sunforged', name:'Sunforged Sabatons', gender:'m', slot:'boots', file:'sprites/preview_assets/char/boots_warrior_legendary_sunforged.png', level:60, rarity:'legendary', classes:['warrior'] },
   { id:'boots_warrior_legendary_sunforged_f', name:'Sunforged Sabatons', gender:'f', slot:'boots', file:'sprites/preview_assets/char/boots_warrior_legendary_sunforged_f.png', level:60, rarity:'legendary', classes:['warrior'] },
+  { id:'helmet_warrior_rare_ironscale', name:'Ironscale Cap', gender:'m', slot:'helmet', file:'sprites/preview_assets/char/helmet_warrior_rare_ironscale.png', level:12, rarity:'rare', classes:['warrior'] },
+  { id:'helmet_warrior_rare_ironscale_f', name:'Ironscale Cap', gender:'f', slot:'helmet', file:'sprites/preview_assets/char/helmet_warrior_rare_ironscale_f.png', level:12, rarity:'rare', classes:['warrior'] },
+  { id:'shirt_warrior_rare_ironscale', name:'Ironscale Hauberk', gender:'m', slot:'shirt', file:'sprites/preview_assets/char/shirt_warrior_rare_ironscale.png', level:12, rarity:'rare', classes:['warrior'] },
+  { id:'shirt_warrior_rare_ironscale_f', name:'Ironscale Hauberk', gender:'f', slot:'shirt', file:'sprites/preview_assets/char/shirt_warrior_rare_ironscale_f.png', level:12, rarity:'rare', classes:['warrior'] },
+  { id:'pants_warrior_rare_ironscale', name:'Ironscale Legwraps', gender:'m', slot:'pants', file:'sprites/preview_assets/char/pants_warrior_rare_ironscale.png', level:12, rarity:'rare', classes:['warrior'] },
+  { id:'pants_warrior_rare_ironscale_f', name:'Ironscale Legwraps', gender:'f', slot:'pants', file:'sprites/preview_assets/char/pants_warrior_rare_ironscale_f.png', level:12, rarity:'rare', classes:['warrior'] },
+  { id:'boots_warrior_rare_ironscale', name:'Ironscale Boots', gender:'m', slot:'boots', file:'sprites/preview_assets/char/boots_warrior_rare_ironscale.png', level:12, rarity:'rare', classes:['warrior'] },
+  { id:'boots_warrior_rare_ironscale_f', name:'Ironscale Boots', gender:'f', slot:'boots', file:'sprites/preview_assets/char/boots_warrior_rare_ironscale_f.png', level:12, rarity:'rare', classes:['warrior'] },
   { id:'boots_warrior_legendary_ajoure', name:'Ajoure Sabatons', gender:'m', slot:'boots', file:'sprites/preview_assets/char/boots_warrior_legendary_ajoure.png', level:50, rarity:'legendary', classes:['warrior'] },
   { id:'boots_warrior_legendary_ajoure_f', name:'Ajoure Sabatons', gender:'f', slot:'boots', file:'sprites/preview_assets/char/boots_warrior_legendary_ajoure_f.png', level:50, rarity:'legendary', classes:['warrior'] },
   { id:'boots_warrior_legendary_ashlar', name:'Ashlar Sabatons', gender:'m', slot:'boots', file:'sprites/preview_assets/char/boots_warrior_legendary_ashlar.png', level:50, rarity:'legendary', classes:['warrior'] },
@@ -3205,7 +3213,7 @@ function addToInventory(item) {
 }
 
 // Encode spaces in file paths for CSS url()
-const SPRITE_VER = 'b3ff4267';
+const SPRITE_VER = '943e47f5';
 function cssUrl(path) {
   return "url('" + path.replace(/ /g, '%20') + '?v=' + SPRITE_VER + "')";
 }
