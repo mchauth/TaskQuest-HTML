@@ -2561,6 +2561,18 @@ var LOOT_TABLE = [
   { id:'shirt_ranger_epic_nightstalker', name:'Nightstalker Jerkin', gender:'m', slot:'shirt', file:'sprites/preview_assets/char/shirt_ranger_epic_nightstalker.png', level:50, rarity:'epic', classes:['ranger'] },
   { id:'pants_ranger_epic_nightstalker', name:'Nightstalker Trousers', gender:'m', slot:'pants', file:'sprites/preview_assets/char/pants_ranger_epic_nightstalker.png', level:50, rarity:'epic', classes:['ranger'] },
   { id:'boots_ranger_epic_nightstalker', name:'Nightstalker Boots', gender:'m', slot:'boots', file:'sprites/preview_assets/char/boots_ranger_epic_nightstalker.png', level:50, rarity:'epic', classes:['ranger'] },
+  { id:'helmet_warrior_epic_tidebreaker', name:'Tidebreaker Helm', gender:'m', slot:'helmet', file:'sprites/preview_assets/char/helmet_warrior_epic_tidebreaker.png', level:65, rarity:'epic', classes:['warrior'] },
+  { id:'shirt_warrior_epic_tidebreaker', name:'Tidebreaker Cuirass', gender:'m', slot:'shirt', file:'sprites/preview_assets/char/shirt_warrior_epic_tidebreaker.png', level:65, rarity:'epic', classes:['warrior'] },
+  { id:'pants_warrior_epic_tidebreaker', name:'Tidebreaker Greaves', gender:'m', slot:'pants', file:'sprites/preview_assets/char/pants_warrior_epic_tidebreaker.png', level:65, rarity:'epic', classes:['warrior'] },
+  { id:'boots_warrior_epic_tidebreaker', name:'Tidebreaker Sabatons', gender:'m', slot:'boots', file:'sprites/preview_assets/char/boots_warrior_epic_tidebreaker.png', level:65, rarity:'epic', classes:['warrior'] },
+  { id:'helmet_mage_legendary_starweave', name:'Starweave Hood', gender:'m', slot:'helmet', file:'sprites/preview_assets/char/helmet_mage_legendary_starweave.png', level:85, rarity:'legendary', classes:['mage'] },
+  { id:'shirt_mage_legendary_starweave', name:'Starweave Robe', gender:'m', slot:'shirt', file:'sprites/preview_assets/char/shirt_mage_legendary_starweave.png', level:85, rarity:'legendary', classes:['mage'] },
+  { id:'pants_mage_legendary_starweave', name:'Starweave Leggings', gender:'m', slot:'pants', file:'sprites/preview_assets/char/pants_mage_legendary_starweave.png', level:85, rarity:'legendary', classes:['mage'] },
+  { id:'boots_mage_legendary_starweave', name:'Starweave Shoes', gender:'m', slot:'boots', file:'sprites/preview_assets/char/boots_mage_legendary_starweave.png', level:85, rarity:'legendary', classes:['mage'] },
+  { id:'helmet_ranger_legendary_kestrel', name:'Kestrel Hood', gender:'m', slot:'helmet', file:'sprites/preview_assets/char/helmet_ranger_legendary_kestrel.png', level:75, rarity:'legendary', classes:['ranger'] },
+  { id:'shirt_ranger_legendary_kestrel', name:'Kestrel Jerkin', gender:'m', slot:'shirt', file:'sprites/preview_assets/char/shirt_ranger_legendary_kestrel.png', level:75, rarity:'legendary', classes:['ranger'] },
+  { id:'pants_ranger_legendary_kestrel', name:'Kestrel Trousers', gender:'m', slot:'pants', file:'sprites/preview_assets/char/pants_ranger_legendary_kestrel.png', level:75, rarity:'legendary', classes:['ranger'] },
+  { id:'boots_ranger_legendary_kestrel', name:'Kestrel Boots', gender:'m', slot:'boots', file:'sprites/preview_assets/char/boots_ranger_legendary_kestrel.png', level:75, rarity:'legendary', classes:['ranger'] },
   { id:'boots_warrior_legendary_ajoure', name:'Ajoure Sabatons', gender:'m', slot:'boots', file:'sprites/preview_assets/char/boots_warrior_legendary_ajoure.png', level:50, rarity:'legendary', classes:['warrior'] },
   { id:'boots_warrior_legendary_ajoure_f', name:'Ajoure Sabatons', gender:'f', slot:'boots', file:'sprites/preview_assets/char/boots_warrior_legendary_ajoure_f.png', level:50, rarity:'legendary', classes:['warrior'] },
   { id:'boots_warrior_legendary_ashlar', name:'Ashlar Sabatons', gender:'m', slot:'boots', file:'sprites/preview_assets/char/boots_warrior_legendary_ashlar.png', level:50, rarity:'legendary', classes:['warrior'] },
@@ -3249,7 +3261,7 @@ function addToInventory(item) {
 }
 
 // Encode spaces in file paths for CSS url()
-const SPRITE_VER = '41d6ec80';
+const SPRITE_VER = 'd8c06bd3';
 function cssUrl(path) {
   return "url('" + path.replace(/ /g, '%20') + '?v=' + SPRITE_VER + "')";
 }
