@@ -2545,6 +2545,22 @@ var LOOT_TABLE = [
   { id:'shirt_warrior_legendary_prismguard', name:'Prismguard Cuirass', gender:'m', slot:'shirt', file:'sprites/preview_assets/char/shirt_warrior_legendary_prismguard.png', level:95, rarity:'legendary', classes:['warrior'] },
   { id:'pants_warrior_legendary_prismguard', name:'Prismguard Greaves', gender:'m', slot:'pants', file:'sprites/preview_assets/char/pants_warrior_legendary_prismguard.png', level:95, rarity:'legendary', classes:['warrior'] },
   { id:'boots_warrior_legendary_prismguard', name:'Prismguard Sabatons', gender:'m', slot:'boots', file:'sprites/preview_assets/char/boots_warrior_legendary_prismguard.png', level:95, rarity:'legendary', classes:['warrior'] },
+  { id:'helmet_mage_rare_emberweave', name:'Emberweave Hood', gender:'m', slot:'helmet', file:'sprites/preview_assets/char/helmet_mage_rare_emberweave.png', level:20, rarity:'rare', classes:['mage'] },
+  { id:'shirt_mage_rare_emberweave', name:'Emberweave Robe', gender:'m', slot:'shirt', file:'sprites/preview_assets/char/shirt_mage_rare_emberweave.png', level:20, rarity:'rare', classes:['mage'] },
+  { id:'pants_mage_rare_emberweave', name:'Emberweave Leggings', gender:'m', slot:'pants', file:'sprites/preview_assets/char/pants_mage_rare_emberweave.png', level:20, rarity:'rare', classes:['mage'] },
+  { id:'boots_mage_rare_emberweave', name:'Emberweave Shoes', gender:'m', slot:'boots', file:'sprites/preview_assets/char/boots_mage_rare_emberweave.png', level:20, rarity:'rare', classes:['mage'] },
+  { id:'helmet_mage_epic_frostbind', name:'Frostbind Hood', gender:'m', slot:'helmet', file:'sprites/preview_assets/char/helmet_mage_epic_frostbind.png', level:50, rarity:'epic', classes:['mage'] },
+  { id:'shirt_mage_epic_frostbind', name:'Frostbind Robe', gender:'m', slot:'shirt', file:'sprites/preview_assets/char/shirt_mage_epic_frostbind.png', level:50, rarity:'epic', classes:['mage'] },
+  { id:'pants_mage_epic_frostbind', name:'Frostbind Leggings', gender:'m', slot:'pants', file:'sprites/preview_assets/char/pants_mage_epic_frostbind.png', level:50, rarity:'epic', classes:['mage'] },
+  { id:'boots_mage_epic_frostbind', name:'Frostbind Shoes', gender:'m', slot:'boots', file:'sprites/preview_assets/char/boots_mage_epic_frostbind.png', level:50, rarity:'epic', classes:['mage'] },
+  { id:'helmet_ranger_rare_greenbriar', name:'Greenbriar Hood', gender:'m', slot:'helmet', file:'sprites/preview_assets/char/helmet_ranger_rare_greenbriar.png', level:20, rarity:'rare', classes:['ranger'] },
+  { id:'shirt_ranger_rare_greenbriar', name:'Greenbriar Jerkin', gender:'m', slot:'shirt', file:'sprites/preview_assets/char/shirt_ranger_rare_greenbriar.png', level:20, rarity:'rare', classes:['ranger'] },
+  { id:'pants_ranger_rare_greenbriar', name:'Greenbriar Trousers', gender:'m', slot:'pants', file:'sprites/preview_assets/char/pants_ranger_rare_greenbriar.png', level:20, rarity:'rare', classes:['ranger'] },
+  { id:'boots_ranger_rare_greenbriar', name:'Greenbriar Boots', gender:'m', slot:'boots', file:'sprites/preview_assets/char/boots_ranger_rare_greenbriar.png', level:20, rarity:'rare', classes:['ranger'] },
+  { id:'helmet_ranger_epic_nightstalker', name:'Nightstalker Hood', gender:'m', slot:'helmet', file:'sprites/preview_assets/char/helmet_ranger_epic_nightstalker.png', level:50, rarity:'epic', classes:['ranger'] },
+  { id:'shirt_ranger_epic_nightstalker', name:'Nightstalker Jerkin', gender:'m', slot:'shirt', file:'sprites/preview_assets/char/shirt_ranger_epic_nightstalker.png', level:50, rarity:'epic', classes:['ranger'] },
+  { id:'pants_ranger_epic_nightstalker', name:'Nightstalker Trousers', gender:'m', slot:'pants', file:'sprites/preview_assets/char/pants_ranger_epic_nightstalker.png', level:50, rarity:'epic', classes:['ranger'] },
+  { id:'boots_ranger_epic_nightstalker', name:'Nightstalker Boots', gender:'m', slot:'boots', file:'sprites/preview_assets/char/boots_ranger_epic_nightstalker.png', level:50, rarity:'epic', classes:['ranger'] },
   { id:'boots_warrior_legendary_ajoure', name:'Ajoure Sabatons', gender:'m', slot:'boots', file:'sprites/preview_assets/char/boots_warrior_legendary_ajoure.png', level:50, rarity:'legendary', classes:['warrior'] },
   { id:'boots_warrior_legendary_ajoure_f', name:'Ajoure Sabatons', gender:'f', slot:'boots', file:'sprites/preview_assets/char/boots_warrior_legendary_ajoure_f.png', level:50, rarity:'legendary', classes:['warrior'] },
   { id:'boots_warrior_legendary_ashlar', name:'Ashlar Sabatons', gender:'m', slot:'boots', file:'sprites/preview_assets/char/boots_warrior_legendary_ashlar.png', level:50, rarity:'legendary', classes:['warrior'] },
@@ -3233,7 +3249,7 @@ function addToInventory(item) {
 }
 
 // Encode spaces in file paths for CSS url()
-const SPRITE_VER = 'c151de37';
+const SPRITE_VER = '41d6ec80';
 function cssUrl(path) {
   return "url('" + path.replace(/ /g, '%20') + '?v=' + SPRITE_VER + "')";
 }
