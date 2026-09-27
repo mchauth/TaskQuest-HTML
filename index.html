@@ -2565,6 +2565,14 @@ var LOOT_TABLE = [
   { id:'pants_warrior_legendary_prismguard_f', name:'Prismguard Greaves', gender:'f', slot:'pants', file:'sprites/preview_assets/char/pants_warrior_legendary_prismguard_f.png', level:95, rarity:'legendary', classes:['warrior'] },
   { id:'boots_warrior_legendary_prismguard', name:'Prismguard Sabatons', gender:'m', slot:'boots', file:'sprites/preview_assets/char/boots_warrior_legendary_prismguard.png', level:95, rarity:'legendary', classes:['warrior'] },
   { id:'boots_warrior_legendary_prismguard_f', name:'Prismguard Sabatons', gender:'f', slot:'boots', file:'sprites/preview_assets/char/boots_warrior_legendary_prismguard_f.png', level:95, rarity:'legendary', classes:['warrior'] },
+  { id:'helmet_warrior_legendary_sunspire', name:'Sunspire Helm', gender:'m', slot:'helmet', file:'sprites/preview_assets/char/helmet_warrior_legendary_sunspire.png', level:100, rarity:'legendary', classes:['warrior'] },
+  { id:'helmet_warrior_legendary_sunspire_f', name:'Sunspire Helm', gender:'f', slot:'helmet', file:'sprites/preview_assets/char/helmet_warrior_legendary_sunspire_f.png', level:100, rarity:'legendary', classes:['warrior'] },
+  { id:'shirt_warrior_legendary_sunspire', name:'Sunspire Cuirass', gender:'m', slot:'shirt', file:'sprites/preview_assets/char/shirt_warrior_legendary_sunspire.png', level:100, rarity:'legendary', classes:['warrior'] },
+  { id:'shirt_warrior_legendary_sunspire_f', name:'Sunspire Cuirass', gender:'f', slot:'shirt', file:'sprites/preview_assets/char/shirt_warrior_legendary_sunspire_f.png', level:100, rarity:'legendary', classes:['warrior'] },
+  { id:'pants_warrior_legendary_sunspire', name:'Sunspire Greaves', gender:'m', slot:'pants', file:'sprites/preview_assets/char/pants_warrior_legendary_sunspire.png', level:100, rarity:'legendary', classes:['warrior'] },
+  { id:'pants_warrior_legendary_sunspire_f', name:'Sunspire Greaves', gender:'f', slot:'pants', file:'sprites/preview_assets/char/pants_warrior_legendary_sunspire_f.png', level:100, rarity:'legendary', classes:['warrior'] },
+  { id:'boots_warrior_legendary_sunspire', name:'Sunspire Sabatons', gender:'m', slot:'boots', file:'sprites/preview_assets/char/boots_warrior_legendary_sunspire.png', level:100, rarity:'legendary', classes:['warrior'] },
+  { id:'boots_warrior_legendary_sunspire_f', name:'Sunspire Sabatons', gender:'f', slot:'boots', file:'sprites/preview_assets/char/boots_warrior_legendary_sunspire_f.png', level:100, rarity:'legendary', classes:['warrior'] },
   { id:'helmet_mage_rare_emberweave', name:'Emberweave Hood', gender:'m', slot:'helmet', file:'sprites/preview_assets/char/helmet_mage_rare_emberweave.png', level:20, rarity:'rare', classes:['mage'] },
   { id:'helmet_mage_rare_emberweave_f', name:'Emberweave Hood', gender:'f', slot:'helmet', file:'sprites/preview_assets/char/helmet_mage_rare_emberweave_f.png', level:20, rarity:'rare', classes:['mage'] },
   { id:'shirt_mage_rare_emberweave', name:'Emberweave Robe', gender:'m', slot:'shirt', file:'sprites/preview_assets/char/shirt_mage_rare_emberweave.png', level:20, rarity:'rare', classes:['mage'] },
@@ -3317,7 +3325,7 @@ function addToInventory(item) {
 }
 
 // Encode spaces in file paths for CSS url()
-const SPRITE_VER = '7266c7be';
+const SPRITE_VER = 'e42bb795';
 function cssUrl(path) {
   return "url('" + path.replace(/ /g, '%20') + '?v=' + SPRITE_VER + "')";
 }
