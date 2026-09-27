@@ -2573,6 +2573,10 @@ var LOOT_TABLE = [
   { id:'shirt_ranger_legendary_kestrel', name:'Kestrel Jerkin', gender:'m', slot:'shirt', file:'sprites/preview_assets/char/shirt_ranger_legendary_kestrel.png', level:75, rarity:'legendary', classes:['ranger'] },
   { id:'pants_ranger_legendary_kestrel', name:'Kestrel Trousers', gender:'m', slot:'pants', file:'sprites/preview_assets/char/pants_ranger_legendary_kestrel.png', level:75, rarity:'legendary', classes:['ranger'] },
   { id:'boots_ranger_legendary_kestrel', name:'Kestrel Boots', gender:'m', slot:'boots', file:'sprites/preview_assets/char/boots_ranger_legendary_kestrel.png', level:75, rarity:'legendary', classes:['ranger'] },
+  { id:'helmet_mage_rare_harlequin', name:'Harlequin Hood', gender:'m', slot:'helmet', file:'sprites/preview_assets/char/helmet_mage_rare_harlequin.png', level:30, rarity:'rare', classes:['mage'] },
+  { id:'shirt_mage_rare_harlequin', name:'Harlequin Doublet', gender:'m', slot:'shirt', file:'sprites/preview_assets/char/shirt_mage_rare_harlequin.png', level:30, rarity:'rare', classes:['mage'] },
+  { id:'pants_mage_rare_harlequin', name:'Harlequin Hose', gender:'m', slot:'pants', file:'sprites/preview_assets/char/pants_mage_rare_harlequin.png', level:30, rarity:'rare', classes:['mage'] },
+  { id:'boots_mage_rare_harlequin', name:'Harlequin Shoes', gender:'m', slot:'boots', file:'sprites/preview_assets/char/boots_mage_rare_harlequin.png', level:30, rarity:'rare', classes:['mage'] },
   { id:'boots_warrior_legendary_ajoure', name:'Ajoure Sabatons', gender:'m', slot:'boots', file:'sprites/preview_assets/char/boots_warrior_legendary_ajoure.png', level:50, rarity:'legendary', classes:['warrior'] },
   { id:'boots_warrior_legendary_ajoure_f', name:'Ajoure Sabatons', gender:'f', slot:'boots', file:'sprites/preview_assets/char/boots_warrior_legendary_ajoure_f.png', level:50, rarity:'legendary', classes:['warrior'] },
   { id:'boots_warrior_legendary_ashlar', name:'Ashlar Sabatons', gender:'m', slot:'boots', file:'sprites/preview_assets/char/boots_warrior_legendary_ashlar.png', level:50, rarity:'legendary', classes:['warrior'] },
@@ -3261,7 +3265,7 @@ function addToInventory(item) {
 }
 
 // Encode spaces in file paths for CSS url()
-const SPRITE_VER = 'd8c06bd3';
+const SPRITE_VER = '4e4df353';
 function cssUrl(path) {
   return "url('" + path.replace(/ /g, '%20') + '?v=' + SPRITE_VER + "')";
 }
