@@ -2157,12 +2157,10 @@ var LOOT_TABLE = [
   { id:'bow_ranger_t7_f', name:'Split-Limb Recurve', gender:'f', slot:'weapon', file:'sprites/preview_assets/char/bow_ranger_t7_f.png', level:50, rarity:'legendary', classes:['ranger'] },
   { id:'bow_ranger_t8',   name:'Crystal Recurve',    gender:'m', slot:'weapon', file:'sprites/preview_assets/char/bow_ranger_t8_m.png', level:60, rarity:'legendary', classes:['ranger'] },
   { id:'bow_ranger_t8_f', name:'Crystal Recurve',    gender:'f', slot:'weapon', file:'sprites/preview_assets/char/bow_ranger_t8_f.png', level:60, rarity:'legendary', classes:['ranger'] },
-  { id:'bow_ranger_t9',   name:'Shadow Compound',    gender:'m', slot:'weapon', file:'sprites/preview_assets/char/bow_ranger_t9_m.png', level:70, rarity:'legendary', classes:['ranger'] },
-  { id:'bow_ranger_t9_f', name:'Shadow Compound',    gender:'f', slot:'weapon', file:'sprites/preview_assets/char/bow_ranger_t9_f.png', level:70, rarity:'legendary', classes:['ranger'] },
-  { id:'bow_ranger_t10',   name:'Vine Bow',          gender:'m', slot:'weapon', file:'sprites/preview_assets/char/bow_ranger_t10_m.png', level:85, rarity:'legendary', classes:['ranger'] },
-  { id:'bow_ranger_t10_f', name:'Vine Bow',          gender:'f', slot:'weapon', file:'sprites/preview_assets/char/bow_ranger_t10_f.png', level:85, rarity:'legendary', classes:['ranger'] },
-  { id:'bow_ranger_t11',   name:'Celestial Compound',gender:'m', slot:'weapon', file:'sprites/preview_assets/char/bow_ranger_t11_m.png', level:100, rarity:'legendary', classes:['ranger'] },
-  { id:'bow_ranger_t11_f', name:'Celestial Compound',gender:'f', slot:'weapon', file:'sprites/preview_assets/char/bow_ranger_t11_f.png', level:100, rarity:'legendary', classes:['ranger'] },
+  { id:'bow_ranger_emberhook_m', name:'Emberhook', gender:'m', slot:'weapon', file:'sprites/preview_assets/char/bow_ranger_emberhook_m.png', level:30, rarity:'rare', classes:['ranger'] },
+  { id:'bow_ranger_emberhook_f', name:'Emberhook', gender:'f', slot:'weapon', file:'sprites/preview_assets/char/bow_ranger_emberhook_f.png', level:30, rarity:'rare', classes:['ranger'] },
+  { id:'bow_ranger_aurorabrand_m', name:'Aurorabrand', gender:'m', slot:'weapon', file:'sprites/preview_assets/char/bow_ranger_aurorabrand_m.png', level:100, rarity:'legendary', classes:['ranger'] },
+  { id:'bow_ranger_aurorabrand_f', name:'Aurorabrand', gender:'f', slot:'weapon', file:'sprites/preview_assets/char/bow_ranger_aurorabrand_f.png', level:100, rarity:'legendary', classes:['ranger'] },
   // ── Mage tier 1: Apprentice Robes ────────────────────────────────
   { id:'shirt_mage1',   name:'Apprentice Robe',     gender:'m', slot:'shirt',  file:'sprites/preview_assets/char/shirt_mage1.png',   level:1, rarity:'common', classes:['mage'] },
   { id:'pants_mage1',   name:'Apprentice Leggings', gender:'m', slot:'pants',  file:'sprites/preview_assets/char/pants_mage1.png',   level:1, rarity:'common', classes:['mage'] },
@@ -2426,7 +2424,7 @@ function addToInventory(item) {
 }
 
 // Encode spaces in file paths for CSS url()
-const SPRITE_VER = '1ecb2638';
+const SPRITE_VER = 'f4d51d48';
 function cssUrl(path) {
   return "url('" + path.replace(/ /g, '%20') + '?v=' + SPRITE_VER + "')";
 }
