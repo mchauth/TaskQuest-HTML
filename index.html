@@ -738,6 +738,7 @@ function syncProfile() {
       S.profile.homeTier      = d.home_tier       != null ? d.home_tier      : (parseInt(localStorage.getItem('tq_home_tier')) || 0);
       S.profile.inventory     = d.inventory        != null ? d.inventory      : (JSON.parse(localStorage.getItem('tq_inventory') || '[]'));
       S.profile.equippedItems = d.equipped_items   != null ? d.equipped_items : (JSON.parse(localStorage.getItem('tq_equipped') || '{}'));
+      migrateSavedItems();
       updateHeader();
       renderProfile();
     });
@@ -2424,9 +2425,61 @@ function addToInventory(item) {
 }
 
 // Encode spaces in file paths for CSS url()
-const SPRITE_VER = 'dbbcf28b';
+const SPRITE_VER = '1a285155';
 function cssUrl(path) {
   return "url('" + path.replace(/ /g, '%20') + '?v=' + SPRITE_VER + "')";
+}
+
+// -- Retired item ids -------------------------------------------------
+// Items that leave LOOT_TABLE are still sitting in saved inventories and in the
+// equipped slots, where they resolve to nothing: the bag quietly drops them and
+// the slot comes up empty. Anything with a successor is renamed to it, anything
+// without one is dropped on load, and the cleaned save is written straight back
+// so it only has to happen once.
+var RETIRED_ITEMS = {
+  'bow_ranger_t4':   'bow_ranger_blackiron_m',   // War Bow    -> Blackiron Bow
+  'bow_ranger_t4_f': 'bow_ranger_blackiron_f',
+  'bow_ranger_t5':   'bow_ranger_verdigris_m',   // Shadow Bow -> Verdigris Longbow
+  'bow_ranger_t5_f': 'bow_ranger_verdigris_f'
+};
+
+function migrateSavedItems() {
+  var known = {};
+  LOOT_TABLE.forEach(function(it){ known[it.id] = true; });
+  var changed = false;
+
+  function remap(id) {
+    var to = RETIRED_ITEMS[id];
+    if (to && known[to]) { changed = true; return to; }
+    if (known[id]) return id;
+    changed = true;
+    return null;                                  // no successor -> drop it
+  }
+
+  var inv = S.profile.inventory || [];
+  var seen = {}, cleaned = [];
+  inv.forEach(function(id) {
+    var to = remap(id);
+    if (to && !seen[to]) { seen[to] = true; cleaned.push(to); }
+  });
+  S.profile.inventory = cleaned;
+
+  var eq = S.profile.equippedItems || {}, eqOut = {};
+  Object.keys(eq).forEach(function(slot) {
+    var to = remap(eq[slot]);
+    if (to) eqOut[slot] = to;
+  });
+  S.profile.equippedItems = eqOut;
+
+  if (!changed) return;
+  try {
+    localStorage.setItem('tq_inventory', JSON.stringify(cleaned));
+    localStorage.setItem('tq_equipped', JSON.stringify(eqOut));
+  } catch (e) {}
+  if (typeof currentUser !== 'undefined' && currentUser && typeof sb !== 'undefined') {
+    sb.from('profiles').update({ inventory: cleaned, equipped_items: eqOut })
+      .eq('id', currentUser.id).then(function(){}).catch(function(){});
+  }
 }
 
 function equipItem(itemId) {
