@@ -2082,11 +2082,7 @@ var LOOT_TABLE = [
   { id:'staff_mage_t6',   name:'Celestial Staff',  gender:'m', slot:'weapon', file:'sprites/preview_assets/char/staff_mage_t6_m.png', level:40, rarity:'legendary', classes:['mage'] },
   { id:'staff_mage_t6_f', name:'Celestial Staff',  gender:'f', slot:'weapon', file:'sprites/preview_assets/char/staff_mage_t6_f.png', level:40, rarity:'legendary', classes:['mage'] },
   // ── Ranger tier 4: War Bow ────────────────────────────────────────
-  { id:'bow_ranger_t4',   name:'War Bow',          gender:'m', slot:'weapon', file:'sprites/preview_assets/char/bow_ranger_t4_m.png', level:20, rarity:'super_rare', classes:['ranger'] },
-  { id:'bow_ranger_t4_f', name:'War Bow',          gender:'f', slot:'weapon', file:'sprites/preview_assets/char/bow_ranger_t4_f.png', level:20, rarity:'super_rare', classes:['ranger'] },
   // ── Ranger tier 5: Shadow Bow ─────────────────────────────────────
-  { id:'bow_ranger_t5',   name:'Shadow Bow',       gender:'m', slot:'weapon', file:'sprites/preview_assets/char/bow_ranger_t5_m.png', level:30, rarity:'super_rare', classes:['ranger'] },
-  { id:'bow_ranger_t5_f', name:'Shadow Bow',       gender:'f', slot:'weapon', file:'sprites/preview_assets/char/bow_ranger_t5_f.png', level:30, rarity:'super_rare', classes:['ranger'] },
   // ── Ranger tier 6: Moonbow ────────────────────────────────────────
   // ── Warrior tier 7-20: Legendary/Mythic Swords (12 static + 2 animated) ──
   { id:'sword_warrior_t7',    name:'Grey Broadsword',      gender:'m', slot:'weapon', file:'sprites/preview_assets/char/sword_warrior_t7_m.png',  level:20, rarity:'legendary', classes:['warrior'] },
@@ -2161,6 +2157,10 @@ var LOOT_TABLE = [
   { id:'bow_ranger_aurorabrand_f', name:'Aurorabrand', gender:'f', slot:'weapon', file:'sprites/preview_assets/char/bow_ranger_aurorabrand_f.png', level:100, rarity:'legendary', classes:['ranger'] },
   { id:'bow_ranger_scarletwing_m', name:'Scarletwing', gender:'m', slot:'weapon', file:'sprites/preview_assets/char/bow_ranger_scarletwing_m.png', level:85, rarity:'legendary', classes:['ranger'] },
   { id:'bow_ranger_scarletwing_f', name:'Scarletwing', gender:'f', slot:'weapon', file:'sprites/preview_assets/char/bow_ranger_scarletwing_f.png', level:85, rarity:'legendary', classes:['ranger'] },
+  { id:'bow_ranger_blackiron_m', name:'Blackiron Bow', gender:'m', slot:'weapon', file:'sprites/preview_assets/char/bow_ranger_blackiron_m.png', level:20, rarity:'super_rare', classes:['ranger'] },
+  { id:'bow_ranger_blackiron_f', name:'Blackiron Bow', gender:'f', slot:'weapon', file:'sprites/preview_assets/char/bow_ranger_blackiron_f.png', level:20, rarity:'super_rare', classes:['ranger'] },
+  { id:'bow_ranger_verdigris_m', name:'Verdigris Longbow', gender:'m', slot:'weapon', file:'sprites/preview_assets/char/bow_ranger_verdigris_m.png', level:30, rarity:'super_rare', classes:['ranger'] },
+  { id:'bow_ranger_verdigris_f', name:'Verdigris Longbow', gender:'f', slot:'weapon', file:'sprites/preview_assets/char/bow_ranger_verdigris_f.png', level:30, rarity:'super_rare', classes:['ranger'] },
   // ── Mage tier 1: Apprentice Robes ────────────────────────────────
   { id:'shirt_mage1',   name:'Apprentice Robe',     gender:'m', slot:'shirt',  file:'sprites/preview_assets/char/shirt_mage1.png',   level:1, rarity:'common', classes:['mage'] },
   { id:'pants_mage1',   name:'Apprentice Leggings', gender:'m', slot:'pants',  file:'sprites/preview_assets/char/pants_mage1.png',   level:1, rarity:'common', classes:['mage'] },
@@ -2424,7 +2424,7 @@ function addToInventory(item) {
 }
 
 // Encode spaces in file paths for CSS url()
-const SPRITE_VER = 'ec89e9b5';
+const SPRITE_VER = 'dbbcf28b';
 function cssUrl(path) {
   return "url('" + path.replace(/ /g, '%20') + '?v=' + SPRITE_VER + "')";
 }
