@@ -639,6 +639,7 @@ hr{border:none;border-top:1px solid var(--border)}
     </div>
     <!-- Enemy portal -->
     <div class="co-enemy-ov" id="coEnemy"></div>
+    <canvas id="coProjectile" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9;display:none"></canvas>
   </div>
   <div class="co-victory" id="coVictory" style="display:none">VICTORY!</div>
   <div class="co-xp-flash" id="coXpFlash">+0 XP  +0g</div>
@@ -2425,7 +2426,7 @@ function addToInventory(item) {
 }
 
 // Encode spaces in file paths for CSS url()
-const SPRITE_VER = '1a285155';
+const SPRITE_VER = 'df2e46bf';
 function cssUrl(path) {
   return "url('" + path.replace(/ /g, '%20') + '?v=' + SPRITE_VER + "')";
 }
@@ -2597,11 +2598,95 @@ function animateChest(onOpen) {
   }, 300);
 }
 
+// ── Class projectile ─────────────────────────────────
+// A ranger looses an arrow and a mage throws an orb; a warrior swings and has
+// neither. The quest scene and the victory overlay draw the same shot, so the
+// drawing lives here and both pass it their own start and end points.
+var _tqOrbImg = null;
+function tqOrbImg() {
+  if (!_tqOrbImg) { _tqOrbImg = new Image(); _tqOrbImg.src = 'sprites/preview_assets/fx/mage_orb.png?v=' + SPRITE_VER; }
+  return _tqOrbImg;
+}
+tqOrbImg();   // preload so the first shot already has its sprite
+
+function drawClassProjectile(ctx, cls, t, elapsed, sx, sy, ex, ey) {
+  var px = sx + (ex - sx) * t;
+  var py = sy + (ey - sy) * t;
+  ctx.save();
+  if (cls === 'ranger') {
+    // Arrow: dark wood shaft + grey metal tip + feather nock, ~24px total, horizontal
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = '#7B4A1A';
+    ctx.beginPath(); ctx.moveTo(px - 10, py); ctx.lineTo(px + 8, py); ctx.stroke();
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(px - 10, py); ctx.lineTo(px - 12, py - 2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(px - 10, py); ctx.lineTo(px - 12, py + 2); ctx.stroke();
+    ctx.fillStyle = '#b0b0b0';
+    ctx.beginPath(); ctx.moveTo(px + 8, py - 2.5); ctx.lineTo(px + 13, py); ctx.lineTo(px + 8, py + 2.5); ctx.closePath(); ctx.fill();
+  } else {
+    // Mage orb: pixel-art sprite (4 quarter-turn frames = spin) with a short fading trail.
+    var orb = tqOrbImg();
+    if (orb && orb.complete && orb.naturalWidth) {
+      ctx.imageSmoothingEnabled = false;
+      var FS = orb.naturalHeight, D = FS * 2;
+      var frame = Math.floor(elapsed / 60);
+      [[2, 0.18], [1, 0.4], [0, 1]].forEach(function(g) {
+        var tt = Math.max(0, t - g[0] * 0.06);
+        var gx = sx + (ex - sx) * tt, gy = sy + (ey - sy) * tt;
+        ctx.globalAlpha = g[1];
+        ctx.drawImage(orb, ((frame - g[0]) & 3) * FS, 0, FS, FS,
+                      Math.round((gx - D / 2) / 2) * 2, Math.round((gy - D / 2) / 2) * 2, D, D);
+      });
+      ctx.globalAlpha = 1;
+    }
+  }
+  ctx.restore();
+}
+
+// Tilt a mage's wand up on the raised-arm frames. The big staff sheets have the
+// raised pose drawn in, so they are left alone.
+function tiltWandForFrame(el, cls, frame) {
+  if (!el) return;
+  if (cls === 'mage' && (frame === 54 || frame === 55) && !el.classList.contains('big-sword')) {
+    el.style.transform = 'translateX(-5px) rotate(45deg)';
+    el.style.transformOrigin = '26.6px 41.5px';
+  } else {
+    el.style.transform = '';
+    el.style.transformOrigin = '';
+  }
+}
+
 // ── Combat overlay ───────────────────────────────────
 var _coPortalFrame = 0, _coPortalTimer = null;
 var _coSlashFrame  = 0, _coSlashTimer  = null;
 var _coSlashAnim   = { row:5, frames:6, fps:10 };
 var _coEnemyAnimTimer = null;
+var _coShotActive = false, _coShotStart = 0, _coShotRaf = null;
+var CO_SHOT_DUR = 300;   // ms for the shot to reach the enemy
+
+// .co-scene is 300x170. .co-hero-ov sits at left:40 width:80, scaled 2x about its
+// bottom centre, so the hand at sprite-local (10, 38) lands at (140, 118).
+// .co-enemy-ov is 128 square at right:10 bottom:0, so its centre is (226, 106).
+function coProjectileLoop() {
+  if (_coShotRaf) cancelAnimationFrame(_coShotRaf);
+  var canvas = document.getElementById('coProjectile');
+  var cls = (S.customization && S.customization.charClass) || 'warrior';
+  if (!canvas || cls === 'warrior') { if (canvas) canvas.style.display = 'none'; return; }
+  function step(ts) {
+    _coShotRaf = requestAnimationFrame(step);
+    if (!_coShotActive) { canvas.style.display = 'none'; return; }
+    var elapsed = ts - _coShotStart;
+    var t = Math.min(elapsed / CO_SHOT_DUR, 1);
+    if (t >= 1) { _coShotActive = false; canvas.style.display = 'none'; return; }
+    var W = canvas.offsetWidth || 300, H = canvas.offsetHeight || 170;
+    if (canvas.width !== W || canvas.height !== H) { canvas.width = W; canvas.height = H; }
+    canvas.style.display = 'block';
+    var ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, W, H);
+    drawClassProjectile(ctx, cls, t, elapsed, W * 0.47, H * 0.69, W - 74, H * 0.62);
+  }
+  _coShotRaf = requestAnimationFrame(step);
+}
 
 function openCombatOverlay(xpEarned, goldEarned, lootItem) {
   var ov = document.getElementById('combatOverlay');
@@ -2626,20 +2711,29 @@ function openCombatOverlay(xpEarned, goldEarned, lootItem) {
     if (el) el.style.backgroundPosition = (-_coPortalFrame * 128) + 'px 0px';
   }, 80);
 
-  // Start hero slash animation (class-aware: warrior=full swing, mage/ranger=extend only)
+  // Start the hero's attack. Same frames the quest scene plays, so the victory
+  // scene shows the class attacking the way it does in the field: the warrior
+  // swings, and the ranger and mage extend and shoot instead.
   var _coCls = (S.customization && S.customization.charClass) || 'warrior';
   var _coFrameSeq = (_coCls === 'warrior') ? [0,1,2,3,4,5] : [0,5,4,4,5,0];
   var _coSeqIdx = 0;
+  _coShotActive = false;
   clearInterval(_coSlashTimer);
   _coSlashTimer = setInterval(function() {
     var f = _coFrameSeq[_coSeqIdx % _coFrameSeq.length];
-    _coSeqIdx++;
     var x = -f * 80, y = -(_coSlashAnim.row * 64);
     Object.keys(heroMap).forEach(function(k) {
       var el = document.getElementById(heroMap[k]);
       setLayerPos(el, x, y);
     });
+    tiltWandForFrame(document.getElementById('coSword'), _coCls, 50 + f);
+    // Loose the shot one frame into the cycle, as the quest scene does
+    if (_coCls !== 'warrior' && (_coSeqIdx % _coFrameSeq.length) === 1) {
+      _coShotActive = true; _coShotStart = performance.now();
+    }
+    _coSeqIdx++;
   }, 200); // 5fps — matches quest scene combat loop pace
+  coProjectileLoop();
 
   // Sequence: fight → enemy sinks → XP flash → (loot chest)
   setTimeout(function() {
@@ -2651,6 +2745,12 @@ function openCombatOverlay(xpEarned, goldEarned, lootItem) {
     // Hero goes idle after enemy gone
     setTimeout(function() {
       clearInterval(_coSlashTimer);
+      _coShotActive = false;
+      if (_coShotRaf) { cancelAnimationFrame(_coShotRaf); _coShotRaf = null; }
+      var _coProj = document.getElementById('coProjectile');
+      if (_coProj) _coProj.style.display = 'none';
+      var _coSw = document.getElementById('coSword');
+      if (_coSw) { _coSw.style.transform = ''; _coSw.style.transformOrigin = ''; }
       var idleX = 0, idleY = 0; // row 0 frame 0
       Object.keys(heroMap).forEach(function(k) {
         var el = document.getElementById(heroMap[k]);
@@ -2692,6 +2792,8 @@ function openCombatOverlay(xpEarned, goldEarned, lootItem) {
 
 function closeCombatOverlay() {
   clearInterval(_coPortalTimer); clearInterval(_coSlashTimer);
+  _coShotActive = false;
+  if (_coShotRaf) { cancelAnimationFrame(_coShotRaf); _coShotRaf = null; }
   if (_coChestTimer) { clearInterval(_coChestTimer); _coChestTimer = null; }
   var ov = document.getElementById('combatOverlay');
   ov.style.display = 'none';
@@ -3585,12 +3687,6 @@ setInterval(function() {
     if (el) el.style.backgroundPosition = (-f * 128) + 'px 0px';
   }
 
-  var _qsOrbImg = null;
-  function qsOrbImg() {
-    if (!_qsOrbImg) { _qsOrbImg = new Image(); _qsOrbImg.src = 'sprites/preview_assets/fx/mage_orb.png?v=' + SPRITE_VER; }
-    return _qsOrbImg;
-  }
-  qsOrbImg();   // preload so the first cast already has its sprite
   function qsDrawProjectile(ts) {
     var canvas = document.getElementById('qsProjectile');
     if (!canvas) return;
@@ -3600,55 +3696,17 @@ setInterval(function() {
     var elapsed = ts - qsProjectileStart;
     var t = Math.min(elapsed / QS_PROJECTILE_DUR, 1);
     if (t >= 1) { qsProjectileActive = false; canvas.style.display = 'none'; return; }
-    // Sync canvas buffer size to its CSS display size
     var W = canvas.offsetWidth || 360;
     var H = canvas.offsetHeight || 180;
     if (canvas.width !== W || canvas.height !== H) { canvas.width = W; canvas.height = H; }
     canvas.style.display = 'block';
     var ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, W, H);
-    // Start: character hand in scene coords
+    // Start: the character's hand in scene coordinates.
     // .qs-char-wrap: left:60px, width:80px, scale(2) scaleX(-1), transform-origin:bottom center
-    // Center of element at screen-x=100. Weapon tip at ~sprite-local-x=10 → screen-x=100+(40-10)*2=160
-    // Arm mid-height: bottom at 180-28=152px, scale(2)×64=128px tall, hand ~sprite-y=38 → 152-(64-38)*2=100
-    var startX = 155, startY = 100;
-    // End: center of .qs-enemy (right:8px, width:128px → left=W-136, center-x=W-72; center-y≈88)
-    var endX = W - 72, endY = 88;
-    var px = startX + (endX - startX) * t;
-    var py = startY + (endY - startY) * t;
-    ctx.save();
-    if (cls === 'ranger') {
-      // Arrow: dark wood shaft + grey metal tip + feather nock, ~24px total, horizontal
-      // Brown shaft (3px wide, 18px long)
-      ctx.lineWidth = 3;
-      ctx.strokeStyle = '#7B4A1A';
-      ctx.beginPath(); ctx.moveTo(px - 10, py); ctx.lineTo(px + 8, py); ctx.stroke();
-      // Feather nock at back (4px spread, V-shape)
-      ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.moveTo(px - 10, py); ctx.lineTo(px - 12, py - 2); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(px - 10, py); ctx.lineTo(px - 12, py + 2); ctx.stroke();
-      // Grey metal arrowhead triangle (5px wide)
-      ctx.fillStyle = '#b0b0b0';
-      ctx.beginPath(); ctx.moveTo(px + 8, py - 2.5); ctx.lineTo(px + 13, py); ctx.lineTo(px + 8, py + 2.5); ctx.closePath(); ctx.fill();
-    } else {
-      // Mage orb: pixel-art sprite (4 quarter-turn frames = spin) with a short fading trail.
-      // Drawn at 2x like the character, snapped to the 2px grid, no smoothing -> stays crisp.
-      var orb = qsOrbImg();
-      if (orb && orb.complete && orb.naturalWidth) {
-        ctx.imageSmoothingEnabled = false;
-        var FS = orb.naturalHeight, D = FS * 2;
-        var frame = Math.floor(elapsed / 60);
-        [[2, 0.18], [1, 0.4], [0, 1]].forEach(function(g) {
-          var tt = Math.max(0, t - g[0] * 0.06);
-          var gx = startX + (endX - startX) * tt, gy = startY + (endY - startY) * tt;
-          ctx.globalAlpha = g[1];
-          ctx.drawImage(orb, ((frame - g[0]) & 3) * FS, 0, FS, FS,
-                        Math.round((gx - D / 2) / 2) * 2, Math.round((gy - D / 2) / 2) * 2, D, D);
-        });
-        ctx.globalAlpha = 1;
-      }
-    }
-    ctx.restore();
+    // Centre of the element at screen-x=100; hand at sprite-local (10, 38).
+    // End: the centre of .qs-enemy (right:8px, width:128px).
+    drawClassProjectile(ctx, cls, t, elapsed, 155, 100, W - 72, 88);
   }
 
   function qsLoop(ts) {
@@ -3677,18 +3735,7 @@ setInterval(function() {
             displayFrame = [0,5,4,4,5,0][qsCharFrame % 6];
           }
           qsSetCharFrame(anim, displayFrame);
-          // Tilt wand upward on mage raised-arm frames (fr54/fr55)
-          var _qsSwordEl = document.getElementById('qsSword');
-          if (_qsSwordEl) {
-            // Big staff sheets (t7+) have the raised cast pose baked in -> no CSS rotation
-            if (_qsCls2 === 'mage' && (displayFrame === 4 || displayFrame === 5) && !_qsSwordEl.classList.contains('big-sword')) {
-              _qsSwordEl.style.transform = 'translateX(-5px) rotate(45deg)';
-              _qsSwordEl.style.transformOrigin = '26.6px 41.5px';
-            } else {
-              _qsSwordEl.style.transform = '';
-              _qsSwordEl.style.transformOrigin = '';
-            }
-          }
+          tiltWandForFrame(document.getElementById('qsSword'), _qsCls2, 50 + displayFrame);
           // Launch projectile at start of attack swing (mage/ranger only)
           if (_qsCls2 !== 'warrior' && qsCharFrame === 1) {
             qsProjectileActive = true;
