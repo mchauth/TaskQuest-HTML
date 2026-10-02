@@ -2088,8 +2088,6 @@ var LOOT_TABLE = [
   { id:'bow_ranger_t5',   name:'Shadow Bow',       gender:'m', slot:'weapon', file:'sprites/preview_assets/char/bow_ranger_t5_m.png', level:30, rarity:'super_rare', classes:['ranger'] },
   { id:'bow_ranger_t5_f', name:'Shadow Bow',       gender:'f', slot:'weapon', file:'sprites/preview_assets/char/bow_ranger_t5_f.png', level:30, rarity:'super_rare', classes:['ranger'] },
   // ── Ranger tier 6: Moonbow ────────────────────────────────────────
-  { id:'bow_ranger_t6',   name:'Moonbow',          gender:'m', slot:'weapon', file:'sprites/preview_assets/char/bow_ranger_t6_m.png', level:40, rarity:'legendary', classes:['ranger'] },
-  { id:'bow_ranger_t6_f', name:'Moonbow',          gender:'f', slot:'weapon', file:'sprites/preview_assets/char/bow_ranger_t6_f.png', level:40, rarity:'legendary', classes:['ranger'] },
   // ── Warrior tier 7-20: Legendary/Mythic Swords (12 static + 2 animated) ──
   { id:'sword_warrior_t7',    name:'Grey Broadsword',      gender:'m', slot:'weapon', file:'sprites/preview_assets/char/sword_warrior_t7_m.png',  level:20, rarity:'legendary', classes:['warrior'] },
   { id:'sword_warrior_t7_f',  name:'Grey Broadsword',      gender:'f', slot:'weapon', file:'sprites/preview_assets/char/sword_warrior_t7_f.png',  level:20, rarity:'legendary', classes:['warrior'] },
@@ -2424,7 +2422,7 @@ function addToInventory(item) {
 }
 
 // Encode spaces in file paths for CSS url()
-const SPRITE_VER = 'e8eb2002';
+const SPRITE_VER = 'b78a5655';
 function cssUrl(path) {
   return "url('" + path.replace(/ /g, '%20') + '?v=' + SPRITE_VER + "')";
 }
