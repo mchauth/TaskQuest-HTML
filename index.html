@@ -1889,15 +1889,19 @@ function renderHomeScene() {
   var tierPill = document.getElementById('hsTierName');
   if (tierPill) tierPill.textContent = t.name;
   var goldPill = document.getElementById('hsGoldPill');
-  if (goldPill) goldPill.textContent = '💰 ' + gold + 'g';
+  if (goldPill) goldPill.textContent = DEV_MODE ? '💰 ∞ (dev)' : '💰 ' + gold + 'g';
 
   // Upgrade bar
   var nextInfo = document.getElementById('hsNextInfo');
   var upgradeBtn = document.getElementById('hsUpgradeBtn');
   if (next) {
-    var canAfford = gold >= next.cost;
-    if (nextInfo) nextInfo.textContent = 'Next: ' + next.name + ' — ' + next.cost + 'g';
-    if (upgradeBtn) { upgradeBtn.disabled = !canAfford; upgradeBtn.style.display = ''; }
+    var canAfford = DEV_MODE || gold >= next.cost;      // dev mode: infinite gold
+    if (nextInfo) nextInfo.textContent = 'Next: ' + next.name + ' — ' + (DEV_MODE ? 'free (dev)' : next.cost + 'g');
+    if (upgradeBtn) { upgradeBtn.disabled = !canAfford; upgradeBtn.style.display = ''; upgradeBtn.textContent = '⬆ Upgrade'; }
+  } else if (DEV_MODE) {
+    // dev mode: loop back to the first home so every tier can be checked again
+    if (nextInfo) nextInfo.textContent = '⭐ Fully upgraded — dev: restart from ' + HOME_TIERS[0].name;
+    if (upgradeBtn) { upgradeBtn.disabled = false; upgradeBtn.style.display = ''; upgradeBtn.textContent = '↺ Reset (dev)'; }
   } else {
     if (nextInfo) nextInfo.textContent = '⭐ Fully upgraded!';
     if (upgradeBtn) upgradeBtn.style.display = 'none';
@@ -1975,12 +1979,20 @@ function hsLoop(ts) {
 function upgradeHome() {
   var tier = S.profile.homeTier || 0;
   var next = HOME_TIERS[tier + 1];
+  if (!next && DEV_MODE) {                       // dev mode: wrap back to the first home
+    S.profile.homeTier = 0;
+    localStorage.setItem('tq_home_tier', 0);
+    if (currentUser) sb.from('profiles').update({ home_tier: 0 }).eq('id', currentUser.id).then(function(){}).catch(function(){});
+    renderHomeScene();
+    toast('🛠 Home reset to ' + HOME_TIERS[0].name, 'success');
+    return;
+  }
   if (!next) return;
-  if ((S.profile.gold || 0) < next.cost) {
+  if (!DEV_MODE && (S.profile.gold || 0) < next.cost) {
     toast('Not enough gold! Need ' + next.cost + 'g', 'error');
     return;
   }
-  S.profile.gold -= next.cost;
+  if (!DEV_MODE) S.profile.gold -= next.cost;   // dev mode: infinite gold, nothing is spent
   S.profile.homeTier = tier + 1;
   // Persist locally
   localStorage.setItem('tq_gold', S.profile.gold);
@@ -2389,6 +2401,7 @@ function toggleDevMode() {
     pBtn.style.background  = DEV_MODE ? 'rgba(201,168,76,.07)' : 'none';
   }
   renderInventory();
+  if (typeof renderHomeScene === 'function' && document.getElementById('hsHome')) renderHomeScene();
 }
 
 // Roll loot drop — returns item or null. Drops every 3rd completed quest.
