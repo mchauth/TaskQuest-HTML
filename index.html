@@ -1794,7 +1794,8 @@ var HOME_TIERS = [
   },
   {
     name: 'Stone Cottage',
-    home: 'sprites/preview_assets/home/home_t3_house.png',
+    home: 'sprites/preview_assets/home/home_t2_stone_cottage.png',
+    homeHeight: 141,   // 113x122 sprite at ~1.16x, same pixel density as the estate
     fire: false,
     props: [
       { src:'sprites/preview_assets/home/tree_oak.png',     left: -10, bottom:32, height:130, z:5 },
@@ -1806,14 +1807,14 @@ var HOME_TIERS = [
   },
   {
     name: 'Fortified Estate',
-    home: 'sprites/preview_assets/home/home_t3_house.png',
+    home: 'sprites/preview_assets/home/home_t3_fortified_estate.png',
+    homeHeight: 148,   // full height above the ground line
+    homeRight: 0,      // wide facade runs off the right edge of the scene on purpose
     fire: false,
     props: [
       { src:'sprites/preview_assets/home/tree_willow.png',      left: -20, bottom:32, height:140, z:5 },
       { src:'sprites/preview_assets/home/tree_oak.png',         left:  85, bottom:32, height:110, z:5 },
       { src:'sprites/preview_assets/home/prop_tall_tree.png',   right:190, bottom:32, height:90,  z:6 },
-      { src:'sprites/preview_assets/home/prop_flower_pot.png',  right:165, bottom:32, height:40,  z:7 },
-      { src:'sprites/preview_assets/home/tree_bonsai.png',      right:140, bottom:32, height:38,  z:7 },
     ],
     cost: 1500
   }
@@ -1852,7 +1853,9 @@ function renderHomeScene() {
     if (t.home) {
       homeEl.src = t.home;
       homeEl.style.display = 'block';
-      homeEl.style.maxHeight = tier >= 2 ? '148px' : tier === 1 ? '128px' : '100px';
+      if (t.homeHeight) { homeEl.style.maxHeight = 'none'; homeEl.style.height = t.homeHeight + 'px'; }
+      else { homeEl.style.height = ''; homeEl.style.maxHeight = tier === 1 ? '128px' : '100px'; }
+      homeEl.style.right = (t.homeRight != null ? t.homeRight : 16) + 'px';
     } else if (t.tent) {
       homeEl.src = t.tent;
       homeEl.style.display = 'block';
