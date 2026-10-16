@@ -170,6 +170,10 @@ hr{border:none;border-top:1px solid var(--border)}
 .co-scene{position:relative;width:300px;height:170px;overflow:visible}
 .co-enemy-ov{width:128px;height:128px;background-image:url('sprites/preview_assets/enemy_portal.png');background-repeat:no-repeat;background-size:1280px 128px;image-rendering:pixelated;position:absolute;right:10px;bottom:0;transition:transform .7s ease-in,opacity .7s ease-in}
 .co-enemy-ov.sinking{transform:translateY(160px);opacity:0}
+/* Enemy creatures: hit flash + knockback, and fade after the death animation */
+.enemy-hit{animation:enemyHit .24s ease-out}
+@keyframes enemyHit{0%{filter:brightness(3) saturate(0);transform:translateX(0)}35%{filter:brightness(2.2) saturate(.3);transform:translateX(6px)}100%{filter:none;transform:translateX(0)}}
+.enemy-dying{opacity:0!important;transition:opacity .5s ease-in!important}
 .co-hero-ov{width:80px;height:64px;position:absolute;left:40px;bottom:0;transform:scale(2) scaleX(-1);transform-origin:bottom center;image-rendering:pixelated}
 .co-hero-layer{position:absolute;top:0;left:0;width:80px;height:64px;background-repeat:no-repeat;image-rendering:pixelated;background-size:800px 448px}
 .co-victory{font-family:'Cinzel',serif;font-size:36px;font-weight:700;color:#ffd700;text-shadow:0 0 30px rgba(255,215,0,.9),0 0 60px rgba(255,180,0,.4);text-align:center;letter-spacing:.12em;animation:victoryPulse 1s ease-in-out infinite alternate}
@@ -430,7 +434,7 @@ hr{border:none;border-top:1px solid var(--border)}
         <img id="qsFireImg" src="sprites/preview_assets/anim/fire_f0.png" alt="">
       </div>
       <!-- Enemy portal (shown when active quests exist) -->
-      <div class="qs-enemy-wrap" id="qsEnemyWrap" style="display:none">
+      <div class="qs-enemy-wrap" id="qsEnemyWrap" style="display:none" onclick="devCycleEnemy()">
         <div class="qs-enemy" id="qsEnemy"></div>
       </div>
       <!-- Projectile overlay for ranger (arrow) and mage (orb) attacks -->
@@ -1397,6 +1401,7 @@ function completeQuest() {
       var leveledUp = data && data.leveled_up    != null ? data.leveled_up   : false;
       var newTotalXp= data && data.new_total_xp  != null ? data.new_total_xp : (S.profile.totalXp + xpEarned);
 
+      var levelBefore = S.profile.level || 1;  // the enemy is the one you fought at your old level
       // Update local profile state immediately
       S.profile.totalXp   = newTotalXp;
       S.profile.level     = newLevel;
@@ -1429,7 +1434,7 @@ function completeQuest() {
       // Check for loot drop and trigger combat victory overlay
       var lootDrop = rollLoot();
       if (lootDrop) { addToInventory(lootDrop); }
-      openCombatOverlay(xpEarned, goldEarned, lootDrop);
+      openCombatOverlay(xpEarned, goldEarned, lootDrop, fq.id, levelBefore);
       renderInventory();
 
       // Sync profile from server in background
@@ -2670,6 +2675,114 @@ function tiltWandForFrame(el, cls, frame) {
   }
 }
 
+// ── Enemies ──────────────────────────────────────────
+// Each sheet has two rows of w x h frames: row 0 idle loop, row 1 death.
+// Drawn at `scale` (2x matches the hero). cx/cy: body centre as a fraction of
+// the frame, which is where projectiles aim.
+var ENEMIES = {
+  slime_a:  {w:38,  h:17, idle:8, death:13, scale:2,   cx:0.50, cy:0.50},
+  slime_b:  {w:38,  h:18, idle:8, death:13, scale:2,   cx:0.49, cy:0.56},
+  goblin_a: {w:54,  h:40, idle:8, death:13, scale:2,   cx:0.50, cy:0.55},
+  goblin_b: {w:54,  h:44, idle:8, death:12, scale:2,   cx:0.50, cy:0.56},
+  brute_a:  {w:79,  h:78, idle:8, death:11, scale:2,   cx:0.49, cy:0.63},
+  brute_b:  {w:80,  h:58, idle:8, death:13, scale:2,   cx:0.50, cy:0.52},
+  dragon_a: {w:111, h:76, idle:8, death:12, scale:2,   cx:0.50, cy:0.56},
+  demon_a:  {w:100, h:98, idle:8, death:11, scale:1.5, cx:0.43, cy:0.52}
+};
+// Player level picks the tier; each quest picks a variant from it.
+var ENEMY_TIERS = [
+  { minLevel: 1,  name: 'Slime',  variants: ['slime_a', 'slime_b'] },
+  { minLevel: 10, name: 'Goblin', variants: ['goblin_a', 'goblin_b'] },
+  { minLevel: 25, name: 'Brute',  variants: ['brute_a', 'brute_b'] },
+  { minLevel: 50, name: 'Dragon', variants: ['dragon_a', 'demon_a'] }
+];
+var ENEMY_PORTAL_CHANCE = 1 / 6;   // the old rift portal still turns up now and then
+var ENEMY_IDLE_FPS = 8, ENEMY_DEATH_FPS = 10;
+
+function _enemyHash(str) {
+  var h = 2166136261; str = String(str);
+  for (var i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+// Same quest + same level always gives the same enemy.
+function pickEnemy(seed, level) {
+  var tier = ENEMY_TIERS[0];
+  ENEMY_TIERS.forEach(function(t) { if ((level || 1) >= t.minLevel) tier = t; });
+  var h = _enemyHash(seed);
+  if ((h % 1000) / 1000 < ENEMY_PORTAL_CHANCE) return 'portal';
+  return tier.variants[(h >>> 10) % tier.variants.length];
+}
+function setupEnemyEl(el, key) {
+  if (!el) return;
+  el.dataset.enemy = key;
+  el.classList.remove('sinking', 'enemy-dying', 'enemy-hit');
+  if (key === 'portal') {
+    el.style.width = '128px'; el.style.height = '128px';
+    el.style.backgroundImage = "url('sprites/preview_assets/enemy_portal.png')";
+    el.style.backgroundSize = '1280px 128px';
+  } else {
+    var m = ENEMIES[key], k = m.scale;
+    el.style.width = (m.w * k) + 'px'; el.style.height = (m.h * k) + 'px';
+    el.style.backgroundImage = "url('sprites/preview_assets/enemies/" + key + ".png')";
+    el.style.backgroundSize = (m.w * Math.max(m.idle, m.death) * k) + 'px ' + (m.h * 2 * k) + 'px';
+  }
+  el.style.backgroundPosition = '0 0';
+}
+function enemyFrame(el, row, f) {
+  if (!el || !el.dataset.enemy) return;
+  var key = el.dataset.enemy;
+  if (key === 'portal') { el.style.backgroundPosition = (-(f % 10) * 128) + 'px 0px'; return; }
+  var m = ENEMIES[key], k = m.scale;
+  el.style.backgroundPosition = (-f * m.w * k) + 'px ' + (-row * m.h * k) + 'px';
+}
+function enemyIdleFrames(el) {
+  var key = el && el.dataset.enemy;
+  return (!key || key === 'portal') ? 10 : ENEMIES[key].idle;
+}
+function enemyHit(el) {
+  if (!el || el.classList.contains('sinking') || el.classList.contains('enemy-dying')) return;
+  el.classList.remove('enemy-hit'); void el.offsetWidth; el.classList.add('enemy-hit');
+}
+// Plays the death row then fades out (the portal sinks instead). Calls done after.
+function enemyDie(el, done) {
+  if (!el) { if (done) done(); return null; }
+  el.classList.remove('enemy-hit');
+  if (el.dataset.enemy === 'portal' || !ENEMIES[el.dataset.enemy]) {
+    el.classList.add('sinking');
+    if (done) setTimeout(done, 800);
+    return null;
+  }
+  var m = ENEMIES[el.dataset.enemy], f = 0;
+  var t = setInterval(function() {
+    enemyFrame(el, 1, f); f++;
+    if (f >= m.death) {
+      clearInterval(t);
+      setTimeout(function() { el.classList.add('enemy-dying'); if (done) setTimeout(done, 450); }, 250);
+    }
+  }, 1000 / ENEMY_DEATH_FPS);
+  return t;
+}
+// Dev mode: tap the enemy in the quest scene to watch it die, then bring in the next one.
+var _devEnemyBusy = false;
+function devCycleEnemy() {
+  if (!DEV_MODE || _devEnemyBusy) return;
+  var el = document.getElementById('qsEnemy'); if (!el) return;
+  var keys = Object.keys(ENEMIES).concat(['portal']);
+  var next = keys[(keys.indexOf(el.dataset.enemy) + 1) % keys.length];
+  _devEnemyBusy = true;
+  enemyDie(el, function() {
+    el.dataset.devEnemy = next; setupEnemyEl(el, next); _devEnemyBusy = false;
+    toast('🛠 Enemy: ' + next, 'success');
+  });
+}
+// Where projectiles should land, in the coordinates of `frameEl` (the canvas).
+function enemyAim(el, frameEl) {
+  var r = el.getBoundingClientRect(), s = frameEl.getBoundingClientRect();
+  var key = el.dataset.enemy, m = ENEMIES[key];
+  var cx = m ? m.cx : 0.5, cy = m ? m.cy : 0.5;
+  return { x: r.left - s.left + r.width * cx, y: r.top - s.top + r.height * cy };
+}
+
 // ── Combat overlay ───────────────────────────────────
 var _coPortalFrame = 0, _coPortalTimer = null;
 var _coSlashFrame  = 0, _coSlashTimer  = null;
@@ -2691,18 +2804,21 @@ function coProjectileLoop() {
     if (!_coShotActive) { canvas.style.display = 'none'; return; }
     var elapsed = ts - _coShotStart;
     var t = Math.min(elapsed / CO_SHOT_DUR, 1);
-    if (t >= 1) { _coShotActive = false; canvas.style.display = 'none'; return; }
+    if (t >= 1) { _coShotActive = false; canvas.style.display = 'none'; enemyHit(document.getElementById('coEnemy')); return; }
     var W = canvas.offsetWidth || 300, H = canvas.offsetHeight || 170;
     if (canvas.width !== W || canvas.height !== H) { canvas.width = W; canvas.height = H; }
     canvas.style.display = 'block';
     var ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, W, H);
-    drawClassProjectile(ctx, cls, t, elapsed, W * 0.47, H * 0.69, W - 74, H * 0.62);
+    var _coEn = document.getElementById('coEnemy');
+    var _aim = _coEn ? enemyAim(_coEn, canvas) : { x: W - 74, y: H * 0.62 };
+    drawClassProjectile(ctx, cls, t, elapsed, W * 0.47, H * 0.69, _aim.x, _aim.y);
   }
   _coShotRaf = requestAnimationFrame(step);
 }
 
-function openCombatOverlay(xpEarned, goldEarned, lootItem) {
+var _coDeathTimer = null;
+function openCombatOverlay(xpEarned, goldEarned, lootItem, enemySeed, enemyLevel) {
   var ov = document.getElementById('combatOverlay');
   ov.style.display = 'flex';
 
@@ -2716,14 +2832,16 @@ function openCombatOverlay(xpEarned, goldEarned, lootItem) {
   applyLegLayerOrder();
   applyHairClipToId('coHair');
 
-  // Start enemy portal animation
+  // Enemy for this quest, picked by the level you were when you fought it
+  var _coEnemyEl = document.getElementById('coEnemy');
+  clearInterval(_coDeathTimer);
+  setupEnemyEl(_coEnemyEl, pickEnemy(enemySeed != null ? enemySeed : Date.now(), enemyLevel || S.profile.level));
   _coPortalFrame = 0;
   clearInterval(_coPortalTimer);
   _coPortalTimer = setInterval(function() {
-    _coPortalFrame = (_coPortalFrame + 1) % 10;
-    var el = document.getElementById('coEnemy');
-    if (el) el.style.backgroundPosition = (-_coPortalFrame * 128) + 'px 0px';
-  }, 80);
+    _coPortalFrame = (_coPortalFrame + 1) % enemyIdleFrames(_coEnemyEl);
+    enemyFrame(_coEnemyEl, 0, _coPortalFrame);
+  }, _coEnemyEl && _coEnemyEl.dataset.enemy === 'portal' ? 80 : 1000 / ENEMY_IDLE_FPS);
 
   // Start the hero's attack. Same frames the quest scene plays, so the victory
   // scene shows the class attacking the way it does in the field: the warrior
@@ -2741,6 +2859,7 @@ function openCombatOverlay(xpEarned, goldEarned, lootItem) {
       setLayerPos(el, x, y);
     });
     tiltWandForFrame(document.getElementById('coSword'), _coCls, 50 + f);
+    if (_coCls === 'warrior' && f === 3) enemyHit(document.getElementById('coEnemy'));
     // Loose the shot one frame into the cycle, as the quest scene does
     if (_coCls !== 'warrior' && (_coSeqIdx % _coFrameSeq.length) === 1) {
       _coShotActive = true; _coShotStart = performance.now();
@@ -2751,13 +2870,18 @@ function openCombatOverlay(xpEarned, goldEarned, lootItem) {
 
   // Sequence: fight → enemy sinks → XP flash → (loot chest)
   setTimeout(function() {
-    // Enemy sinks
+    // Enemy dies (creatures play their death, the portal sinks)
     clearInterval(_coPortalTimer);
     var en = document.getElementById('coEnemy');
-    if (en) en.classList.add('sinking');
+    // Hero stops attacking as the enemy falls
+    clearInterval(_coSlashTimer);
+    _coShotActive = false;
+    Object.keys(heroMap).forEach(function(k) { setLayerPos(document.getElementById(heroMap[k]), 0, 0); });
+    var _coSwIdle = document.getElementById('coSword');
+    if (_coSwIdle) { _coSwIdle.style.transform = ''; _coSwIdle.style.transformOrigin = ''; }
 
     // Hero goes idle after enemy gone
-    setTimeout(function() {
+    _coDeathTimer = enemyDie(en, function() {
       clearInterval(_coSlashTimer);
       _coShotActive = false;
       if (_coShotRaf) { cancelAnimationFrame(_coShotRaf); _coShotRaf = null; }
@@ -2800,7 +2924,7 @@ function openCombatOverlay(xpEarned, goldEarned, lootItem) {
           document.getElementById('coContinueBtn').style.display = '';
         }, 400);
       }
-    }, 800);
+    });
   }, 1800); // fight for 1.8s before victory
 }
 
@@ -2812,8 +2936,9 @@ function closeCombatOverlay() {
   var ov = document.getElementById('combatOverlay');
   ov.style.display = 'none';
   // Reset for next time
+  clearInterval(_coDeathTimer);
   var en = document.getElementById('coEnemy');
-  if (en) en.classList.remove('sinking');
+  if (en) en.classList.remove('sinking', 'enemy-dying', 'enemy-hit');
   var xpEl = document.getElementById('coXpFlash');
   if (xpEl) xpEl.classList.remove('show');
   var vic = document.getElementById('coVictory');
@@ -3779,8 +3904,7 @@ setInterval(function() {
   }
 
   function qsSetPortalFrame(f) {
-    var el = document.getElementById('qsEnemy');
-    if (el) el.style.backgroundPosition = (-f * 128) + 'px 0px';
+    enemyFrame(document.getElementById('qsEnemy'), 0, f);
   }
 
   function qsDrawProjectile(ts) {
@@ -3791,7 +3915,7 @@ setInterval(function() {
     if (!qsProjectileActive) { canvas.style.display = 'none'; return; }
     var elapsed = ts - qsProjectileStart;
     var t = Math.min(elapsed / QS_PROJECTILE_DUR, 1);
-    if (t >= 1) { qsProjectileActive = false; canvas.style.display = 'none'; return; }
+    if (t >= 1) { qsProjectileActive = false; canvas.style.display = 'none'; enemyHit(document.getElementById('qsEnemy')); return; }
     var W = canvas.offsetWidth || 360;
     var H = canvas.offsetHeight || 180;
     if (canvas.width !== W || canvas.height !== H) { canvas.width = W; canvas.height = H; }
@@ -3802,7 +3926,9 @@ setInterval(function() {
     // .qs-char-wrap: left:60px, width:80px, scale(2) scaleX(-1), transform-origin:bottom center
     // Centre of the element at screen-x=100; hand at sprite-local (10, 38).
     // End: the centre of .qs-enemy (right:8px, width:128px).
-    drawClassProjectile(ctx, cls, t, elapsed, 155, 100, W - 72, 88);
+    var _qsEn = document.getElementById('qsEnemy');
+    var _aim = _qsEn ? enemyAim(_qsEn, canvas) : { x: W - 72, y: 88 };
+    drawClassProjectile(ctx, cls, t, elapsed, 155, 100, _aim.x, _aim.y);
   }
 
   function qsLoop(ts) {
@@ -3833,6 +3959,7 @@ setInterval(function() {
           qsSetCharFrame(anim, displayFrame);
           tiltWandForFrame(document.getElementById('qsSword'), _qsCls2, 50 + displayFrame);
           // Launch projectile at start of attack swing (mage/ranger only)
+          if (_qsCls2 === 'warrior' && qsCharFrame === 3) enemyHit(document.getElementById('qsEnemy'));
           if (_qsCls2 !== 'warrior' && qsCharFrame === 1) {
             qsProjectileActive = true;
             qsProjectileStart = ts;
@@ -3856,8 +3983,10 @@ setInterval(function() {
       var img = document.getElementById('qsFireImg');
       if (img) img.src = CF_SRCS[qsCfFrame];
     }
-    if (qsAnim === 'combat' && ts - qsPortalLast > 1000 / QS_PORTAL_FPS) {
-      qsPortalFrame = (qsPortalFrame + 1) % 10;
+    var _qsEnEl = document.getElementById('qsEnemy');
+    var _qsEnFps = (_qsEnEl && _qsEnEl.dataset.enemy && _qsEnEl.dataset.enemy !== 'portal') ? ENEMY_IDLE_FPS : QS_PORTAL_FPS;
+    if (qsAnim === 'combat' && ts - qsPortalLast > 1000 / _qsEnFps) {
+      qsPortalFrame = (qsPortalFrame + 1) % enemyIdleFrames(_qsEnEl);
       qsPortalLast = ts;
       qsSetPortalFrame(qsPortalFrame);
     }
@@ -3875,6 +4004,13 @@ setInterval(function() {
     el = document.getElementById('qsPillLevel');  if(el) el.textContent = 'Lv '+level+' Warrior';
     el = document.getElementById('qsPillDone');   if(el) el.textContent = done+' Complete';
     // Switch animation state based on active quests
+    // Enemy for the first active quest, at your current level
+    if (active > 0) {
+      var _firstQ = allQuests.find(function(q){ return q.status === 'active'; });
+      var _qsEnemyEl = document.getElementById('qsEnemy');
+      var _key = (_qsEnemyEl && _qsEnemyEl.dataset.devEnemy) || pickEnemy(_firstQ ? _firstQ.id : 'camp', level);
+      if (_qsEnemyEl && _qsEnemyEl.dataset.enemy !== _key) { setupEnemyEl(_qsEnemyEl, _key); qsPortalFrame = 0; }
+    }
     var newAnim = active > 0 ? 'combat' : 'sleep';
     if (newAnim !== qsAnim) {
       qsAnim = newAnim; qsCharFrame = 0; qsPortalFrame = 0; qsSlashCooldown = 0;
