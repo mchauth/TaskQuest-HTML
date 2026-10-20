@@ -471,7 +471,7 @@ header.top .xp-fill{height:100%;border-radius:99px;background:linear-gradient(90
 .stage::after{content:'';position:absolute;left:24%;right:24%;bottom:16px;height:10px;border-radius:50%;background:radial-gradient(closest-side,rgba(0,0,0,.6),transparent)}
 #profAvatarLarge{position:absolute;inset:0;display:block!important}
 #profAvatarLarge .av-char-wrap{bottom:15px;transform:translateX(-50%) scale(2.55) scaleX(-1);z-index:2}
-.stage-l,.stage-r{position:absolute;top:12px;z-index:9;font-family:var(--hf);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase}
+.stage-l,.stage-r{display:none;position:absolute;top:12px;z-index:9;font-family:var(--hf);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase}
 .stage-l{left:14px;color:var(--text-dim)}
 .stage-r{right:12px}
 .stage-r button{font-family:var(--hf);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold2);padding:6px 10px;border-radius:9px;background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.35);cursor:pointer}
@@ -484,7 +484,7 @@ header.top .xp-fill{height:100%;border-radius:99px;background:linear-gradient(90
 .track{position:relative;display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;scrollbar-width:none;margin:0 -16px;padding:2px calc((100% + 32px) * .11) 6px}
 .track::-webkit-scrollbar{display:none}
 .item{flex:0 0 78%;scroll-snap-align:center;display:flex;align-items:center;gap:14px;padding:12px;border-radius:16px;position:relative;cursor:pointer;
-  background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.015));border:1px solid var(--line);transition:transform .25s,opacity .25s,border-color .25s}
+  background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.015));border:1px solid var(--line);transition:transform .15s,opacity .15s,border-color .15s}
 .item.off{opacity:.45;transform:scale(.95)}
 .item::before{content:'';position:absolute;left:12px;right:12px;top:0;height:2px;border-radius:2px;background:var(--rc,transparent);opacity:.9}
 .item .pv{width:88px;height:88px;flex:none;border-radius:12px;display:grid;place-items:center;overflow:hidden;border:1px solid rgba(255,255,255,.06);
@@ -558,6 +558,44 @@ header.top .xp-fill{height:100%;border-radius:99px;background:linear-gradient(90
 .auth-box{border-radius:20px}
 .auth-submit{border-radius:14px;color:#1d1407;border:none;background:linear-gradient(180deg,#f6dd96,#d6b257 48%,#b18a33);font-family:var(--hf);font-size:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 8px 24px rgba(201,168,76,.22)}
 .auth-box input{border-radius:12px;padding:12px 14px}
+
+/* compass (v2.1) */
+.dial{padding:16px 0 14px;overflow:hidden}
+.tape{position:relative;height:70px;margin:0 0 12px}
+.tape canvas{position:absolute;inset:0;width:100%;height:100%}
+.tape::before,.tape::after{content:'';position:absolute;top:0;bottom:0;width:56px;z-index:2;pointer-events:none}
+.tape::before{left:0;background:linear-gradient(90deg,#121220,transparent)}
+.tape::after{right:0;background:linear-gradient(270deg,#121220,transparent)}
+.needle{position:absolute;left:50%;top:-4px;bottom:-4px;width:2px;margin-left:-1px;z-index:3;background:linear-gradient(180deg,var(--gold2),rgba(236,208,133,0));box-shadow:0 0 10px rgba(236,208,133,.6)}
+.needle::before{content:'';position:absolute;top:-2px;left:-6px;border:7px solid transparent;border-top:9px solid var(--gold2)}
+.dial-read{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;padding:0 16px}
+.dial .hdg{font-family:var(--hf);font-weight:var(--hw);font-size:40px;line-height:1;color:var(--text-bright);letter-spacing:.02em;font-variant-numeric:tabular-nums}
+.dial .hdg small{font-size:16px;color:var(--gold2);margin-left:8px;letter-spacing:.12em}
+.dial .gps-row{font-family:var(--hf);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;padding-bottom:4px}
+.card.focus{position:relative;overflow:hidden;border-color:rgba(201,168,76,.28);background:linear-gradient(160deg,rgba(201,168,76,.12),rgba(201,168,76,.02) 55%),var(--bg2)}
+.card.focus .fq-title{font-family:var(--hf);font-weight:var(--hw);font-size:22px;color:var(--text-bright);margin:6px 0 4px;line-height:1.2}
+.focus-row{display:flex;align-items:center;gap:16px;margin:14px 0 14px}
+.dist{font-family:var(--hf);font-weight:var(--hw);font-size:31px;color:var(--text-bright);line-height:1;white-space:nowrap;font-variant-numeric:tabular-nums}
+.dist small{font-size:13px;color:var(--text-dim);margin-left:4px;letter-spacing:.08em}
+.range{flex:1;min-width:0}
+.range-track{height:8px;border-radius:99px;background:rgba(255,255,255,.06);overflow:hidden}
+.range-fill{height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,#6e5627,#c9a84c);transition:width .4s ease}
+.range-fill.ok{background:linear-gradient(90deg,#3c8f62,#7fd6a5)}
+.range-lbl{margin-top:6px;font-family:var(--hf);font-size:10.5px;letter-spacing:.12em;color:var(--gold);text-transform:uppercase}
+.range-lbl.ok{color:#7fd6a5}
+.arrow-badge{width:52px;height:52px;border-radius:50%;flex:none;display:grid;place-items:center;background:rgba(0,0,0,.25);border:1px solid rgba(201,168,76,.35)}
+.arrow-badge svg{width:24px;height:24px;color:var(--gold2);will-change:transform}
+.fq-pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.qrow{display:flex;align-items:center;gap:12px;padding:14px;cursor:pointer;transition:border-color .2s,background .2s}
+.qrow.sel{border-color:rgba(201,168,76,.4);background:linear-gradient(180deg,rgba(201,168,76,.08),rgba(201,168,76,.02))}
+.qrow .dir{width:38px;height:38px;border-radius:12px;flex:none;display:grid;place-items:center;background:rgba(255,255,255,.04);border:1px solid var(--line)}
+.qrow .dir svg{width:18px;height:18px;color:var(--gold);will-change:transform}
+.qrow .body{flex:1;min-width:0}
+.qrow .t{font-family:var(--hf);font-weight:var(--hw);font-size:15.5px;color:var(--text-bright);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qrow .meta span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qrow .right{text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:5px}
+.qrow .d{font-family:var(--hf);font-weight:var(--hw);font-size:15px;color:var(--text);white-space:nowrap}
+#screen-create select#nSaved{color:var(--text-bright)}
 </style>
 <script src="sprite_spec.js"></script>
 </head>
@@ -622,37 +660,29 @@ header.top .xp-fill{height:100%;border-radius:99px;background:linear-gradient(90
     <button class="cbanner-btn" onclick="enableCompass()">Enable</button>
   </div>
 
-  <div class="bsection">
-    <div class="btape-wrap" id="btWrap">
-      <div class="bfade bfade-l"></div>
-      <div class="bfade bfade-r"></div>
-      <canvas id="btCanvas" style="position:absolute;top:0;left:0"></canvas>
-      <div class="qmarker" id="qmarker" style="display:none">
-        <div class="qmarker-arr"></div>
-        <div class="qmarker-line"></div>
-      </div>
-    </div>
-    <div class="binfo">
-      <div>
-        <div class="bhdg" id="bHdg">---<span id="bCard"></span></div>
-        <div class="gps-row" style="margin-top:6px"><div class="gdot" id="gpsDot2"></div><span id="gpsLbl2">Waiting for GPS…</span></div>
-      </div>
-      <div class="bqi dim" id="bQI">No quest selected</div>
+  <div class="card dial">
+    <div class="tape"><canvas id="tape"></canvas><div class="needle"></div></div>
+    <div class="dial-read">
+      <div class="hdg" id="bHdg">---</div>
+      <div class="gps-row"><div class="gdot" id="gpsDot2"></div><span id="gpsLbl2">Waiting for GPS…</span></div>
     </div>
   </div>
 
-  <div class="fqcard focus" id="fqCard" style="display:none">
+  <div class="card focus" id="fqCard" style="display:none">
     <div class="eyebrow">Tracking quest</div>
-    <div class="fq-head"><div class="fq-title" id="fqTitle"></div><div class="xp-pill" id="fqXp"></div></div>
-    <div class="fq-meta">
-      <span class="meta"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 15s5-4.6 5-8.5A5 5 0 0 0 3 6.5C3 10.4 8 15 8 15z"/><circle cx="8" cy="6.5" r="1.8"/></svg><span id="fqLoc"></span></span>
-      <span class="meta"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="8" r="6"/><circle cx="8" cy="8" r="2.2"/></svg><span id="fqRad"></span></span>
+    <h3 class="fq-title" id="fqTitle"></h3>
+    <div class="meta"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 15s5-4.6 5-8.5A5 5 0 0 0 3 6.5C3 10.4 8 15 8 15z"/><circle cx="8" cy="6.5" r="1.8"/></svg><span id="fqLoc"></span></div>
+    <div class="focus-row">
+      <div class="arrow-badge"><svg id="fqArrow" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l6 18-6-4-6 4z"/></svg></div>
+      <div class="dist" id="fqDist">—</div>
+      <div class="range"><div class="range-track"><div class="range-fill" id="fqRange"></div></div><div class="range-lbl" id="fqRangeLbl">Waiting for GPS</div></div>
     </div>
-    <button class="btn btn-primary complete-btn" id="completeBtn" onclick="completeQuest()">Complete Quest</button>
+    <div class="fq-pills"><span class="xp-pill" id="fqXp"></span><span class="pill pill-g" id="fqGold"></span><span class="pill pill-g" id="fqRad"></span></div>
+    <button class="btn btn-primary complete-btn" id="completeBtn" onclick="completeQuest()" disabled>Complete Quest</button>
   </div>
 
   <button class="btn btn-secondary" onclick="showScreen('create',null)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Forge New Quest</button>
-  <div class="h-sec"><h2>Active quests</h2></div>
+  <div class="h-sec"><h2>Active quests</h2><span class="aux" id="cQCount"></span></div>
   <div class="qlist" id="cQList"></div>
 </div></section>
 
@@ -771,11 +801,9 @@ header.top .xp-fill{height:100%;border-radius:99px;background:linear-gradient(90
     <div class="stat"><div class="v" id="sGold" style="color:var(--gold2)">0</div><div class="l">Gold</div></div>
   </div>
 
-  <div class="h-sec"><h2>Loadout</h2><span class="aux">Swipe to try on</span></div>
+  <div class="h-sec"><h2>Loadout</h2><span class="aux">Swipe to equip</span></div>
   <div class="loadout">
     <div class="stage" id="stage">
-      <div class="stage-l" id="stageL">Equipped</div>
-      <div class="stage-r" id="stageR"></div>
       <div id="profAvatarLarge"></div>
     </div>
   </div>
@@ -818,6 +846,10 @@ header.top .xp-fill{height:100%;border-radius:99px;background:linear-gradient(90
   <div class="fg">
     <label>Description</label>
     <textarea id="nDesc" placeholder="What must be done…"></textarea>
+  </div>
+  <div class="fg" id="savedLocWrap" style="display:none">
+    <label>Previous locations</label>
+    <select id="nSaved" onchange="v2PickSavedLoc(this.value)"></select>
   </div>
   <div class="fg">
     <label>Location Name</label>
@@ -1125,7 +1157,7 @@ function toast(msg, type) {
 // ═══════════════════════════════════════════════════
 function showScreen(id, btn, fromSwipe) {
   var cr = document.getElementById('screen-create');
-  if (id === 'create') { if (cr) cr.classList.add('open'); return; }
+  if (id === 'create') { if (cr) cr.classList.add('open'); v2FillSavedLocs(); return; }
   if (cr) cr.classList.remove('open');
   var idx = V2_PAGES.indexOf(id);
   if (idx < 0) return;
@@ -1396,146 +1428,6 @@ function updateHeader() {
 // ═══════════════════════════════════════════════════
 //  BEARING BAR (canvas) — unchanged
 // ═══════════════════════════════════════════════════
-function drawBar() {
-  var wrap   = document.getElementById('btWrap');
-  var canvas = document.getElementById('btCanvas');
-  var W = wrap.clientWidth, H = wrap.clientHeight;
-  if (!W || !H) return;
-
-  var dpr = window.devicePixelRatio || 1;
-  canvas.width  = W * dpr;
-  canvas.height = H * dpr;
-  canvas.style.width  = W + 'px';
-  canvas.style.height = H + 'px';
-
-  var ctx = canvas.getContext('2d');
-  ctx.scale(dpr, dpr);
-
-  var hdg = S.heading;
-  var cx  = W / 2;
-  var PPD = 3.6; // pixels per degree
-
-  // Background
-  var bg = ctx.createLinearGradient(0, 0, 0, H);
-  bg.addColorStop(0, '#0c0c1c');
-  bg.addColorStop(1, '#111122');
-  ctx.fillStyle = bg;
-  ctx.fillRect(0, 0, W, H);
-
-  // Tick marks
-  var vis = W / PPD;
-  var s0  = hdg - vis / 2 - 6;
-  var s1  = hdg + vis / 2 + 6;
-  var CARD = {0:'N',45:'NE',90:'E',135:'SE',180:'S',225:'SW',270:'W',315:'NW',360:'N'};
-
-  for (var rd = Math.floor(s0); rd <= Math.ceil(s1); rd++) {
-    var dg = ((rd % 360) + 360) % 360;
-    var x  = cx + (rd - hdg) * PPD;
-    var isMaj = dg % 45 === 0;
-    var isMid = !isMaj && dg % 15 === 0;
-    var isMin = !isMaj && !isMid && dg % 5 === 0;
-    if (!isMaj && !isMid && !isMin) continue;
-
-    var th, col, lw;
-    if (isMaj)      { th = 22; col = '#6a6880'; lw = 1.5; }
-    else if (isMid) { th = 13; col = '#323250'; lw = 1;   }
-    else            { th = 7;  col = '#222240'; lw = 0.8; }
-
-    ctx.strokeStyle = col;
-    ctx.lineWidth   = lw;
-    ctx.beginPath();
-    ctx.moveTo(x, H - 4);
-    ctx.lineTo(x, H - 4 - th);
-    ctx.stroke();
-
-    if (isMaj) {
-      var lbl   = CARD[dg] || (dg + '°');
-      var isDir = ['N','S','E','W'].indexOf(lbl) >= 0;
-      ctx.fillStyle = isDir ? '#c9a84c' : '#4a4860';
-      ctx.font      = (isDir ? '600 11px' : '9px') + " 'Cinzel', serif";
-      ctx.textAlign = 'center';
-      ctx.fillText(lbl, x, H - 4 - th - 5);
-    }
-  }
-
-  // Center line
-  ctx.strokeStyle = '#c9a84c';
-  ctx.lineWidth   = 2;
-  ctx.shadowColor = '#c9a84c';
-  ctx.shadowBlur  = 10;
-  ctx.beginPath();
-  ctx.moveTo(cx, 0);
-  ctx.lineTo(cx, H);
-  ctx.stroke();
-  ctx.shadowBlur = 0;
-
-  // Triangle pointer at top
-  ctx.fillStyle   = '#c9a84c';
-  ctx.shadowColor = '#c9a84c';
-  ctx.shadowBlur  = 6;
-  ctx.beginPath();
-  ctx.moveTo(cx - 6, 0);
-  ctx.lineTo(cx + 6, 0);
-  ctx.lineTo(cx, 11);
-  ctx.closePath();
-  ctx.fill();
-  ctx.shadowBlur = 0;
-
-  // Heading label
-  if (S.compassReady) {
-    document.getElementById('bHdg').innerHTML = Math.round(hdg) + '°<span>' + toCardinal(hdg) + '</span>';
-  } else {
-    document.getElementById('bHdg').innerHTML = '---<span id="bCard"></span>';
-  }
-
-  // Quest marker
-  var fq   = null;
-  for (var i = 0; i < S.quests.length; i++) {
-    if (S.quests[i].id === S.focusedId && S.quests[i].status === 'active') { fq = S.quests[i]; break; }
-  }
-
-  var mkr = document.getElementById('qmarker');
-  var bqi = document.getElementById('bQI');
-  var cb  = document.getElementById('completeBtn');
-
-  if (!fq || S.lat === null) {
-    mkr.style.display = 'none';
-    bqi.className = 'bqi dim';
-    bqi.textContent = S.lat === null ? 'Waiting for GPS…' : 'No quest selected';
-    if (cb) cb.disabled = true;
-    return;
-  }
-
-  var br   = bearingDeg(S.lat, S.lng, fq.latitude, fq.longitude);
-  var d    = distM(S.lat, S.lng, fq.latitude, fq.longitude);
-  var rel  = br - hdg;
-  while (rel > 180)  rel -= 360;
-  while (rel < -180) rel += 360;
-  var mx = cx + rel * PPD;
-  var onScreen = mx > 12 && mx < W - 12;
-
-  if (onScreen) {
-    mkr.style.display = 'flex';
-    mkr.style.left    = mx + 'px';
-  } else {
-    mkr.style.display = 'none';
-    // Draw edge chevron
-    var ex    = mx < cx ? 20 : W - 20;
-    var arrow = rel < 0 ? '◂' : '▸';
-    ctx.fillStyle = 'rgba(76,175,122,.85)';
-    ctx.font      = '16px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(arrow, ex, H / 2 + 5);
-  }
-
-  var canDo = d <= fq.completionRadius;
-  bqi.className   = 'bqi';
-  bqi.innerHTML   = fq.title + '<br>' + fmtD(d) + ' · ' + Math.round(br) + '°';
-  if (cb) {
-    cb.disabled    = !canDo;
-    cb.textContent = canDo ? 'Complete Quest' : fmtD(d) + ' away';
-  }
-}
 
 // ═══════════════════════════════════════════════════
 //  CREATE QUEST
@@ -1606,6 +1498,7 @@ function createQuest() {
       });
       document.getElementById('coordFb').className   = 'chint';
       document.getElementById('coordFb').textContent = 'Enter decimal coordinates: latitude, longitude';
+      var _ns = document.getElementById('nSaved'); if (_ns) _ns.value = '';
 
       toast('Quest forged! ⚔ (' + newQ.xpReward + ' XP)', 'success');
       showScreen('compass', document.querySelector('nav button'));
@@ -1714,61 +1607,6 @@ function completeQuest() {
 // ═══════════════════════════════════════════════════
 //  RENDER COMPASS SCREEN
 // ═══════════════════════════════════════════════════
-function renderCompass() {
-  var active = S.quests.filter(function(q) { return q.status === 'active'; });
-  var listEl = document.getElementById('cQList');
-  var card   = document.getElementById('fqCard');
-
-  // Validate focused quest still active
-  if (S.focusedId) {
-    var stillActive = false;
-    for (var i = 0; i < active.length; i++) { if (active[i].id === S.focusedId) { stillActive = true; break; } }
-    if (!stillActive) S.focusedId = null;
-  }
-
-  // Auto-select nearest / first
-  if (!S.focusedId && active.length > 0) {
-    if (S.lat !== null) {
-      var best = active[0], bestD = Infinity;
-      active.forEach(function(q) {
-        var d = distM(S.lat, S.lng, q.latitude, q.longitude);
-        if (d < bestD) { bestD = d; best = q; }
-      });
-      S.focusedId = best.id;
-    } else {
-      S.focusedId = active[0].id;
-    }
-  }
-
-  var fq = null;
-  for (var j = 0; j < active.length; j++) { if (active[j].id === S.focusedId) { fq = active[j]; break; } }
-
-  if (fq) {
-    card.style.display = 'block';
-    document.getElementById('fqTitle').textContent = fq.title;
-    document.getElementById('fqXp').textContent    = fq.xpReward + ' XP';
-    document.getElementById('fqLoc').textContent   = fq.locationName || (fq.latitude.toFixed(4) + ', ' + fq.longitude.toFixed(4));
-    document.getElementById('fqRad').textContent   = fq.completionRadius + ' m radius';
-  } else {
-    card.style.display = 'none';
-  }
-
-  if (active.length === 0) {
-    listEl.innerHTML = '<div class="empty"><p>No active quests.<br>Forge one to begin.</p></div>';
-  } else {
-    listEl.innerHTML = active.map(function(q) {
-      var isFocused = q.id === S.focusedId;
-      var ds = S.lat !== null ? '<span class="tag">' + fmtD(distM(S.lat, S.lng, q.latitude, q.longitude)) + '</span>' : '';
-      return '<div class="qi' + (isFocused ? ' focused' : '') + '" onclick="focusQ(\'' + q.id + '\')">' +
-        '<div class="qi-hdr"><div class="qi-title">' + q.title + '</div><div class="xp-pill">' + q.xpReward + ' XP</div></div>' +
-        (q.locationName ? '<div class="qi-body">' + V2_PIN + q.locationName + '</div>' : '') +
-        '<div class="qi-foot">' + ds + '<span class="tag">' + q.completionRadius + 'm</span></div>' +
-        '</div>';
-    }).join('');
-  }
-
-  drawBar();
-}
 
 function focusQ(id) { S.focusedId = id; renderCompass(); }
 
@@ -4099,7 +3937,7 @@ function v2HairColor(url, cb) {
 }
 
 // ── Loadout: per-slot carousels with a live try-on ───
-var V2_PREVIEW = null, _v2InvKey = '', _v2InPv = false;
+var V2_PREVIEW = null, _v2InPv = false;   // preview is off: swiping equips directly
 var V2_SLOTS = [
   { slot: 'helmet', label: 'Head',   none: 'No headgear',    sub: 'Show your hair',
     icon: '<path d="M5 14a7 7 0 0 1 14 0v3H5z"/><path d="M12 7V4M9 17v3M15 17v3"/>' },
@@ -4160,34 +3998,35 @@ function v2CenterOn(slot, id, instant) {
   if (!card) return;
   tr.scrollTo({ left: card.offsetLeft - (tr.clientWidth - card.clientWidth) / 2, behavior: instant ? 'auto' : 'smooth' });
 }
-function v2StageLabel() {
-  var eq = S.profile.equippedItems || {}, pv = V2_PREVIEW || {};
-  var diff = V2_SLOTS.some(function(s) { return (pv[s.slot] || null) !== (eq[s.slot] || null); });
-  var l = document.getElementById('stageL'), r = document.getElementById('stageR');
-  if (l) { l.textContent = diff ? 'Previewing' : 'Equipped'; l.style.color = diff ? 'var(--gold2)' : ''; }
-  if (r) r.innerHTML = diff ? '<button onclick="v2ResetPreview()">Reset</button>' : '';
+function v2StageLabel() {}
+// Equip as the carousel lands on a card. The character updates straight away;
+// the other scenes follow a beat later and the save is batched.
+var _v2SaveTimer = null, _v2SceneTimer = null;
+function v2SetSlot(slot, id) {
+  var eq = S.profile.equippedItems || {};
+  if ((eq[slot] || null) === (id || null)) return;
+  if (id) eq[slot] = id; else delete eq[slot];
+  S.profile.equippedItems = eq;
+  try { localStorage.setItem('tq_equipped', JSON.stringify(eq)); } catch (e) {}
+  refreshAvatarPreview();
+  v2RefreshCards();
+  clearTimeout(_v2SceneTimer);
+  _v2SceneTimer = setTimeout(function() { refreshSceneLayers(); refreshHomeLayers(); }, 150);
+  clearTimeout(_v2SaveTimer);
+  _v2SaveTimer = setTimeout(function() {
+    if (currentUser) sb.from('profiles').update({ equipped_items: S.profile.equippedItems }).eq('id', currentUser.id).then(function(){}).catch(function(){});
+  }, 800);
 }
-function v2ResetPreview() {
-  V2_PREVIEW = Object.assign({}, S.profile.equippedItems || {});
-  V2_SLOTS.forEach(function(s) { v2CenterOn(s.slot, V2_PREVIEW[s.slot] || 'none', false); });
-  v2RefreshCards(); refreshAvatarPreview(); v2StageLabel();
-}
-function v2Unequip(slot) {
-  var cur = (S.profile.equippedItems || {})[slot];
-  if (cur) equipItem(cur);   // equipItem toggles an equipped item off
-}
+function v2Unequip(slot) { v2SetSlot(slot, null); }
 function v2RefreshCards() {
-  var eq = S.profile.equippedItems || {}, pv = V2_PREVIEW || {};
+  var eq = S.profile.equippedItems || {};
   V2_SLOTS.forEach(function(s) {
     document.querySelectorAll('#tr-' + s.slot + ' .item').forEach(function(c) {
-      var id = c.dataset.id, isEq = (eq[s.slot] || 'none') === id, isPv = (pv[s.slot] || 'none') === id;
-      c.classList.toggle('is-eq', isEq); c.classList.toggle('off', !isPv);
-      var act = c.querySelector('.act');
-      if (isEq) act.innerHTML = '<span class="eq-badge">' + V2_CHECK + (id === 'none' ? 'Current' : 'Equipped') + '</span>';
-      else {
-        act.innerHTML = '<button class="btn btn-primary">' + (id === 'none' ? 'Remove' : 'Equip') + '</button>';
-        act.querySelector('.btn').onclick = function(e) { e.stopPropagation(); if (id === 'none') v2Unequip(s.slot); else equipItem(id); };
-      }
+      var isEq = (eq[s.slot] || 'none') === c.dataset.id;
+      if (c.classList.contains('is-eq') === isEq && c.dataset.drawn) return;
+      c.dataset.drawn = '1';
+      c.classList.toggle('is-eq', isEq); c.classList.toggle('off', !isEq);
+      c.querySelector('.act').innerHTML = isEq ? '<span class="eq-badge">' + V2_CHECK + (c.dataset.id === 'none' ? 'Current' : 'Equipped') + '</span>' : '';
     });
   });
 }
@@ -4196,7 +4035,6 @@ function renderInventory() {
   if (!container) return;
   var g = S.customization.gender || 'm', cls = S.customization.charClass || 'warrior';
   var eq = S.profile.equippedItems || {};
-  if (!V2_PREVIEW || _v2InvKey !== g + '|' + cls) { V2_PREVIEW = Object.assign({}, eq); _v2InvKey = g + '|' + cls; }
   function classOk(it) { return !it.classes || it.classes.length === 0 || it.classes.indexOf(cls) >= 0; }
   var pool;
   if (DEV_MODE) pool = LOOT_TABLE.filter(function(it) { return it.gender === g && classOk(it); });
@@ -4223,18 +4061,21 @@ function renderInventory() {
       card.onclick = function() { v2CenterOn(s.slot, it.id, false); };
       tr.appendChild(card);
     });
-    var tmr;
+    // Equip whichever card sits in the middle, checked every frame while scrolling
+    var raf = 0;
     tr.addEventListener('scroll', function() {
-      clearTimeout(tmr);
-      tmr = setTimeout(function() {
+      if (raf || !tr.dataset.ready) return;
+      raf = requestAnimationFrame(function() {
+        raf = 0;
         var mid = tr.scrollLeft + tr.clientWidth / 2, best = null, bd = 1e9;
-        tr.querySelectorAll('.item').forEach(function(c) { var dd = Math.abs(c.offsetLeft + c.clientWidth / 2 - mid); if (dd < bd) { bd = dd; best = c; } });
-        if (!best) return;
-        var id = best.dataset.id, prev = V2_PREVIEW[s.slot] || 'none';
-        if (id === prev) return;
-        if (id === 'none') delete V2_PREVIEW[s.slot]; else V2_PREVIEW[s.slot] = id;
-        v2RefreshCards(); refreshAvatarPreview(); v2StageLabel();
-      }, 90);
+        var cards = tr.children;
+        for (var k = 0; k < cards.length; k++) {
+          var c = cards[k], dd = Math.abs(c.offsetLeft + c.clientWidth / 2 - mid);
+          if (dd < bd) { bd = dd; best = c; }
+        }
+        if (!best || bd > best.clientWidth * 0.3) return;   // wait until a card is mostly centred
+        v2SetSlot(s.slot, best.dataset.id === 'none' ? null : best.dataset.id);
+      });
     }, { passive: true });
     container.appendChild(sec);
   });
@@ -4244,9 +4085,11 @@ function renderInventory() {
     container.insertBefore(n, container.firstChild);
   }
   v2RefreshCards();
-  requestAnimationFrame(function() { V2_SLOTS.forEach(function(s) { v2CenterOn(s.slot, V2_PREVIEW[s.slot] || 'none', true); }); });
+  requestAnimationFrame(function() {
+    V2_SLOTS.forEach(function(s) { v2CenterOn(s.slot, eq[s.slot] || 'none', true); });
+    setTimeout(function() { container.querySelectorAll('.track').forEach(function(t) { t.dataset.ready = '1'; }); }, 60);
+  });
   refreshAvatarPreview();
-  v2StageLabel();
 }
 // Idle animation for the loadout stage (only while the Hero page is showing)
 var _v2StageFrame = 0;
@@ -4295,6 +4138,153 @@ function renderCustomizeUI() {
     }).join('');
   }
   v2RenderClassBtn();
+}
+
+// ── Compass (v2.1): tape + tracked quest, driven by the live heading ──
+var _v2Hdg = null, _v2HdgLoop = false;
+var V2_ARROW = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l6 18-6-4-6 4z"/></svg>';
+var V2_DIRS16 = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
+function v2FocusQuest() {
+  for (var i = 0; i < S.quests.length; i++) if (S.quests[i].id === S.focusedId && S.quests[i].status === 'active') return S.quests[i];
+  return null;
+}
+function v2GoldFor(xp) { return Math.max(10, Math.floor(xp * 0.3)); }
+function v2DistHTML(d) { return d < 1000 ? Math.round(d) + '<small>m</small>' : (d / 1000).toFixed(1) + '<small>km</small>'; }
+// Called by the orientation sensor, GPS and renders: refresh the numbers and make sure the tape is animating
+function drawBar() {
+  v2UpdateFocus();
+  if (!_v2HdgLoop) { _v2HdgLoop = true; requestAnimationFrame(v2CompassFrame); }
+}
+function v2CompassFrame() {
+  var page = document.getElementById('screen-compass');
+  if (!page || !page.classList.contains('active')) { _v2HdgLoop = false; return; }
+  var target = S.heading || 0;
+  if (_v2Hdg === null) _v2Hdg = target;
+  var diff = ((target - _v2Hdg + 540) % 360) - 180;
+  _v2Hdg = Math.abs(diff) < 0.1 ? target : (_v2Hdg + diff * 0.5 + 360) % 360;   // catches up in a few frames, smooths sensor jitter
+  v2DrawTape();
+  if (Math.abs(diff) < 0.1) { _v2HdgLoop = false; return; }
+  requestAnimationFrame(v2CompassFrame);
+}
+function v2DrawTape() {
+  var cv = document.getElementById('tape'); if (!cv) return;
+  var W = cv.clientWidth, H = cv.clientHeight, dpr = window.devicePixelRatio || 1;
+  if (!W || !H) return;
+  if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
+  var x = cv.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, W, H);
+  var hdg = _v2Hdg || 0, pxDeg = 3.2, CARD = { 0:'N', 45:'NE', 90:'E', 135:'SE', 180:'S', 225:'SW', 270:'W', 315:'NW' };
+  var font = (getComputedStyle(document.body).getPropertyValue('--hf') || 'serif').trim();
+  x.textAlign = 'center';
+  for (var d = Math.floor((hdg - W / 2 / pxDeg) / 5) * 5; d <= hdg + W / 2 / pxDeg; d += 5) {
+    var xx = W / 2 + (d - hdg) * pxDeg, dd = ((d % 360) + 360) % 360, major = dd % 15 === 0, card = CARD[dd] !== undefined;
+    x.strokeStyle = card ? 'rgba(236,208,133,.9)' : major ? 'rgba(255,255,255,.42)' : 'rgba(255,255,255,.16)';
+    x.lineWidth = card ? 2 : 1;
+    x.beginPath(); x.moveTo(xx, H - 8); x.lineTo(xx, H - 8 - (card ? 22 : major ? 15 : 8)); x.stroke();
+    if (major) {
+      x.font = (card ? '15px ' : '11px ') + font;
+      x.fillStyle = card ? '#ecd085' : 'rgba(255,255,255,.5)';
+      x.fillText(card ? CARD[dd] : dd, xx, card ? 20 : 22);
+    }
+  }
+  // Tracked quest marker (or an edge chevron when it is behind you)
+  var fq = v2FocusQuest(), off = null;
+  if (fq && S.lat !== null) {
+    off = ((bearingDeg(S.lat, S.lng, fq.latitude, fq.longitude) - hdg + 540) % 360) - 180;
+    var qx = W / 2 + off * pxDeg;
+    x.fillStyle = '#7fd6a5';
+    if (Math.abs(off) * pxDeg < W / 2 - 14) {
+      x.beginPath(); x.moveTo(qx, H - 36); x.lineTo(qx - 7, H - 48); x.lineTo(qx + 7, H - 48); x.closePath(); x.fill();
+      x.fillStyle = 'rgba(127,214,165,.2)'; x.fillRect(qx - 1, H - 34, 2, 26);
+    } else {
+      var ex = off < 0 ? 18 : W - 18;
+      x.beginPath(); x.moveTo(ex + (off < 0 ? -6 : 6), H / 2); x.lineTo(ex + (off < 0 ? 4 : -4), H / 2 - 8); x.lineTo(ex + (off < 0 ? 4 : -4), H / 2 + 8); x.closePath(); x.fill();
+    }
+  }
+  var hEl = document.getElementById('bHdg');
+  if (hEl) {
+    if (S.compassReady) { var hh = ((Math.round(hdg) % 360) + 360) % 360; hEl.innerHTML = hh + '°<small>' + V2_DIRS16[Math.round(hh / 22.5) % 16] + '</small>'; }
+    else hEl.textContent = '---';
+  }
+  var arrow = document.getElementById('fqArrow');
+  if (arrow) arrow.style.transform = off === null ? '' : 'rotate(' + off.toFixed(1) + 'deg)';
+  if (S.lat !== null) document.querySelectorAll('#cQList .dir svg').forEach(function(s) {
+    var b = bearingDeg(S.lat, S.lng, +s.dataset.lat, +s.dataset.lng);
+    s.style.transform = 'rotate(' + (((b - hdg + 540) % 360) - 180).toFixed(1) + 'deg)';
+  });
+}
+function v2UpdateFocus() {
+  var fq = v2FocusQuest(), cb = document.getElementById('completeBtn');
+  if (!fq) { if (cb) cb.disabled = true; return; }
+  var dist = document.getElementById('fqDist'), fill = document.getElementById('fqRange'), lbl = document.getElementById('fqRangeLbl');
+  if (S.lat === null) {
+    dist.textContent = '—'; fill.style.width = '0%'; fill.classList.remove('ok');
+    lbl.textContent = 'Waiting for GPS'; lbl.classList.remove('ok');
+    if (cb) { cb.disabled = true; cb.textContent = 'Waiting for GPS'; }
+    return;
+  }
+  var d = distM(S.lat, S.lng, fq.latitude, fq.longitude), r = fq.completionRadius, ok = d <= r;
+  // log scale: 5 km away reads empty, inside the radius reads full
+  var pct = ok ? 100 : Math.max(4, Math.min(96, 100 * (1 - Math.log(d / r) / Math.log(Math.max(5000 / r, 2)))));
+  dist.innerHTML = v2DistHTML(d);
+  fill.style.width = pct.toFixed(1) + '%'; fill.classList.toggle('ok', ok);
+  lbl.textContent = ok ? 'Within ' + r + ' m — ready' : 'Get within ' + r + ' m'; lbl.classList.toggle('ok', ok);
+  if (cb) { cb.disabled = !ok; cb.textContent = ok ? 'Complete Quest' : fmtD(d) + ' away'; }
+}
+function renderCompass() {
+  var active = S.quests.filter(function(q) { return q.status === 'active'; });
+  var listEl = document.getElementById('cQList'), card = document.getElementById('fqCard');
+  if (S.focusedId && !active.some(function(q) { return q.id === S.focusedId; })) S.focusedId = null;
+  if (!S.focusedId && active.length) {
+    var best = active[0];
+    if (S.lat !== null) { var bd = Infinity; active.forEach(function(q) { var d = distM(S.lat, S.lng, q.latitude, q.longitude); if (d < bd) { bd = d; best = q; } }); }
+    S.focusedId = best.id;
+  }
+  var fq = v2FocusQuest();
+  if (fq) {
+    card.style.display = '';
+    document.getElementById('fqTitle').textContent = fq.title;
+    document.getElementById('fqLoc').textContent = fq.locationName || (fq.latitude.toFixed(4) + ', ' + fq.longitude.toFixed(4));
+    document.getElementById('fqXp').textContent = '+' + fq.xpReward + ' XP';
+    document.getElementById('fqGold').textContent = '+' + v2GoldFor(fq.xpReward) + 'g';
+    document.getElementById('fqRad').textContent = fq.completionRadius + ' m radius';
+  } else card.style.display = 'none';
+  var cnt = document.getElementById('cQCount'); if (cnt) cnt.textContent = active.length ? active.length + ' active' : '';
+  if (!active.length) listEl.innerHTML = '<div class="empty"><p>No active quests.<br>Forge one to begin.</p></div>';
+  else listEl.innerHTML = active.map(function(q) {
+    var dist = S.lat !== null ? fmtD(distM(S.lat, S.lng, q.latitude, q.longitude)) : '—';
+    var loc = q.locationName || (q.latitude.toFixed(4) + ', ' + q.longitude.toFixed(4));
+    return '<div class="card qrow' + (q.id === S.focusedId ? ' sel' : '') + '" onclick="focusQ(\'' + q.id + '\')">' +
+      '<div class="dir">' + V2_ARROW.replace('<svg ', '<svg data-lat="' + q.latitude + '" data-lng="' + q.longitude + '" ') + '</div>' +
+      '<div class="body"><div class="t">' + escHtml(q.title) + '</div><div class="meta" style="margin-top:3px">' + V2_PIN + '<span>' + escHtml(loc) + '</span></div></div>' +
+      '<div class="right"><div class="d">' + dist + '</div><span class="xp-pill">' + q.xpReward + ' XP</span></div></div>';
+  }).join('');
+  _v2Hdg = _v2Hdg === null ? null : _v2Hdg;
+  drawBar();
+  v2DrawTape();
+}
+
+// ── Forge: pick from places you've used before ──
+var _v2Locs = [];
+function v2FillSavedLocs() {
+  var seen = {}, wrap = document.getElementById('savedLocWrap'), sel = document.getElementById('nSaved');
+  if (!wrap || !sel) return;
+  _v2Locs = [];
+  allQuests.slice().sort(function(a, b) { return new Date(b.createdAt || 0) - new Date(a.createdAt || 0); }).forEach(function(q) {
+    var n = (q.locationName || '').trim(); if (!n || q.latitude == null) return;
+    var k = n.toLowerCase(); if (seen[k]) return; seen[k] = 1;
+    _v2Locs.push({ name: n, lat: +q.latitude, lng: +q.longitude });
+  });
+  wrap.style.display = _v2Locs.length ? '' : 'none';
+  sel.innerHTML = '<option value="">Choose a saved place…</option>' + _v2Locs.map(function(l, i) {
+    return '<option value="' + i + '">' + escHtml(l.name) + (S.lat !== null ? '  ·  ' + fmtD(distM(S.lat, S.lng, l.lat, l.lng)) : '') + '</option>';
+  }).join('');
+}
+function v2PickSavedLoc(v) {
+  if (v === '' || !_v2Locs[+v]) return;
+  var l = _v2Locs[+v];
+  document.getElementById('nLocName').value = l.name;
+  document.getElementById('nCoords').value = l.lat.toFixed(6) + ', ' + l.lng.toFixed(6);
+  onCoordInput();
 }
 
 startGPS();
