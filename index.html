@@ -2,12 +2,13 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0f">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <title>TaskQuest</title>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Marcellus&family=Josefin+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
 :root {
@@ -41,8 +42,6 @@ nav button.active{color:var(--gold);border-bottom-color:var(--gold);background:r
 nav button:hover:not(.active){color:var(--text);background:rgba(255,255,255,.03)}
 
 /* SCREENS */
-.screen{display:none;flex:1;flex-direction:column;padding:16px 20px 30px;gap:14px;animation:fadeIn .25s ease}
-.screen.active{display:flex}
 @keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
 .sec-title{font-family:'Cinzel',serif;font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--text-dim);padding-bottom:7px;border-bottom:1px solid var(--border)}
 
@@ -294,6 +293,309 @@ hr{border:none;border-top:1px solid var(--border)}
 .unlock-desc{font-family:'Crimson Pro',serif;font-size:14px;color:var(--text-dim);font-style:italic;margin-bottom:22px;line-height:1.5}
 .unlock-btn{width:100%;padding:12px;background:linear-gradient(135deg,#2a2010,#1a1508);border:1px solid var(--gold-dim);border-radius:var(--r);color:var(--gold2);font-family:'Cinzel',serif;font-size:12px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .2s}
 .unlock-btn:hover{background:linear-gradient(135deg,#3a2e18,#2a200c);border-color:var(--gold)}
+
+/* ══════════ V2 UI ══════════ */
+:root{
+  --rr:16px; --line:rgba(255,255,255,.07); --line2:rgba(255,255,255,.12);
+  --faint:#56534c; --tab-h:66px; --safe-b:env(safe-area-inset-bottom,0px);
+  --hf:'Marcellus',serif; --hw:400; --hls:.08em;
+}
+body.hf-cinzel{--hf:'Cinzel',serif;--hw:500}
+body.hf-josefin{--hf:'Josefin Sans',sans-serif;--hw:500}
+html,body{height:100%}
+body{overflow:hidden}
+#app{height:100vh;height:100dvh;min-height:0;overflow:hidden;background:radial-gradient(120% 55% at 50% -10%,#1b1830 0%,transparent 60%)}
+
+/* top bar */
+header.top{position:relative;padding:calc(env(safe-area-inset-top,0px) + 12px) 18px 10px;border:none;background:none;backdrop-filter:none;display:flex;flex-direction:column;gap:9px;z-index:5}
+.top-row{display:flex;align-items:center;justify-content:space-between}
+header.top .logo{font-family:'Cinzel',serif;font-weight:600;font-size:18px;letter-spacing:.14em;color:var(--gold2);text-shadow:0 0 18px rgba(201,168,76,.25);text-transform:uppercase}
+.top-chips{display:flex;gap:8px;align-items:center}
+.chip{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 11px;border-radius:999px;background:rgba(255,255,255,.05);border:1px solid var(--line2);font-family:var(--hf);font-weight:var(--hw);font-size:13px;letter-spacing:.04em;color:var(--text-bright)}
+.chip svg{width:14px;height:14px}
+.icon-chip{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--faint);cursor:pointer}
+.icon-chip svg{width:15px;height:15px}
+.lvl{position:relative;width:34px;height:34px}
+.lvl svg{position:absolute;inset:0;transform:rotate(-90deg)}
+.lvl b{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--hf);font-size:13px;font-weight:var(--hw);color:var(--gold2)}
+.xp{display:flex;align-items:center;gap:10px}
+.xp-track{flex:1;height:6px;border-radius:99px;background:rgba(255,255,255,.06);overflow:hidden}
+header.top .xp-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#a8842f,#ecd085);box-shadow:0 0 12px rgba(236,208,133,.4);transition:width .6s ease}
+.xp-txt{font-family:var(--hf);font-size:11px;letter-spacing:.06em;color:var(--text-dim);white-space:nowrap}
+
+/* pager */
+.pager{flex:1;min-height:0;display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain}
+.pager::-webkit-scrollbar{display:none}
+.screen.page{display:block;flex:0 0 100%;width:100%;height:100%;overflow-y:auto;overflow-x:hidden;scroll-snap-align:start;scroll-snap-stop:always;
+  padding:6px 16px calc(var(--tab-h) + var(--safe-b) + 28px);animation:none;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.screen.page::-webkit-scrollbar{display:none}
+.stack{display:flex;flex-direction:column;gap:14px}
+
+/* create overlay page */
+#screen-create{display:flex;position:absolute;inset:0;z-index:30;background:var(--bg);overflow-y:auto;padding:calc(env(safe-area-inset-top,0px) + 16px) 18px 40px;
+  transform:translateX(105%);transition:transform .32s cubic-bezier(.3,.8,.2,1);animation:none}
+#screen-create.open{transform:none}
+
+/* tab bar */
+.tabbar{position:absolute;left:12px;right:12px;bottom:calc(10px + var(--safe-b));height:var(--tab-h);z-index:20;display:grid;grid-template-columns:repeat(4,1fr);padding:6px;border-radius:22px;
+  background:rgba(18,17,28,.84);backdrop-filter:blur(18px) saturate(1.3);-webkit-backdrop-filter:blur(18px) saturate(1.3);border:1px solid var(--line2);box-shadow:0 12px 40px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.05)}
+.tab-ind{position:absolute;top:6px;bottom:6px;left:6px;width:calc((100% - 12px)/4);border-radius:16px;background:linear-gradient(180deg,rgba(236,208,133,.15),rgba(201,168,76,.05));border:1px solid rgba(236,208,133,.26);box-shadow:0 0 22px rgba(201,168,76,.16);will-change:transform}
+.tab{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:var(--faint);background:none;border:none;cursor:pointer;transition:color .2s}
+.tab svg{width:23px;height:23px}
+.tab span{font-family:var(--hf);font-size:9.5px;font-weight:var(--hw);letter-spacing:.14em;text-transform:uppercase}
+.tab.on{color:var(--gold2)}
+
+/* building blocks */
+.card{background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.015));border:1px solid var(--line);border-radius:var(--rr);padding:16px}
+.h-sec{display:flex;align-items:center;justify-content:space-between;margin:8px 2px 0}
+.h-sec h2{font-family:var(--hf);font-size:12.5px;font-weight:var(--hw);letter-spacing:.18em;text-transform:uppercase;color:var(--text-dim)}
+.h-sec .aux{font-family:var(--hf);font-size:11px;color:var(--faint);letter-spacing:.06em}
+.btn{height:52px;border-radius:14px;display:inline-flex;align-items:center;justify-content:center;gap:10px;width:100%;border:none;cursor:pointer;
+  font-family:var(--hf);font-weight:var(--hw);font-size:14px;letter-spacing:.14em;text-transform:uppercase;transition:transform .12s,filter .2s,opacity .2s}
+.btn:active{transform:translateY(1px) scale(.985)}
+.btn svg{width:18px;height:18px}
+.btn.btn-primary{color:#1d1407;background:linear-gradient(180deg,#f6dd96 0%,#d6b257 48%,#b18a33 100%);border:none;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.55),inset 0 -3px 0 rgba(90,60,10,.35),0 8px 24px rgba(201,168,76,.26)}
+.btn.btn-primary:disabled{filter:grayscale(.85) brightness(.55);box-shadow:none;cursor:not-allowed;opacity:1}
+.btn.btn-secondary{color:var(--gold2);background:rgba(201,168,76,.06);border:1.5px solid rgba(201,168,76,.45)}
+.btn.btn-ghost{color:var(--text-dim);background:rgba(255,255,255,.03);border:1px solid var(--line2)}
+.btn.btn-danger{color:#e07a7a;background:rgba(213,80,80,.07);border:1px solid rgba(213,80,80,.35)}
+.btn.btn-sm{height:38px;width:auto;padding:0 16px;border-radius:11px;font-size:12px;letter-spacing:.12em}
+.pill{display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 9px;border-radius:999px;font-family:var(--hf);font-size:11px;font-weight:var(--hw);letter-spacing:.06em;white-space:nowrap}
+.pill-xp,.xp-pill{background:rgba(201,168,76,.12);color:var(--gold2);border:1px solid rgba(201,168,76,.25);font-family:var(--hf);font-weight:var(--hw);font-size:11px;padding:3px 9px;border-radius:999px;letter-spacing:.06em;white-space:nowrap}
+.pill-g{background:rgba(255,255,255,.05);color:var(--text);border:1px solid var(--line2)}
+.meta{display:inline-flex;align-items:center;gap:6px;color:var(--text-dim);font-size:15px;min-width:0}
+.meta svg{width:14px;height:14px;flex:none;opacity:.8}
+.seg{position:relative;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;padding:4px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid var(--line)}
+.seg-thumb{position:absolute;top:4px;bottom:4px;left:4px;border-radius:10px;background:linear-gradient(180deg,#2a2640,#1e1b2e);border:1px solid var(--line2);transition:transform .28s cubic-bezier(.3,.7,.2,1)}
+.seg button{position:relative;z-index:1;height:36px;background:none;border:none;cursor:pointer;font-family:var(--hf);font-size:12px;font-weight:var(--hw);letter-spacing:.12em;text-transform:uppercase;color:var(--faint);transition:color .2s}
+.seg button.on{color:var(--gold2)}
+.empty{padding:30px 16px}
+.empty .ei{display:none}
+
+/* compass */
+.cbanner{border-radius:var(--rr);border-color:rgba(201,168,76,.35);padding:12px 14px}
+.cbanner-text,.cbanner-btn{font-family:var(--hf)}
+.cbanner-btn{border-radius:10px;padding:9px 14px}
+.bsection{background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.012));border:1px solid var(--line);border-radius:var(--rr)}
+.btape-wrap{border-bottom:1px solid var(--line)}
+.binfo{padding:12px 16px}
+.bhdg{font-family:var(--hf);font-size:30px;font-weight:var(--hw);letter-spacing:.02em}
+.bhdg span{font-size:14px;color:var(--gold2);margin-left:6px;letter-spacing:.12em}
+.bqi{font-family:var(--hf);font-size:12px}
+.gps-row{font-family:var(--hf);letter-spacing:.1em}
+.fqcard.focus{position:relative;overflow:hidden;padding:16px;border-radius:var(--rr);border:1px solid rgba(201,168,76,.28);background:linear-gradient(160deg,rgba(201,168,76,.12),rgba(201,168,76,.02) 55%),var(--bg2)}
+.fqcard.focus::before{display:none}
+.eyebrow{font-family:var(--hf);font-size:10.5px;letter-spacing:.2em;color:var(--gold);text-transform:uppercase}
+.fq-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin:6px 0 8px}
+.fq-title{font-family:var(--hf);font-weight:var(--hw);font-size:21px;line-height:1.2;color:var(--text-bright);margin:0}
+.fq-meta{display:flex;flex-direction:column;gap:4px;margin-bottom:14px}
+.btn.complete-btn{margin-top:0}
+.qi{border-radius:14px;border:1px solid var(--line);background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.012));padding:14px 15px}
+.qi.focused{border-color:rgba(201,168,76,.4);background:linear-gradient(180deg,rgba(201,168,76,.08),rgba(201,168,76,.02))}
+.qi.focused::after{display:none}
+.qi-title{font-family:var(--hf);font-weight:var(--hw);font-size:15px;line-height:1.25}
+.qi-body{font-size:15px;display:flex;align-items:center;gap:6px}
+.qi-body svg{width:13px;height:13px;flex:none;opacity:.75}
+.qi-foot{margin-top:10px;align-items:center}
+.qi .tag{font-family:var(--hf);font-size:10.5px;border-radius:999px;padding:3px 9px;border-color:var(--line2)}
+.qi .tag.active{border-color:rgba(76,175,122,.35)}
+.qi .tag.completed{border-color:rgba(201,168,76,.35)}
+.qi .abandon{margin-left:auto;background:none;border:none;color:#d46a6a;font-family:var(--hf);font-size:11px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;padding:4px 2px}
+
+/* create form */
+#screen-create .fg{gap:7px}
+#screen-create label{font-family:var(--hf);font-size:10.5px;letter-spacing:.16em}
+#screen-create input,#screen-create textarea,#screen-create select,.sheet input{border-radius:13px;background:rgba(255,255,255,.04);border:1px solid var(--line2);padding:13px 14px;font-size:17px}
+#screen-create .loc-btn{height:50px;border-radius:13px;font-family:var(--hf)}
+.page-hd{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.page-hd h1{font-family:var(--hf);font-weight:var(--hw);font-size:22px;color:var(--text-bright);letter-spacing:.04em}
+.back-round{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:rgba(255,255,255,.05);border:1px solid var(--line2);color:var(--text);cursor:pointer}
+.back-round svg{width:18px;height:18px}
+
+/* habits */
+.today{display:flex;align-items:center;gap:18px}
+.ring{position:relative;width:84px;height:84px;flex:none}
+.ring svg{position:absolute;inset:0;transform:rotate(-90deg)}
+.ring b{position:absolute;inset:0;display:grid;place-items:center;align-content:center;text-align:center;font-family:var(--hf);font-weight:var(--hw);font-size:23px;color:var(--text-bright);line-height:1}
+.ring b small{display:block;font-size:9px;letter-spacing:.16em;color:var(--text-dim);margin-top:5px}
+.today-stats{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ts .v{font-family:var(--hf);font-weight:var(--hw);font-size:21px;color:var(--text-bright)}
+.ts .l{font-family:var(--hf);font-size:9.5px;letter-spacing:.14em;color:var(--text-dim);text-transform:uppercase;margin-top:2px}
+.habit{display:flex;flex-direction:column;gap:12px;transition:border-color .3s,background .3s}
+.habit.done{border-color:rgba(201,168,76,.22);background:linear-gradient(180deg,rgba(201,168,76,.07),rgba(201,168,76,.015))}
+.habit-top{display:flex;align-items:center;gap:14px}
+.check{position:relative;width:46px;height:46px;flex:none;border-radius:50%;border:2px solid rgba(255,255,255,.18);background:none;display:grid;place-items:center;cursor:pointer;transition:all .25s}
+.check svg{width:22px;height:22px;color:#1d1407;opacity:0;transform:scale(.4);transition:all .25s cubic-bezier(.3,1.6,.5,1)}
+.check:active{transform:scale(.92)}
+.habit.done .check{border-color:transparent;background:linear-gradient(180deg,#f6dd96,#c9a84c);box-shadow:0 0 18px rgba(201,168,76,.4);cursor:default}
+.habit.done .check svg{opacity:1;transform:scale(1)}
+.check.pop::after{content:'';position:absolute;inset:-4px;border-radius:50%;border:2px solid var(--gold2);animation:ringPop .6s ease-out forwards}
+@keyframes ringPop{from{opacity:1;transform:scale(.9)}to{opacity:0;transform:scale(1.6)}}
+.habit .nm{font-family:var(--hf);font-weight:var(--hw);font-size:17px;color:var(--text-bright)}
+.habit.done .nm{color:var(--gold2)}
+.habit .desc{font-size:15px;color:var(--text-dim);margin-top:2px}
+.streak{display:flex;align-items:center;gap:6px;margin-top:4px;font-size:15px;color:var(--text-dim);flex-wrap:wrap}
+.streak svg{width:15px;height:15px}
+.streak b{font-family:var(--hf);font-weight:var(--hw);color:var(--text);font-size:14px}
+.tier-name{font-family:var(--hf);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;padding:2px 7px;border-radius:6px}
+.more{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;color:var(--faint);margin-left:auto;align-self:flex-start;background:none;border:none;cursor:pointer}
+.more svg{width:18px;height:18px}
+.segs{display:grid;grid-template-columns:repeat(10,1fr);gap:4px}
+.segs i{height:7px;border-radius:3px;background:rgba(255,255,255,.07)}
+.habit-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;font-family:var(--hf);font-size:10.5px;letter-spacing:.08em;color:var(--faint);text-transform:uppercase}
+.habit-foot .rw{display:flex;gap:6px}
+
+/* profile */
+.hs-foot{border-color:var(--border2)}
+.hs-next{font-family:var(--hf);font-size:11px}
+.hs-btn{font-family:var(--hf);border-radius:10px;padding:7px 14px;font-size:11px;color:#1d1407;border:none;background:linear-gradient(180deg,#f6dd96,#d6b257 50%,#b18a33);box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 4px 14px rgba(201,168,76,.22)}
+.hs-btn:hover:not(:disabled){background:linear-gradient(180deg,#f8e4a8,#dcba62 50%,#b8913a)}
+.hs-btn:disabled{filter:grayscale(.85) brightness(.55);opacity:1}
+.id-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:2px}
+.id-row .prof-name{font-family:var(--hf);font-weight:var(--hw);font-size:25px;color:var(--text-bright);letter-spacing:.03em}
+.id-row .prof-ttl{font-family:var(--hf);font-style:normal;font-size:11.5px;letter-spacing:.2em;color:var(--gold);text-transform:uppercase;margin-top:2px}
+.class-btn{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 12px 0 11px;border-radius:12px;cursor:pointer;
+  background:var(--cls-bg,rgba(74,159,212,.1));border:1px solid var(--cls-bd,rgba(74,159,212,.35));color:var(--cls-fg,#8cc8ef);
+  font-family:var(--hf);font-weight:var(--hw);font-size:12px;letter-spacing:.14em;text-transform:uppercase;transition:transform .12s}
+.class-btn:active{transform:scale(.97)}
+.class-btn svg{width:17px;height:17px}
+.class-btn .chev{width:14px;height:14px;opacity:.7}
+.stats5{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
+.stat{padding:11px 4px;text-align:center;border-radius:13px;background:rgba(255,255,255,.035);border:1px solid var(--line)}
+.stat .v{font-family:var(--hf);font-weight:var(--hw);font-size:17px;color:var(--text-bright);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stat .l{font-family:var(--hf);font-size:8.5px;letter-spacing:.14em;color:var(--text-dim);text-transform:uppercase;margin-top:3px}
+.loadout{position:sticky;top:-6px;z-index:12;margin:0 -16px;padding:8px 16px 10px;background:linear-gradient(180deg,var(--bg) 82%,rgba(10,10,15,0))}
+.stage{position:relative;height:156px;border-radius:var(--rr);overflow:hidden;border:1px solid rgba(201,168,76,.2);
+  background:radial-gradient(60% 75% at 50% 100%,rgba(201,168,76,.2),transparent 70%),radial-gradient(90% 90% at 50% 120%,#2a2440,#12111c 70%)}
+.stage::after{content:'';position:absolute;left:24%;right:24%;bottom:16px;height:10px;border-radius:50%;background:radial-gradient(closest-side,rgba(0,0,0,.6),transparent)}
+#profAvatarLarge{position:absolute;inset:0;display:block!important}
+#profAvatarLarge .av-char-wrap{bottom:15px;transform:translateX(-50%) scale(2.55) scaleX(-1);z-index:2}
+.stage-l,.stage-r{display:none;position:absolute;top:12px;z-index:9;font-family:var(--hf);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase}
+.stage-l{left:14px;color:var(--text-dim)}
+.stage-r{right:12px}
+.stage-r button{font-family:var(--hf);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold2);padding:6px 10px;border-radius:9px;background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.35);cursor:pointer}
+.slot{margin-top:4px}
+.slot+.slot{margin-top:14px}
+.slot-hd{display:flex;align-items:center;gap:8px;margin:0 2px 8px}
+.slot-hd svg{width:16px;height:16px;color:var(--gold)}
+.slot-hd h3{font-family:var(--hf);font-weight:var(--hw);font-size:12.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--text)}
+.slot-hd .cnt{margin-left:auto;font-family:var(--hf);font-size:11px;color:var(--faint);letter-spacing:.06em}
+.track{position:relative;display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;scrollbar-width:none;margin:0 -16px;padding:2px calc((100% + 32px) * .11) 6px}
+.track::-webkit-scrollbar{display:none}
+.item{flex:0 0 78%;scroll-snap-align:center;display:flex;align-items:center;gap:14px;padding:12px;border-radius:16px;position:relative;cursor:pointer;
+  background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.015));border:1px solid var(--line);transition:transform .15s,opacity .15s,border-color .15s}
+.item.off{opacity:.45;transform:scale(.95)}
+.item::before{content:'';position:absolute;left:12px;right:12px;top:0;height:2px;border-radius:2px;background:var(--rc,transparent);opacity:.9}
+.item .pv{width:88px;height:88px;flex:none;border-radius:12px;display:grid;place-items:center;overflow:hidden;border:1px solid rgba(255,255,255,.06);
+  background:radial-gradient(75% 75% at 50% 50%,rgba(255,255,255,.13),rgba(255,255,255,.03)),var(--rc-bg,transparent)}
+.item .pv canvas{image-rendering:pixelated}
+.item .pv .none{font-family:var(--hf);font-size:10.5px;letter-spacing:.14em;color:var(--faint);text-transform:uppercase}
+.item .info{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
+.item .nm{font-family:var(--hf);font-weight:var(--hw);font-size:15.5px;color:var(--text-bright);line-height:1.2}
+.rar{font-family:var(--hf);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase}
+.item .lv{font-size:14.5px;color:var(--text-dim)}
+.item .act{margin-top:4px}
+.item .act .btn{height:34px;width:auto;padding:0 14px;font-size:11px;border-radius:10px}
+.eq-badge{display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 10px;border-radius:9px;font-family:var(--hf);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#7fd6a5;background:rgba(76,175,122,.1);border:1px solid rgba(76,175,122,.3)}
+.eq-badge svg{width:12px;height:12px}
+.item.is-eq{border-color:rgba(76,175,122,.35)}
+.inv-note{font-size:15px;color:var(--text-dim);font-style:italic;padding:4px 2px 0}
+.dev-note{font-family:var(--hf);font-size:10.5px;letter-spacing:.1em;color:var(--gold);opacity:.75;margin:0 2px 10px}
+.appear-hd{display:flex;align-items:center;justify-content:space-between;cursor:pointer}
+.appear-hd h3{font-family:var(--hf);font-weight:var(--hw);font-size:13.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--text)}
+.appear-hd svg{width:18px;height:18px;color:var(--text-dim);transition:transform .25s}
+.appear.open .appear-hd svg{transform:rotate(180deg)}
+.appear-body{display:none;margin-top:16px;flex-direction:column;gap:16px}
+.appear.open .appear-body{display:flex}
+.opt-row .lbl{font-family:var(--hf);font-size:10.5px;letter-spacing:.16em;color:var(--text-dim);text-transform:uppercase;margin-bottom:9px}
+.swatches{display:flex;gap:10px;flex-wrap:wrap}
+.sw{width:36px;height:36px;border-radius:50%;border:2px solid transparent;cursor:pointer;box-shadow:inset 0 0 0 2px rgba(0,0,0,.35);transition:transform .15s}
+.sw:active{transform:scale(.92)}
+.sw.on{border-color:var(--gold2);box-shadow:inset 0 0 0 2px rgba(0,0,0,.35),0 0 12px rgba(236,208,133,.4)}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chipbtn{height:34px;padding:0 13px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid var(--line2);color:var(--text-dim);cursor:pointer;font-family:var(--hf);font-size:12px;letter-spacing:.08em}
+.chipbtn.on{color:var(--gold2);border-color:rgba(201,168,76,.5);background:rgba(201,168,76,.1)}
+.settings{display:flex;flex-direction:column;gap:12px}
+.settings .btn{height:46px;font-size:12.5px}
+
+/* sheets */
+.scrim{position:absolute;inset:0;z-index:40;background:rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .25s}
+.scrim.on{opacity:1;pointer-events:auto}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:41;padding:10px 18px calc(22px + var(--safe-b));border-radius:24px 24px 0 0;max-height:88%;overflow-y:auto;
+  background:#14131f;border-top:1px solid var(--line2);transform:translateY(105%);transition:transform .32s cubic-bezier(.3,.8,.2,1)}
+.sheet.on{transform:none}
+.grab{width:40px;height:5px;border-radius:9px;background:rgba(255,255,255,.18);margin:0 auto 16px}
+.sheet h3{font-family:var(--hf);font-weight:var(--hw);font-size:19px;color:var(--text-bright);margin-bottom:16px;letter-spacing:.03em}
+.sheet .field{display:flex;flex-direction:column;gap:7px;margin-bottom:14px}
+.sheet .field label{font-family:var(--hf);font-size:10.5px;letter-spacing:.16em;color:var(--text-dim);text-transform:uppercase}
+.sheet input{width:100%;color:var(--text-bright);outline:none}
+.sheet input:focus{border-color:rgba(201,168,76,.55);box-shadow:0 0 0 3px rgba(201,168,76,.12)}
+.diff{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.diff button{padding:10px 6px;border-radius:13px;background:rgba(255,255,255,.03);border:1px solid var(--line2);text-align:center;cursor:pointer;color:inherit}
+.diff button b{display:block;font-family:var(--hf);font-weight:var(--hw);font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--text)}
+.diff button span{display:block;font-family:'Crimson Pro',serif;font-size:14px;color:var(--text-dim);margin-top:2px}
+.diff button.on{border-color:rgba(201,168,76,.55);background:rgba(201,168,76,.1)}
+.diff button.on b{color:var(--gold2)}
+.class-opts{display:flex;flex-direction:column;gap:10px}
+.class-opt{display:flex;align-items:center;gap:14px;padding:14px;border-radius:16px;background:rgba(255,255,255,.035);border:1px solid var(--line2);cursor:pointer;text-align:left;color:inherit}
+.class-opt .ic{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;flex:none;background:var(--cls-bg);border:1px solid var(--cls-bd);color:var(--cls-fg)}
+.class-opt .ic svg{width:24px;height:24px}
+.class-opt b{display:block;font-family:var(--hf);font-weight:var(--hw);font-size:16px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-bright)}
+.class-opt span{display:block;font-family:'Crimson Pro',serif;font-size:15px;color:var(--text-dim);margin-top:2px;line-height:1.3}
+.class-opt.on{border-color:var(--cls-bd);background:linear-gradient(180deg,var(--cls-bg),rgba(255,255,255,.02))}
+.class-opt .tick{margin-left:auto;width:22px;height:22px;color:var(--cls-fg);opacity:0}
+.class-opt.on .tick{opacity:1}
+
+/* toast */
+.toast{top:calc(env(safe-area-inset-top,0px) + 14px);bottom:auto;transform:translateX(-50%) translateY(-24px);border-radius:999px;padding:10px 18px;font-family:var(--hf);font-size:13px;letter-spacing:.05em;
+  background:rgba(24,22,36,.96);border:1px solid rgba(201,168,76,.35);color:var(--text-bright);box-shadow:0 10px 30px rgba(0,0,0,.5);white-space:normal}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.success{border-color:rgba(76,175,122,.5);color:#bfeed3}
+.toast.error{border-color:rgba(213,80,80,.55);color:#f2b9b9}
+
+/* auth */
+.auth-box{border-radius:20px}
+.auth-submit{border-radius:14px;color:#1d1407;border:none;background:linear-gradient(180deg,#f6dd96,#d6b257 48%,#b18a33);font-family:var(--hf);font-size:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 8px 24px rgba(201,168,76,.22)}
+.auth-box input{border-radius:12px;padding:12px 14px}
+
+/* compass (v2.1) */
+.dial{padding:16px 0 14px;overflow:hidden}
+.tape{position:relative;height:70px;margin:0 0 12px}
+.tape canvas{position:absolute;inset:0;width:100%;height:100%}
+.tape::before,.tape::after{content:'';position:absolute;top:0;bottom:0;width:56px;z-index:2;pointer-events:none}
+.tape::before{left:0;background:linear-gradient(90deg,#121220,transparent)}
+.tape::after{right:0;background:linear-gradient(270deg,#121220,transparent)}
+.needle{position:absolute;left:50%;top:-4px;bottom:-4px;width:2px;margin-left:-1px;z-index:3;background:linear-gradient(180deg,var(--gold2),rgba(236,208,133,0));box-shadow:0 0 10px rgba(236,208,133,.6)}
+.needle::before{content:'';position:absolute;top:-2px;left:-6px;border:7px solid transparent;border-top:9px solid var(--gold2)}
+.dial-read{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;padding:0 16px}
+.dial .hdg{font-family:var(--hf);font-weight:var(--hw);font-size:40px;line-height:1;color:var(--text-bright);letter-spacing:.02em;font-variant-numeric:tabular-nums}
+.dial .hdg small{font-size:16px;color:var(--gold2);margin-left:8px;letter-spacing:.12em}
+.dial .gps-row{font-family:var(--hf);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;padding-bottom:4px}
+.card.focus{position:relative;overflow:hidden;border-color:rgba(201,168,76,.28);background:linear-gradient(160deg,rgba(201,168,76,.12),rgba(201,168,76,.02) 55%),var(--bg2)}
+.card.focus .fq-title{font-family:var(--hf);font-weight:var(--hw);font-size:22px;color:var(--text-bright);margin:6px 0 4px;line-height:1.2}
+.focus-row{display:flex;align-items:center;gap:16px;margin:14px 0 14px}
+.dist{font-family:var(--hf);font-weight:var(--hw);font-size:31px;color:var(--text-bright);line-height:1;white-space:nowrap;font-variant-numeric:tabular-nums}
+.dist small{font-size:13px;color:var(--text-dim);margin-left:4px;letter-spacing:.08em}
+.range{flex:1;min-width:0}
+.range-track{height:8px;border-radius:99px;background:rgba(255,255,255,.06);overflow:hidden}
+.range-fill{height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,#6e5627,#c9a84c);transition:width .4s ease}
+.range-fill.ok{background:linear-gradient(90deg,#3c8f62,#7fd6a5)}
+.range-lbl{margin-top:6px;font-family:var(--hf);font-size:10.5px;letter-spacing:.12em;color:var(--gold);text-transform:uppercase}
+.range-lbl.ok{color:#7fd6a5}
+.arrow-badge{width:52px;height:52px;border-radius:50%;flex:none;display:grid;place-items:center;background:rgba(0,0,0,.25);border:1px solid rgba(201,168,76,.35)}
+.arrow-badge svg{width:24px;height:24px;color:var(--gold2);will-change:transform}
+.fq-pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.qrow{display:flex;align-items:center;gap:12px;padding:14px;cursor:pointer;transition:border-color .2s,background .2s}
+.qrow.sel{border-color:rgba(201,168,76,.4);background:linear-gradient(180deg,rgba(201,168,76,.08),rgba(201,168,76,.02))}
+.qrow .dir{width:38px;height:38px;border-radius:12px;flex:none;display:grid;place-items:center;background:rgba(255,255,255,.04);border:1px solid var(--line)}
+.qrow .dir svg{width:18px;height:18px;color:var(--gold);will-change:transform}
+.qrow .body{flex:1;min-width:0}
+.qrow .t{font-family:var(--hf);font-weight:var(--hw);font-size:15.5px;color:var(--text-bright);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qrow .meta span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qrow .right{text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:5px}
+.qrow .d{font-family:var(--hf);font-weight:var(--hw);font-size:15px;color:var(--text);white-space:nowrap}
+#screen-create select#nSaved{color:var(--text-bright)}
 </style>
 <script src="sprite_spec.js"></script>
 </head>
@@ -328,83 +630,64 @@ hr{border:none;border-top:1px solid var(--border)}
 <div id="app" style="display:none">
 
 <!-- HEADER -->
-<header>
-  <div class="hrow">
-    <div class="logo">⚔ TaskQuest</div>
-    <div style="display:flex;align-items:center;gap:8px">
-      <button id="devModeHeaderBtn" onclick="toggleDevMode()" title="Toggle dev mode" style="background:none;border:1px solid var(--border);border-radius:2px;color:var(--text-dim);font-size:13px;padding:2px 7px;cursor:pointer;line-height:1;transition:all .2s">🛠</button>
-      <div class="gold-badge" id="goldBadge">💰 0g</div>
-      <div class="lvl-badge" id="lvlBadge">LVL 1</div>
-      <button class="logout-btn" onclick="doLogout()">Exit</button>
+<header class="top">
+  <div class="top-row">
+    <div class="logo">TaskQuest</div>
+    <div class="top-chips">
+      <button class="icon-chip" id="devModeHeaderBtn" onclick="toggleDevMode()" title="Toggle dev mode"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.2L3.5 17.3a1.8 1.8 0 0 0 2.6 2.6l5.8-5.8a4 4 0 0 0 5.2-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/></svg></button>
+      <div class="chip"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#c9a84c"/><circle cx="8" cy="8" r="4.6" fill="none" stroke="#f6dd96" stroke-width="1.2"/><circle cx="8" cy="8" r="7" fill="none" stroke="#7a5c1c"/></svg><span id="goldBadge">0</span></div>
+      <div class="lvl" title="Level">
+        <svg viewBox="0 0 34 34"><circle cx="17" cy="17" r="15" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="3"/><circle id="lvlRing" cx="17" cy="17" r="15" fill="none" stroke="url(#lvlGrad)" stroke-width="3" stroke-linecap="round" stroke-dasharray="94.25" stroke-dashoffset="94.25"/><defs><linearGradient id="lvlGrad"><stop offset="0" stop-color="#a8842f"/><stop offset="1" stop-color="#ecd085"/></linearGradient></defs></svg>
+        <b id="lvlBadge">1</b>
+      </div>
     </div>
   </div>
-  <div class="xp-wrap">
-    <div class="xp-lbl"><span>Experience</span><span id="xpLbl">0 XP</span></div>
-    <div class="xp-bar"><div class="xp-fill" id="xpFill" style="width:0%"></div></div>
+  <div class="xp">
+    <div class="xp-track"><div class="xp-fill" id="xpFill" style="width:0%"></div></div>
+    <div class="xp-txt" id="xpLbl">0 XP</div>
   </div>
 </header>
 
-<!-- NAV -->
-<nav>
-  <button class="active" onclick="showScreen('compass',this)">⊙ Compass</button>
-  <button onclick="showScreen('quests',this)">⚑ Quests</button>
-  <button onclick="showScreen('habits',this)">🔥 Habits</button>
-  <button onclick="showScreen('profile',this)">◈ Profile</button>
-</nav>
+<main class="pager" id="pager">
 
-<!-- ══ COMPASS SCREEN ══ -->
-<div class="screen active" id="screen-compass">
-
-  <!-- iOS compass banner (hidden on Android / after grant) -->
+<!-- ══ COMPASS ══ -->
+<section class="screen page active" id="screen-compass"><div class="stack">
   <div class="cbanner" id="cbanner" style="display:none">
     <div>
-      <div class="cbanner-text">🧭 Enable Compass</div>
+      <div class="cbanner-text">Enable Compass</div>
       <div class="cbanner-sub">Tap to allow device orientation access</div>
     </div>
     <button class="cbanner-btn" onclick="enableCompass()">Enable</button>
   </div>
 
-  <!-- BEARING BAR -->
-  <div class="bsection">
-    <div class="btape-wrap" id="btWrap">
-      <div class="bfade bfade-l"></div>
-      <div class="bfade bfade-r"></div>
-      <canvas id="btCanvas" style="position:absolute;top:0;left:0"></canvas>
-      <div class="qmarker" id="qmarker" style="display:none">
-        <div class="qmarker-arr"></div>
-        <div class="qmarker-line"></div>
-      </div>
-    </div>
-    <div class="binfo">
-      <div>
-        <div class="bhdg" id="bHdg">---<span id="bCard"></span></div>
-        <div class="gps-row" style="margin-top:4px"><div class="gdot" id="gpsDot2"></div><span id="gpsLbl2">Waiting for GPS…</span></div>
-      </div>
-      <div class="bqi dim" id="bQI">No quest selected</div>
+  <div class="card dial">
+    <div class="tape"><canvas id="tape"></canvas><div class="needle"></div></div>
+    <div class="dial-read">
+      <div class="hdg" id="bHdg">---</div>
+      <div class="gps-row"><div class="gdot" id="gpsDot2"></div><span id="gpsLbl2">Waiting for GPS…</span></div>
     </div>
   </div>
 
-  <!-- FOCUSED QUEST CARD -->
-  <div class="fqcard" id="fqCard" style="display:none">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start">
-      <div class="fq-title" id="fqTitle"></div>
-      <div class="xp-pill" id="fqXp"></div>
+  <div class="card focus" id="fqCard" style="display:none">
+    <div class="eyebrow">Tracking quest</div>
+    <h3 class="fq-title" id="fqTitle"></h3>
+    <div class="meta"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 15s5-4.6 5-8.5A5 5 0 0 0 3 6.5C3 10.4 8 15 8 15z"/><circle cx="8" cy="6.5" r="1.8"/></svg><span id="fqLoc"></span></div>
+    <div class="focus-row">
+      <div class="arrow-badge"><svg id="fqArrow" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l6 18-6-4-6 4z"/></svg></div>
+      <div class="dist" id="fqDist">—</div>
+      <div class="range"><div class="range-track"><div class="range-fill" id="fqRange"></div></div><div class="range-lbl" id="fqRangeLbl">Waiting for GPS</div></div>
     </div>
-    <div class="fq-meta" style="margin-top:6px">
-      <span>📍 <span id="fqLoc"></span></span>
-      <span id="fqRad"></span>
-    </div>
-    <button class="complete-btn" id="completeBtn" onclick="completeQuest()">Complete Quest</button>
+    <div class="fq-pills"><span class="xp-pill" id="fqXp"></span><span class="pill pill-g" id="fqGold"></span><span class="pill pill-g" id="fqRad"></span></div>
+    <button class="btn btn-primary complete-btn" id="completeBtn" onclick="completeQuest()" disabled>Complete Quest</button>
   </div>
 
-  <button class="forge-btn" onclick="showScreen('create',null)">⚔ Forge New Quest</button>
-  <div class="sec-title">Active Quests</div>
+  <button class="btn btn-secondary" onclick="showScreen('create',null)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Forge New Quest</button>
+  <div class="h-sec"><h2>Active quests</h2><span class="aux" id="cQCount"></span></div>
   <div class="qlist" id="cQList"></div>
-</div>
+</div></section>
 
-<!-- ══ QUESTS SCREEN ══ -->
-<div class="screen" id="screen-quests">
-
+<!-- ══ QUESTS ══ -->
+<section class="screen page" id="screen-quests"><div class="stack">
   <!-- Quest Scene -->
   <div class="qs-wrap">
     <div class="qs">
@@ -441,95 +724,30 @@ hr{border:none;border-top:1px solid var(--border)}
       <canvas id="qsProjectile" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9;display:none"></canvas>
     </div>
   </div>
-
-  <div class="sec-title">All Quests</div>
-  <div id="qFilter" style="display:flex;gap:8px;flex-wrap:wrap">
-    <button class="tag active" onclick="filterQ('active',this)">Active</button>
-    <button class="tag" onclick="filterQ('completed',this)">Completed</button>
-    <button class="tag" onclick="filterQ('all',this)">All</button>
-  </div>
+  <div class="seg" id="qFilter"><div class="seg-thumb"></div><button class="on" onclick="filterQ('active',this)">Active</button><button onclick="filterQ('completed',this)">Completed</button><button onclick="filterQ('all',this)">All</button></div>
   <div class="qlist" id="aQList"></div>
-</div>
+</div></section>
 
-<!-- ══ CREATE SCREEN ══ -->
-<div class="screen" id="screen-create">
-  <button class="back-btn" onclick="showScreen('compass',null)">← Back</button>
-  <div class="sec-title">Forge New Quest</div>
-
-  <div class="fg">
-    <label>Quest Title *</label>
-    <input type="text" id="nTitle" placeholder="Name your quest…" maxlength="60">
-  </div>
-  <div class="fg">
-    <label>Description</label>
-    <textarea id="nDesc" placeholder="What must be done…"></textarea>
-  </div>
-  <div class="fg">
-    <label>Location Name</label>
-    <input type="text" id="nLocName" placeholder="e.g. Home, Park, Office…">
-  </div>
-  <div class="fg">
-    <label>Coordinates * <span style="font-weight:300;text-transform:none;font-family:'Crimson Pro',serif;letter-spacing:0;font-size:12px">— tap Locate or type lat, lng</span></label>
-    <div class="coords-row">
-      <input type="text" id="nCoords" inputmode="decimal" placeholder="36.2508, -86.7109" oninput="onCoordInput()">
-      <button class="loc-btn" id="locBtn" onclick="locateMe()">📍 Locate</button>
+<!-- ══ HABITS ══ -->
+<section class="screen page" id="screen-habits"><div class="stack">
+  <div class="card today">
+    <div class="ring">
+      <svg viewBox="0 0 84 84"><circle cx="42" cy="42" r="36" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="8"/><circle id="habitRingArc" cx="42" cy="42" r="36" fill="none" stroke="url(#habitGrad)" stroke-width="8" stroke-linecap="round" stroke-dasharray="226.2" stroke-dashoffset="226.2" style="transition:stroke-dashoffset .6s cubic-bezier(.3,.8,.2,1)"/><defs><linearGradient id="habitGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f6dd96"/><stop offset="1" stop-color="#b18a33"/></linearGradient></defs></svg>
+      <b><span id="habitRingTxt">0/0</span><small>TODAY</small></b>
     </div>
-    <div id="coordFb" class="chint">Enter decimal coordinates: latitude, longitude</div>
-  </div>
-  <div class="chint" style="margin-top:-4px">✦ XP reward is calculated automatically from the distance to this location</div>
-  <div class="fg">
-    <label>Completion Radius</label>
-    <select id="nRad">
-      <option value="20">20m — Precise</option>
-      <option value="50" selected>50m — Normal</option>
-      <option value="100">100m — Generous</option>
-      <option value="250">250m — Broad</option>
-    </select>
-  </div>
-  <button class="submit-btn" id="forgeBtn" onclick="createQuest()">⚔ Forge Quest</button>
-</div>
-
-<!-- ══ HABITS SCREEN ══ -->
-<div class="screen" id="screen-habits">
-  <div style="display:flex;align-items:center;justify-content:space-between">
-    <div class="sec-title" style="border:none;padding:0">Daily Habits</div>
-    <button class="forge-btn" style="margin:0" onclick="toggleHabitForm()">+ New Habit</button>
-  </div>
-
-  <!-- Create habit form (hidden by default) -->
-  <div id="habitForm" style="display:none">
-    <div class="fg">
-      <div class="fl"><label class="fl-lbl">Habit Name</label>
-        <input class="fi" id="hName" placeholder="e.g. Morning run, Read 20 min…" maxlength="60">
-      </div>
-      <div class="fl"><label class="fl-lbl">Description (optional)</label>
-        <input class="fi" id="hDesc" placeholder="Keep it brief">
-      </div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <div class="fl" style="flex:1;margin:0"><label class="fl-lbl">XP Reward</label>
-          <select class="fi" id="hXp" style="padding:8px 10px">
-            <option value="5">5 XP (easy)</option>
-            <option value="10" selected>10 XP (medium)</option>
-            <option value="20">20 XP (hard)</option>
-          </select>
-        </div>
-        <div class="fl" style="flex:1;margin:0"><label class="fl-lbl">Gold Reward</label>
-          <select class="fi" id="hGold" style="padding:8px 10px">
-            <option value="3">3g (easy)</option>
-            <option value="5" selected>5g (medium)</option>
-            <option value="10">10g (hard)</option>
-          </select>
-        </div>
-      </div>
-      <button class="submit-btn" onclick="createHabit()">✦ Add Habit</button>
+    <div class="today-stats">
+      <div class="ts"><div class="v" id="htXp">+0</div><div class="l">XP today</div></div>
+      <div class="ts"><div class="v" id="htBest">0</div><div class="l">Best streak</div></div>
+      <div class="ts"><div class="v" id="htLive">0</div><div class="l">Live streaks</div></div>
+      <div class="ts"><div class="v" id="htGold" style="color:var(--gold2)">+0g</div><div class="l">Gold today</div></div>
     </div>
   </div>
-
+  <div class="h-sec"><h2>Daily habits</h2><button class="btn btn-primary btn-sm" onclick="toggleHabitForm()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" style="width:14px;height:14px"><path d="M12 5v14M5 12h14"/></svg>New</button></div>
   <div id="habitList" class="qlist"></div>
-</div>
+</div></section>
 
-<!-- ══ PROFILE SCREEN ══ -->
-<div class="screen" id="screen-profile">
+<!-- ══ PROFILE ══ -->
+<section class="screen page" id="screen-profile"><div class="stack">
   <!-- Home Scene -->
   <div class="hs-wrap">
     <div class="hs" id="homeScene">
@@ -571,60 +789,114 @@ hr{border:none;border-top:1px solid var(--border)}
       <button class="hs-btn" id="hsUpgradeBtn" onclick="upgradeHome()">⬆ Upgrade</button>
     </div>
   </div>
-  <!-- Name / title below scene -->
-  <div class="prof-hero" style="padding:10px 0 0;background:none;border:none">
-    <div id="profAvatarLarge" style="display:none"></div>
-    <div class="prof-name" id="profName">Adventurer</div>
-    <div class="prof-ttl" id="profTtl">Novice Quester</div>
+  <div class="id-row">
+    <div><div class="prof-name" id="profName">Adventurer</div><div class="prof-ttl" id="profTtl">Novice Quester</div></div>
+    <button class="class-btn" id="classBtn" onclick="openClassSheet()"><span id="classBtnIcon"></span><span id="classBtnLbl">Warrior</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></button>
   </div>
-  <div id="customizeSection">
-    <div class="sec-title" style="margin-top:4px">Character</div>
-    <div class="ward-section">
-      <div class="ward-row">
-        <div class="ward-label">Gender</div>
-        <div class="ward-opts">
-          <div class="ward-chip" id="genderM" onclick="setCustom('gender','m')">♂ Male</div>
-          <div class="ward-chip" id="genderF" onclick="setCustom('gender','f')">♀ Female</div>
-        </div>
-      </div>
-      <div class="ward-row">
-        <div class="ward-label">Class</div>
-        <div class="ward-opts">
-          <div class="ward-chip" id="classWarrior" onclick="setCustom('charClass','warrior')">⚔ Warrior</div>
-          <div class="ward-chip" id="classMage" onclick="setCustom('charClass','mage')">✦ Mage</div>
-          <div class="ward-chip" id="classRanger" onclick="setCustom('charClass','ranger')">➳ Ranger</div>
-        </div>
-      </div>
-      <div class="ward-row">
-        <div class="ward-label">Skin</div>
-        <div class="ward-opts" id="skinOpts"></div>
-      </div>
-      <div class="ward-row">
-        <div class="ward-label">Style</div>
-        <div class="ward-opts" id="hairStyleToggle"></div>
-      </div>
-      <div class="ward-row" style="align-items:flex-start">
-        <div class="ward-label" style="padding-top:4px">Color</div>
-        <div class="ward-opts" id="hairStyleOpts" style="flex-wrap:wrap;gap:6px"></div>
-      </div>
-    </div>
-  </div>
-  <div class="sec-title" style="margin-top:14px">🎒 Inventory</div>
-  <div id="invGrid">
-    <div class="inv-empty">No items yet — complete quests to find loot!</div>
+  <div class="stats5">
+    <div class="stat"><div class="v" id="sLvl">1</div><div class="l">Level</div></div>
+    <div class="stat"><div class="v" id="sXp">0</div><div class="l">XP</div></div>
+    <div class="stat"><div class="v" id="sDone">0</div><div class="l">Done</div></div>
+    <div class="stat"><div class="v" id="sAct">0</div><div class="l">Active</div></div>
+    <div class="stat"><div class="v" id="sGold" style="color:var(--gold2)">0</div><div class="l">Gold</div></div>
   </div>
 
-  <div class="stats-grid" style="margin-top:16px">
-    <div class="sc"><div class="sv" id="sLvl">1</div><div class="sl">Level</div></div>
-    <div class="sc"><div class="sv" id="sXp">0</div><div class="sl">Total XP</div></div>
-    <div class="sc"><div class="sv" id="sDone">0</div><div class="sl">Completed</div></div>
-    <div class="sc"><div class="sv" id="sAct">0</div><div class="sl">Active</div></div>
-    <div class="sc"><div class="sv" id="sGold" style="color:var(--gold)">0</div><div class="sl">Gold</div></div>
+  <div class="h-sec"><h2>Loadout</h2><span class="aux">Swipe to equip</span></div>
+  <div class="loadout">
+    <div class="stage" id="stage">
+      <div id="profAvatarLarge"></div>
+    </div>
   </div>
-  <hr>
-  <div class="sec-title">Danger Zone</div>
-  <button onclick="resetData()" style="width:100%;padding:11px;background:rgba(207,68,68,.08);border:1px solid #6a2a2a;border-radius:4px;color:#cf6464;font-family:'Cinzel',serif;font-size:11px;letter-spacing:.08em;cursor:pointer">Reset All Data</button>
-  <button id="devModeBtn" onclick="toggleDevMode()" style="width:100%;margin-top:10px;padding:9px;background:none;border:1px solid var(--border2);border-radius:4px;color:var(--text-dim);font-family:'Cinzel',serif;font-size:11px;letter-spacing:.08em;cursor:pointer;transition:all .2s">🛠 DEV MODE: OFF</button>
+  <div id="invGrid"></div>
+
+  <div class="card appear" id="customizeSection">
+    <div class="appear-hd" onclick="document.getElementById('customizeSection').classList.toggle('open')"><h3>Appearance</h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></div>
+    <div class="appear-body">
+      <div class="opt-row"><div class="lbl">Body</div><div class="seg" id="genderSeg"><div class="seg-thumb"></div><button id="genderM" onclick="setCustom('gender','m')">Male</button><button id="genderF" onclick="setCustom('gender','f')">Female</button></div></div>
+      <div class="opt-row"><div class="lbl">Skin colour</div><div class="swatches" id="skinOpts"></div></div>
+      <div class="opt-row"><div class="lbl">Hair colour</div><div class="swatches" id="hairColorOpts"></div></div>
+      <div class="opt-row"><div class="lbl">Hair style</div><div class="chips" id="hairStyleToggle"></div></div>
+    </div>
+  </div>
+
+  <div class="card settings">
+    <div class="opt-row"><div class="lbl">Heading font</div><div class="chips" id="fontOpts"></div></div>
+    <button class="btn btn-ghost" id="devModeBtn" onclick="toggleDevMode()">Dev mode: off</button>
+    <button class="btn btn-ghost" onclick="doLogout()">Sign out</button>
+    <button class="btn btn-danger" onclick="resetData()">Reset all data</button>
+  </div>
+</div></section>
+</main>
+
+<nav class="tabbar" id="tabbar">
+  <div class="tab-ind" id="tabInd"></div>
+  <button class="tab on" data-i="0" onclick="v2GoPage(0)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><circle cx="12" cy="12" r="9.2"/><path d="M15.6 8.4l-2 5.2-5.2 2 2-5.2z" fill="currentColor" fill-opacity=".25"/><path d="M12 2.8v2M12 19.2v2M2.8 12h2M19.2 12h2"/></svg><span>Compass</span></button>
+  <button class="tab" data-i="1" onclick="v2GoPage(1)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h11a2 2 0 0 1 2 2v13"/><path d="M6 3a2 2 0 0 0-2 2v1h4V5a2 2 0 0 0-2-2z"/><path d="M8 6v13a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-1H12v1a2 2 0 0 1-2 2"/><path d="M11 9h5M11 12.5h5"/></svg><span>Quests</span></button>
+  <button class="tab" data-i="2" onclick="v2GoPage(2)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 21.5c-4 0-7-2.7-7-6.6 0-3.3 2.3-5.4 3.6-7.2.4 1.6 1.2 2.7 2.3 3.1C10.6 7 12.4 4.2 15 2.5c-.4 3 1 4.8 2.4 6.6 1 1.4 1.6 3 1.6 5 0 4.4-3 7.4-7 7.4z"/><path d="M12 21.5c-1.7 0-3-1.2-3-3 0-1.9 1.6-2.9 2.4-4.4.9 1.5 3.6 2.4 3.6 4.4 0 1.8-1.3 3-3 3z" fill="currentColor" fill-opacity=".25"/></svg><span>Habits</span></button>
+  <button class="tab" data-i="3" onclick="v2GoPage(3)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 2.5l7.5 3v6c0 4.6-3.2 8.4-7.5 10-4.3-1.6-7.5-5.4-7.5-10v-6z"/><path d="M12 7.5l1.4 2.9 3.1.4-2.3 2.1.6 3.1L12 14.5l-2.8 1.5.6-3.1-2.3-2.1 3.1-.4z" fill="currentColor" fill-opacity=".25"/></svg><span>Hero</span></button>
+</nav>
+
+<!-- ══ FORGE QUEST (slides over) ══ -->
+<div class="screen" id="screen-create"><div class="stack" style="width:100%">
+  <div class="page-hd"><button class="back-round" onclick="showScreen('compass',null)" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button><h1>Forge New Quest</h1></div>
+  <div class="fg">
+    <label>Quest Title *</label>
+    <input type="text" id="nTitle" placeholder="Name your quest…" maxlength="60">
+  </div>
+  <div class="fg">
+    <label>Description</label>
+    <textarea id="nDesc" placeholder="What must be done…"></textarea>
+  </div>
+  <div class="fg" id="savedLocWrap" style="display:none">
+    <label>Previous locations</label>
+    <select id="nSaved" onchange="v2PickSavedLoc(this.value)"></select>
+  </div>
+  <div class="fg">
+    <label>Location Name</label>
+    <input type="text" id="nLocName" placeholder="e.g. Home, Park, Office…">
+  </div>
+  <div class="fg">
+    <label>Coordinates *</label>
+    <div class="coords-row">
+      <input type="text" id="nCoords" inputmode="decimal" placeholder="36.2508, -86.7109" oninput="onCoordInput()">
+      <button class="loc-btn" id="locBtn" onclick="locateMe()">Locate</button>
+    </div>
+    <div id="coordFb" class="chint">Enter decimal coordinates: latitude, longitude</div>
+  </div>
+  <div class="chint" style="margin-top:-4px">XP reward is calculated automatically from the distance to this location</div>
+  <div class="fg">
+    <label>Completion Radius</label>
+    <select id="nRad">
+      <option value="20">20m — Precise</option>
+      <option value="50" selected>50m — Normal</option>
+      <option value="100">100m — Generous</option>
+      <option value="250">250m — Broad</option>
+    </select>
+  </div>
+  <button class="btn btn-primary" id="forgeBtn" onclick="createQuest()">Forge Quest</button>
+</div></div>
+
+<!-- sheets -->
+<div class="scrim" id="v2Scrim" onclick="v2CloseSheets()"></div>
+<div class="sheet" id="habitSheet">
+  <div class="grab"></div>
+  <h3>New habit</h3>
+  <div class="field"><label>Name</label><input id="hName" placeholder="Morning run, read 20 minutes…" maxlength="60"></div>
+  <div class="field"><label>Description (optional)</label><input id="hDesc" placeholder="Keep it brief"></div>
+  <div class="field"><label>Difficulty</label>
+    <div class="diff" id="habitDiff">
+      <button data-x="5" data-g="3"><b>Easy</b><span>5 XP · 3g</span></button>
+      <button class="on" data-x="10" data-g="5"><b>Medium</b><span>10 XP · 5g</span></button>
+      <button data-x="20" data-g="10"><b>Hard</b><span>20 XP · 10g</span></button>
+    </div>
+  </div>
+  <input type="hidden" id="hXp" value="10"><input type="hidden" id="hGold" value="5">
+  <button class="btn btn-primary" style="margin-top:6px" onclick="createHabit()">Add habit</button>
+</div>
+<div class="sheet" id="classSheet">
+  <div class="grab"></div>
+  <h3>Choose your class</h3>
+  <div class="class-opts" id="classOpts"></div>
 </div>
 
 <!-- COMBAT VICTORY OVERLAY -->
@@ -883,11 +1155,25 @@ function toast(msg, type) {
 // ═══════════════════════════════════════════════════
 //  SCREENS
 // ═══════════════════════════════════════════════════
-function showScreen(id, btn) {
-  document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
-  document.querySelectorAll('nav button').forEach(function(b) { b.classList.remove('active'); });
+function showScreen(id, btn, fromSwipe) {
+  var cr = document.getElementById('screen-create');
+  if (id === 'create') { if (cr) cr.classList.add('open'); v2FillSavedLocs(); return; }
+  if (cr) cr.classList.remove('open');
+  var idx = V2_PAGES.indexOf(id);
+  if (idx < 0) return;
+  document.querySelectorAll('.screen.page').forEach(function(s) { s.classList.remove('active'); });
   document.getElementById('screen-' + id).classList.add('active');
-  if (btn) btn.classList.add('active');
+  v2MarkTabs(idx);
+  if (!fromSwipe) {
+    var pager = document.getElementById('pager');
+    _v2Page = idx;
+    if (pager && Math.abs(pager.scrollLeft - idx * pager.clientWidth) > 2) {
+      _v2Jump = idx;
+      clearTimeout(_v2JumpTimer);
+      _v2JumpTimer = setTimeout(function() { _v2Jump = null; }, 900);
+      pager.scrollTo({ left: idx * pager.clientWidth, behavior: 'smooth' });
+    }
+  }
   if (id === 'compass') { refreshCompassQuests(); renderCompass(); }
   if (id === 'quests')  { loadAllQuests(); renderAllQ(); }
   if (id === 'habits')  { loadHabits(); }
@@ -1035,14 +1321,14 @@ function locateMe() {
   var btn = document.getElementById('locBtn');
   var fb  = document.getElementById('coordFb');
   btn.disabled = true;
-  btn.textContent = '⏳';
+  btn.textContent = '…';
   fb.className = 'chint';
   fb.textContent = 'Getting your location…';
 
   if (!navigator.geolocation) {
     fb.textContent = 'Geolocation not supported in this browser';
     btn.disabled = false;
-    btn.innerHTML = '📍 Locate';
+    btn.innerHTML = 'Locate';
     return;
   }
 
@@ -1054,7 +1340,7 @@ function locateMe() {
       fb.className = 'cok';
       fb.textContent = '✓ Location captured';
       btn.disabled = false;
-      btn.innerHTML = '📍 Locate';
+      btn.innerHTML = 'Locate';
       toast('Location captured!', 'success');
       onCoordInput();
     },
@@ -1066,7 +1352,7 @@ function locateMe() {
       fb.className = 'chint';
       fb.textContent = m;
       btn.disabled = false;
-      btn.innerHTML = '📍 Locate';
+      btn.innerHTML = 'Locate';
       toast(m, 'error');
     },
     { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
@@ -1130,156 +1416,18 @@ function updateHeader() {
   p.level = l;
   var lo = xpForLvl(l), hi = xpForLvl(l + 1);
   var pct = hi > lo ? (p.totalXp - lo) / (hi - lo) * 100 : 100;
-  document.getElementById('lvlBadge').textContent  = 'LVL ' + l;
-  document.getElementById('xpLbl').textContent     = p.totalXp + ' XP';
-  document.getElementById('xpFill').style.width    = pct.toFixed(1) + '%';
+  document.getElementById('lvlBadge').textContent = l;
+  document.getElementById('xpLbl').textContent    = (p.totalXp - lo).toLocaleString() + ' / ' + (hi - lo).toLocaleString() + ' XP';
+  document.getElementById('xpFill').style.width   = pct.toFixed(1) + '%';
+  var ring = document.getElementById('lvlRing');
+  if (ring) ring.style.strokeDashoffset = (94.25 * (1 - pct / 100)).toFixed(2);
   var gb = document.getElementById('goldBadge');
-  if (gb) gb.textContent = '💰 ' + (p.gold || 0) + 'g';
+  if (gb) gb.textContent = DEV_MODE ? '∞' : (p.gold || 0).toLocaleString();
 }
 
 // ═══════════════════════════════════════════════════
 //  BEARING BAR (canvas) — unchanged
 // ═══════════════════════════════════════════════════
-function drawBar() {
-  var wrap   = document.getElementById('btWrap');
-  var canvas = document.getElementById('btCanvas');
-  var W = wrap.clientWidth, H = wrap.clientHeight;
-  if (!W || !H) return;
-
-  var dpr = window.devicePixelRatio || 1;
-  canvas.width  = W * dpr;
-  canvas.height = H * dpr;
-  canvas.style.width  = W + 'px';
-  canvas.style.height = H + 'px';
-
-  var ctx = canvas.getContext('2d');
-  ctx.scale(dpr, dpr);
-
-  var hdg = S.heading;
-  var cx  = W / 2;
-  var PPD = 3.6; // pixels per degree
-
-  // Background
-  var bg = ctx.createLinearGradient(0, 0, 0, H);
-  bg.addColorStop(0, '#0c0c1c');
-  bg.addColorStop(1, '#111122');
-  ctx.fillStyle = bg;
-  ctx.fillRect(0, 0, W, H);
-
-  // Tick marks
-  var vis = W / PPD;
-  var s0  = hdg - vis / 2 - 6;
-  var s1  = hdg + vis / 2 + 6;
-  var CARD = {0:'N',45:'NE',90:'E',135:'SE',180:'S',225:'SW',270:'W',315:'NW',360:'N'};
-
-  for (var rd = Math.floor(s0); rd <= Math.ceil(s1); rd++) {
-    var dg = ((rd % 360) + 360) % 360;
-    var x  = cx + (rd - hdg) * PPD;
-    var isMaj = dg % 45 === 0;
-    var isMid = !isMaj && dg % 15 === 0;
-    var isMin = !isMaj && !isMid && dg % 5 === 0;
-    if (!isMaj && !isMid && !isMin) continue;
-
-    var th, col, lw;
-    if (isMaj)      { th = 22; col = '#6a6880'; lw = 1.5; }
-    else if (isMid) { th = 13; col = '#323250'; lw = 1;   }
-    else            { th = 7;  col = '#222240'; lw = 0.8; }
-
-    ctx.strokeStyle = col;
-    ctx.lineWidth   = lw;
-    ctx.beginPath();
-    ctx.moveTo(x, H - 4);
-    ctx.lineTo(x, H - 4 - th);
-    ctx.stroke();
-
-    if (isMaj) {
-      var lbl   = CARD[dg] || (dg + '°');
-      var isDir = ['N','S','E','W'].indexOf(lbl) >= 0;
-      ctx.fillStyle = isDir ? '#c9a84c' : '#4a4860';
-      ctx.font      = (isDir ? '600 11px' : '9px') + " 'Cinzel', serif";
-      ctx.textAlign = 'center';
-      ctx.fillText(lbl, x, H - 4 - th - 5);
-    }
-  }
-
-  // Center line
-  ctx.strokeStyle = '#c9a84c';
-  ctx.lineWidth   = 2;
-  ctx.shadowColor = '#c9a84c';
-  ctx.shadowBlur  = 10;
-  ctx.beginPath();
-  ctx.moveTo(cx, 0);
-  ctx.lineTo(cx, H);
-  ctx.stroke();
-  ctx.shadowBlur = 0;
-
-  // Triangle pointer at top
-  ctx.fillStyle   = '#c9a84c';
-  ctx.shadowColor = '#c9a84c';
-  ctx.shadowBlur  = 6;
-  ctx.beginPath();
-  ctx.moveTo(cx - 6, 0);
-  ctx.lineTo(cx + 6, 0);
-  ctx.lineTo(cx, 11);
-  ctx.closePath();
-  ctx.fill();
-  ctx.shadowBlur = 0;
-
-  // Heading label
-  if (S.compassReady) {
-    document.getElementById('bHdg').innerHTML = Math.round(hdg) + '°<span>' + toCardinal(hdg) + '</span>';
-  } else {
-    document.getElementById('bHdg').innerHTML = '---<span id="bCard"></span>';
-  }
-
-  // Quest marker
-  var fq   = null;
-  for (var i = 0; i < S.quests.length; i++) {
-    if (S.quests[i].id === S.focusedId && S.quests[i].status === 'active') { fq = S.quests[i]; break; }
-  }
-
-  var mkr = document.getElementById('qmarker');
-  var bqi = document.getElementById('bQI');
-  var cb  = document.getElementById('completeBtn');
-
-  if (!fq || S.lat === null) {
-    mkr.style.display = 'none';
-    bqi.className = 'bqi dim';
-    bqi.textContent = S.lat === null ? 'Waiting for GPS…' : 'No quest selected';
-    if (cb) cb.disabled = true;
-    return;
-  }
-
-  var br   = bearingDeg(S.lat, S.lng, fq.latitude, fq.longitude);
-  var d    = distM(S.lat, S.lng, fq.latitude, fq.longitude);
-  var rel  = br - hdg;
-  while (rel > 180)  rel -= 360;
-  while (rel < -180) rel += 360;
-  var mx = cx + rel * PPD;
-  var onScreen = mx > 12 && mx < W - 12;
-
-  if (onScreen) {
-    mkr.style.display = 'flex';
-    mkr.style.left    = mx + 'px';
-  } else {
-    mkr.style.display = 'none';
-    // Draw edge chevron
-    var ex    = mx < cx ? 20 : W - 20;
-    var arrow = rel < 0 ? '◂' : '▸';
-    ctx.fillStyle = 'rgba(76,175,122,.85)';
-    ctx.font      = '16px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(arrow, ex, H / 2 + 5);
-  }
-
-  var canDo = d <= fq.completionRadius;
-  bqi.className   = 'bqi';
-  bqi.innerHTML   = fq.title + '<br>' + fmtD(d) + ' · ' + Math.round(br) + '°';
-  if (cb) {
-    cb.disabled    = !canDo;
-    cb.textContent = canDo ? '✓ Complete Quest' : 'Complete Quest (' + fmtD(d) + ' away)';
-  }
-}
 
 // ═══════════════════════════════════════════════════
 //  CREATE QUEST
@@ -1335,7 +1483,7 @@ function createQuest() {
     })
     .then(function(res) {
       btn.disabled    = false;
-      btn.textContent = '⚔ Forge Quest';
+      btn.textContent = 'Forge Quest';
 
       if (res.error) { toast('Error: ' + res.error.message, 'error'); return; }
 
@@ -1350,6 +1498,7 @@ function createQuest() {
       });
       document.getElementById('coordFb').className   = 'chint';
       document.getElementById('coordFb').textContent = 'Enter decimal coordinates: latitude, longitude';
+      var _ns = document.getElementById('nSaved'); if (_ns) _ns.value = '';
 
       toast('Quest forged! ⚔ (' + newQ.xpReward + ' XP)', 'success');
       showScreen('compass', document.querySelector('nav button'));
@@ -1357,7 +1506,7 @@ function createQuest() {
     })
     .catch(function() {
       btn.disabled    = false;
-      btn.textContent = '⚔ Forge Quest';
+      btn.textContent = 'Forge Quest';
       toast('Failed to forge quest', 'error');
     });
 }
@@ -1458,61 +1607,6 @@ function completeQuest() {
 // ═══════════════════════════════════════════════════
 //  RENDER COMPASS SCREEN
 // ═══════════════════════════════════════════════════
-function renderCompass() {
-  var active = S.quests.filter(function(q) { return q.status === 'active'; });
-  var listEl = document.getElementById('cQList');
-  var card   = document.getElementById('fqCard');
-
-  // Validate focused quest still active
-  if (S.focusedId) {
-    var stillActive = false;
-    for (var i = 0; i < active.length; i++) { if (active[i].id === S.focusedId) { stillActive = true; break; } }
-    if (!stillActive) S.focusedId = null;
-  }
-
-  // Auto-select nearest / first
-  if (!S.focusedId && active.length > 0) {
-    if (S.lat !== null) {
-      var best = active[0], bestD = Infinity;
-      active.forEach(function(q) {
-        var d = distM(S.lat, S.lng, q.latitude, q.longitude);
-        if (d < bestD) { bestD = d; best = q; }
-      });
-      S.focusedId = best.id;
-    } else {
-      S.focusedId = active[0].id;
-    }
-  }
-
-  var fq = null;
-  for (var j = 0; j < active.length; j++) { if (active[j].id === S.focusedId) { fq = active[j]; break; } }
-
-  if (fq) {
-    card.style.display = 'block';
-    document.getElementById('fqTitle').textContent = fq.title;
-    document.getElementById('fqXp').textContent    = fq.xpReward + ' XP';
-    document.getElementById('fqLoc').textContent   = fq.locationName || (fq.latitude.toFixed(4) + ', ' + fq.longitude.toFixed(4));
-    document.getElementById('fqRad').textContent   = '⊙ ' + fq.completionRadius + 'm radius';
-  } else {
-    card.style.display = 'none';
-  }
-
-  if (active.length === 0) {
-    listEl.innerHTML = '<div class="empty"><div class="ei">🗺</div><p>No active quests.<br>Create one to begin.</p></div>';
-  } else {
-    listEl.innerHTML = active.map(function(q) {
-      var isFocused = q.id === S.focusedId;
-      var ds = S.lat !== null ? '<span class="tag">' + fmtD(distM(S.lat, S.lng, q.latitude, q.longitude)) + '</span>' : '';
-      return '<div class="qi' + (isFocused ? ' focused' : '') + '" onclick="focusQ(\'' + q.id + '\')">' +
-        '<div class="qi-hdr"><div class="qi-title">' + q.title + '</div><div class="xp-pill">' + q.xpReward + ' XP</div></div>' +
-        (q.locationName ? '<div class="qi-body">📍 ' + q.locationName + '</div>' : '') +
-        '<div class="qi-foot">' + ds + '<span class="tag">' + q.completionRadius + 'm</span></div>' +
-        '</div>';
-    }).join('');
-  }
-
-  drawBar();
-}
 
 function focusQ(id) { S.focusedId = id; renderCompass(); }
 
@@ -1521,8 +1615,9 @@ function focusQ(id) { S.focusedId = id; renderCompass(); }
 // ═══════════════════════════════════════════════════
 function filterQ(f, btn) {
   qFilter = f;
-  document.querySelectorAll('#qFilter .tag').forEach(function(b) { b.classList.remove('active'); });
-  btn.classList.add('active');
+  document.querySelectorAll('#qFilter button').forEach(function(b) { b.classList.remove('on'); });
+  btn.classList.add('on');
+  v2PlaceSeg(document.getElementById('qFilter'));
   renderAllQ();
 }
 
@@ -1531,7 +1626,7 @@ function renderAllQ() {
   var list = document.getElementById('aQList');
   var qs   = qFilter === 'all' ? allQuests : allQuests.filter(function(q) { return q.status === qFilter; });
   if (!qs.length) {
-    list.innerHTML = '<div class="empty"><div class="ei">📜</div><p>No quests here yet.</p></div>';
+    list.innerHTML = '<div class="empty"><p>No quests here yet.</p></div>';
     return;
   }
   list.innerHTML = qs.map(function(q) {
@@ -1539,9 +1634,9 @@ function renderAllQ() {
     return '<div class="qi">' +
       '<div class="qi-hdr"><div class="qi-title">' + q.title + '</div><div class="xp-pill">' + q.xpReward + ' XP</div></div>' +
       (q.description  ? '<div class="qi-body">' + q.description + '</div>' : '') +
-      (q.locationName ? '<div class="qi-body" style="margin-top:2px">📍 ' + q.locationName + '</div>' : '') +
+      (q.locationName ? '<div class="qi-body" style="margin-top:2px">' + V2_PIN + q.locationName + '</div>' : '') +
       '<div class="qi-foot"><span class="tag ' + q.status + '">' + q.status + '</span><span class="tag">' + d + '</span>' +
-      (q.status === 'active' ? '<button class="tag" style="cursor:pointer;border-color:#6a2a2a;color:#cf6464" onclick="delQ(\'' + q.id + '\',event)">✕ Abandon</button>' : '') +
+      (q.status === 'active' ? '<button class="abandon" onclick="delQ(\'' + q.id + '\',event)">Abandon</button>' : '') +
       '</div></div>';
   }).join('');
 }
@@ -1612,52 +1707,34 @@ function habitTierInfo(streak) {
 function renderHabits() {
   var list = document.getElementById('habitList');
   if (!list) return;
+  v2HabitSummary();
   if (!allHabits.length) {
-    list.innerHTML = '<div class="empty"><div class="ei">🔥</div><p>No habits yet.<br>Add one to start building your streak.</p></div>';
+    list.innerHTML = '<div class="empty"><p>No habits yet.<br>Add one to start building your streak.</p></div>';
     return;
   }
+  var pop = _v2PopHabit; _v2PopHabit = null;
   list.innerHTML = allHabits.map(function(h) {
     var done = isCheckedToday(h);
     var ti   = habitTierInfo(h.streak);
-    var streakTxt = h.streak > 0 ? '🔥 ' + h.streak + ' day streak' : '🔥 Start your streak';
-
-    // Build 10 squares (2 rows of 5)
-    var squares = '';
-    for (var s = 0; s < 10; s++) {
-      var filled = s < ti.filled;
-      squares += '<div class="habit-sq' + (filled ? ' ' + TIER_COLORS[ti.tier] : '') + '"></div>';
-    }
-
-    // Milestone hint
-    var milestoneHint = '';
-    if (h.streak > 0) {
-      var bonusTier = Math.floor(h.streak / 10) + 1;
-      var xpBonus   = bonusTier * 50;
-      var gBonus    = bonusTier * 25;
-      var daysLeft  = ti.next - h.streak;
-      milestoneHint = '<div class="habit-milestone" style="color:var(--text-dim)">' +
-        daysLeft + ' day' + (daysLeft !== 1 ? 's' : '') + ' to milestone · ⬆ +' + xpBonus + ' XP +' + gBonus + 'g</div>';
-    }
-
-    return '<div class="habit-card' + (done ? ' checked' : '') + '" id="hc-' + h.id + '">' +
-      '<button class="habit-del" onclick="deleteHabit(\'' + h.id + '\')" title="Delete">✕</button>' +
-      '<div class="habit-hdr">' +
-        '<div class="habit-name">' + escHtml(h.name) + '</div>' +
-        '<button class="habit-check' + (done ? ' done' : '') + '" ' +
-          (done ? 'disabled' : 'onclick="checkHabit(\'' + h.id + '\')"') + '>' +
-          (done ? '✓ Done' : 'Check In') +
-        '</button>' +
+    var col  = V2_TIERS[ti.tier][0];
+    var segs = '';
+    for (var i = 0; i < 10; i++) segs += '<i' + (i < ti.filled ? ' style="background:' + col + ';box-shadow:0 0 6px ' + col + '66"' : '') + '></i>';
+    var streak = h.streak > 0
+      ? '<b>' + h.streak + '</b><span>day streak</span><span class="tier-name" style="color:' + col + ';background:' + col + '1f">' + V2_TIERS[ti.tier][1] + '</span>'
+      : '<span>Start a streak today</span>';
+    var foot = h.streak > 0
+      ? (ti.next - h.streak) + ' to milestone · +' + (Math.floor(h.streak / 10) + 1) * 50 + ' XP'
+      : 'Milestone every 10 days';
+    return '<div class="card habit' + (done ? ' done' : '') + '" id="hc-' + h.id + '">' +
+      '<div class="habit-top">' +
+        '<button class="check' + (pop === h.id ? ' pop' : '') + '" aria-label="Check in" ' + (done ? 'disabled' : 'onclick="v2CheckHabit(\'' + h.id + '\')"') + '>' + V2_CHECK + '</button>' +
+        '<div style="min-width:0;flex:1"><div class="nm">' + escHtml(h.name) + '</div>' +
+          (h.description ? '<div class="desc">' + escHtml(h.description) + '</div>' : '') +
+          '<div class="streak" style="color:' + (h.streak ? col : 'var(--faint)') + '">' + V2_FLAME + streak + '</div></div>' +
+        '<button class="more" aria-label="More" onclick="v2HabitMenu(\'' + h.id + '\')">' + V2_DOTS + '</button>' +
       '</div>' +
-      (h.description ? '<div class="habit-meta" style="margin-top:3px">' + escHtml(h.description) + '</div>' : '') +
-      '<div class="habit-meta" style="margin-top:6px">' +
-        '<span class="habit-streak">' + streakTxt + '</span>' +
-        '<span class="habit-rewards">' +
-          '<span class="xp-pill">+' + h.xpReward + ' XP</span>' +
-          '<span style="font-size:11px;color:var(--gold);font-family:\'Cinzel\',serif">+' + h.goldReward + 'g</span>' +
-        '</span>' +
-      '</div>' +
-      '<div class="habit-squares">' + squares + '</div>' +
-      milestoneHint +
+      '<div class="segs">' + segs + '</div>' +
+      '<div class="habit-foot"><span>' + foot + '</span><span class="rw"><span class="xp-pill">+' + h.xpReward + ' XP</span><span class="pill pill-g">+' + h.goldReward + 'g</span></span></div>' +
     '</div>';
   }).join('');
 }
@@ -1668,11 +1745,12 @@ function escHtml(s) {
 
 function toggleHabitForm() {
   habitFormOpen = !habitFormOpen;
-  var f = document.getElementById('habitForm');
-  if (f) f.style.display = habitFormOpen ? 'block' : 'none';
   if (habitFormOpen) {
+    v2OpenSheet('habitSheet');
     var n = document.getElementById('hName');
-    if (n) setTimeout(function(){ n.focus(); }, 50);
+    if (n) setTimeout(function() { n.focus(); }, 320);
+  } else {
+    v2CloseSheets();
   }
 }
 
@@ -1705,7 +1783,7 @@ function createHabit() {
     document.getElementById('hDesc').value = '';
     toggleHabitForm();
     renderHabits();
-    toast('🔥 Habit added!', 'success');
+    toast('Habit added', 'success');
   });
 }
 
@@ -2403,12 +2481,13 @@ function toggleDevMode() {
   }
   var pBtn = document.getElementById('devModeBtn');
   if (pBtn) {
-    pBtn.textContent       = DEV_MODE ? '🛠 DEV MODE: ON' : '🛠 DEV MODE: OFF';
+    pBtn.textContent       = DEV_MODE ? 'Dev mode: on' : 'Dev mode: off';
     pBtn.style.borderColor = DEV_MODE ? 'var(--gold-dim)' : 'var(--border2)';
     pBtn.style.color       = DEV_MODE ? 'var(--gold)'     : 'var(--text-dim)';
-    pBtn.style.background  = DEV_MODE ? 'rgba(201,168,76,.07)' : 'none';
+    pBtn.style.background  = DEV_MODE ? 'rgba(201,168,76,.07)' : '';
   }
   renderInventory();
+  updateHeader();
   if (typeof renderHomeScene === 'function' && document.getElementById('hsHome')) renderHomeScene();
 }
 
@@ -2512,6 +2591,7 @@ function equipItem(itemId) {
     eq[item.slot] = itemId;
   }
   S.profile.equippedItems = eq;
+  if (V2_PREVIEW) { if (eq[item.slot]) V2_PREVIEW[item.slot] = eq[item.slot]; else delete V2_PREVIEW[item.slot]; }
   localStorage.setItem('tq_equipped', JSON.stringify(eq));
   if (currentUser) {
     sb.from('profiles').update({ equipped_items: eq }).eq('id', currentUser.id)
@@ -2531,61 +2611,6 @@ var INV_SLOTS = [
   { slot:'weapon', label:'Weapon' },
 ];
 
-function renderInventory() {
-  var container = document.getElementById('invGrid');
-  if (!container) return;
-  var inv = S.profile.inventory || [];
-  var eq  = S.profile.equippedItems || {};
-  var g   = S.customization.gender || 'm';
-  var cls = S.customization.charClass || 'warrior';
-  function classOk(it) {
-    return !it.classes || it.classes.length === 0 || it.classes.indexOf(cls) >= 0;
-  }
-
-  // DEV_MODE: show all LOOT_TABLE items for current gender+class, ignoring drops
-  var genderedInv;
-  if (DEV_MODE) {
-    genderedInv = LOOT_TABLE.filter(function(it) { return it.gender === g && classOk(it); }).map(function(it) { return it.id; });
-  } else {
-    genderedInv = inv.filter(function(id) {
-      var it = LOOT_TABLE.find(function(x){ return x.id === id; });
-      return it && it.gender === g && classOk(it);
-    });
-  }
-
-  if (!DEV_MODE && !inv.length) {
-    container.innerHTML = '<div class="inv-empty">No items yet — complete quests to find loot!</div>';
-    return;
-  }
-  if (!genderedInv.length) {
-    container.innerHTML = '<div class="inv-empty">Switch to your other character to see those items, or earn loot for this gender.</div>';
-    return;
-  }
-
-  var html = DEV_MODE ? '<div style="font-family:\'Cinzel\',serif;font-size:9px;letter-spacing:.08em;color:var(--gold);opacity:.7;margin-bottom:8px">🛠 DEV — showing all items</div>' : '';
-  INV_SLOTS.forEach(function(slotInfo) {
-    var items = genderedInv.map(function(id) {
-      return LOOT_TABLE.find(function(x){ return x.id === id; });
-    }).filter(function(it){ return it && it.slot === slotInfo.slot; });
-    if (!items.length) return;
-
-    html += '<div class="inv-slot-group">'
-      + '<div class="inv-slot-label">' + slotInfo.label + '</div>'
-      + '<div class="inv-grid">';
-    items.forEach(function(item) {
-      var isEq = eq[item.slot] === item.id;
-      var sprOffsets = { helmet:'0px -3px', shirt:'0px -28px', pants:'0px -38px', boots:'0px -46px' };
-      var sprPos = sprOffsets[item.slot] || '0px 0px';
-      if (isBigSword(item.file)) sprPos = '3px 0px;background-size:640px 392px'; // fit full 128x112 frame
-      html += '<div class="inv-item'+(isEq?' equipped':'')+'" onclick="equipItem(\''+item.id+'\')" title="'+(isEq?'Unequip':'Equip')+': '+item.name+'">'
-        + '<div class="inv-item-spr" style="background-image:'+cssUrl(item.file)+';background-position:'+sprPos+'"></div>'
-        + '<div class="inv-item-lbl">'+(isEq?'✓ ':'')+item.name+'</div>'
-        + '</div>';
-    });
-    html += '</div></div>';
-  });
-  container.innerHTML = html || '<div class="inv-empty">No items for this gender yet.</div>';
-}
 
 // ── Chest sprite animation (chest.png: 8 frames × 48px, 384×48 total) ──
 // Frames 0-3: closed idle  |  Frames 4-7: opening sequence
@@ -3611,6 +3636,8 @@ function applyHoodHair(hairEl, hairElId) {
 // Keeps the legacy name — callers pass the hair element id. Cheap when cached;
 // called every animation tick.
 function applyHairClipToId(hairElId) {
+  // The loadout stage shows the try-on preview, not what is saved
+  if (hairElId === 'avHair' && V2_PREVIEW && !_v2InPv) return v2WithPreview(function() { applyHairClipToId('avHair'); });
   var hairEl = document.getElementById(hairElId);
   if (!hairEl) return;
   applyArmFaceFix(hairElId);   // keep the bangs visible over the arm layer's face copy
@@ -3689,6 +3716,7 @@ function setCustom(key, val) {
   refreshSceneLayers();  // quest scene
   refreshHomeLayers();   // home scene
   if (key === 'gender' || key === 'charClass') renderInventory(); // re-filter inventory by gender/class
+  refreshAvatarPreview();  // loadout stage
 }
 
 function refreshHomeLayers() {
@@ -3701,56 +3729,6 @@ function refreshHomeLayers() {
   applyHairClipToId('hsHair');
 }
 
-function renderCustomizeUI() {
-  var c = S.customization;
-
-  // Gender
-  var gm = document.getElementById('genderM'); if(gm) gm.className = 'ward-chip' + (c.gender !== 'f' ? ' active' : '');
-  var gf = document.getElementById('genderF'); if(gf) gf.className = 'ward-chip' + (c.gender === 'f' ? ' active' : '');
-
-  // Class (Warrior / Mage / Ranger)
-  var cCls = c.charClass || 'warrior';
-  [['classWarrior','warrior'],['classMage','mage'],['classRanger','ranger']].forEach(function(pair) {
-    var el = document.getElementById(pair[0]);
-    if (el) el.className = 'ward-chip' + (cCls === pair[1] ? ' active' : '');
-  });
-
-  // Skin swatches (1–5)
-  var skinEl = document.getElementById('skinOpts');
-  if (skinEl) skinEl.innerHTML = SKIN_COLORS.map(function(col, i) {
-    var n = i + 1;
-    return '<div class="ward-swatch' + ((c.skinNum||1) === n ? ' active' : '') + '" onclick="setCustom(\'skinNum\',' + n + ')" style="background:' + col + '" title="Skin ' + n + '"></div>';
-  }).join('');
-
-  var g = c.gender || 'm';
-  var hs = c.hairStyle || 1;
-
-  // Style toggle: 6 styles
-  var toggleEl = document.getElementById('hairStyleToggle');
-  if (toggleEl) {
-    var MALE_STYLE_NAMES   = [['1','Short'],['2','Long'],['3','Medium'],['4','Ponytail'],['5','Mohawk'],['6','Man-Bun']];
-    var FEMALE_STYLE_NAMES = [['1','Short'],['2','Long'],['3','Braid'],['4','Updo']];
-    var STYLE_NAMES = (g === 'f') ? FEMALE_STYLE_NAMES : MALE_STYLE_NAMES;
-    toggleEl.innerHTML = STYLE_NAMES.map(function(pair) {
-      return '<div class="ward-chip' + (hs === parseInt(pair[0]) ? ' active' : '') + '" onclick="setCustom(\'hairStyle\',' + pair[0] + ')">' + pair[1] + '</div>';
-    }).join('');
-  }
-
-  // Color thumbnails — show the correct style's sprites
-  var styleEl = document.getElementById('hairStyleOpts');
-  if (styleEl) {
-    var HAIR_COLOR_LABELS = ['Dark','Auburn','Red','Blonde','Silver'];
-    styleEl.innerHTML = [1,2,3,4,5].map(function(n) {
-      var fileNum = (hs - 1) * 5 + n;
-      var hairFile = 'sprites/preview_assets/char/hair_' + g + fileNum + '.png';
-      var isActive = (c.hairNum||1) === n;
-      return '<div class="hair-style-thumb' + (isActive ? ' active' : '') + '" onclick="setCustom(\'hairNum\',' + n + ')"'
-        + ' style="background-image:' + cssUrl(hairFile) + ';background-size:384px 214px;background-position:0px 0px">'
-        + '<div class="hair-style-thumb-lbl">' + HAIR_COLOR_LABELS[n-1] + '</div>'
-        + '</div>';
-    }).join('');
-  }
-}
 
 // Refresh the quest scene character layers after customization change
 function refreshSceneLayers() {
@@ -3771,7 +3749,7 @@ function saveCustomization() {
   });
 }
 
-function refreshAvatarPreview() {
+function _refreshAvatarPreviewRaw() {
   var big = document.getElementById('profAvatarLarge');
   if (!big) { updateHeaderAvatar(); return; }
 
@@ -3803,8 +3781,517 @@ function refreshAvatarPreview() {
 // ═══════════════════════════════════════════════════
 //  INIT
 // ═══════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════
+//  V2 UI — pager, sheets, loadout carousels, appearance
+// ═══════════════════════════════════════════════════
+var V2_PIN = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 15s5-4.6 5-8.5A5 5 0 0 0 3 6.5C3 10.4 8 15 8 15z"/><circle cx="8" cy="6.5" r="1.8"/></svg>';
+var V2_CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+var V2_FLAME = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 22c-4 0-7-2.7-7-6.6 0-3.3 2.3-5.4 3.6-7.2.4 1.6 1.2 2.7 2.3 3.1C10.6 7.5 12.4 4.7 15 3c-.4 3 1 4.8 2.4 6.6 1 1.4 1.6 3 1.6 5C19 19 16 22 12 22z"/></svg>';
+var V2_DOTS = '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>';
+
+// ── Pager + tab bar ──────────────────────────────────
+var V2_PAGES = ['compass', 'quests', 'habits', 'profile'];
+var _v2Page = 0, _v2Jump = null, _v2JumpTimer = null;
+function v2MarkTabs(i) {
+  document.querySelectorAll('#tabbar .tab').forEach(function(t, k) { t.classList.toggle('on', k === i); });
+}
+function v2GoPage(i) { showScreen(V2_PAGES[i], null); }
+function v2InitPager() {
+  var pager = document.getElementById('pager'), ind = document.getElementById('tabInd');
+  if (!pager) return;
+  pager.addEventListener('scroll', function() {
+    var w = pager.clientWidth; if (!w) return;
+    var p = pager.scrollLeft / w;
+    ind.style.transform = 'translateX(' + (p * 100) + '%)';
+    if (_v2Jump !== null) { if (Math.abs(p - _v2Jump) < 0.01) _v2Jump = null; return; }
+    var i = Math.round(p);
+    if (i !== _v2Page && Math.abs(p - i) < 0.2) {
+      _v2Page = i; v2MarkTabs(i);
+      window.showScreen(V2_PAGES[i], null, true);
+    }
+  }, { passive: true });
+  window.addEventListener('resize', function() { pager.scrollLeft = _v2Page * pager.clientWidth; });
+}
+
+// ── Sheets ───────────────────────────────────────────
+function v2OpenSheet(id) {
+  document.getElementById('v2Scrim').classList.add('on');
+  document.getElementById(id).classList.add('on');
+}
+function v2CloseSheets() {
+  document.getElementById('v2Scrim').classList.remove('on');
+  document.querySelectorAll('.sheet').forEach(function(s) { s.classList.remove('on'); });
+  habitFormOpen = false;
+}
+function v2PlaceSeg(seg) {
+  if (!seg) return;
+  var btns = [].slice.call(seg.querySelectorAll('button')), th = seg.querySelector('.seg-thumb');
+  var i = Math.max(0, btns.findIndex(function(b) { return b.classList.contains('on'); }));
+  th.style.width = 'calc((100% - 8px) / ' + btns.length + ')';
+  th.style.transform = 'translateX(' + (i * 100) + '%)';
+}
+(function wireHabitDiff() {
+  document.addEventListener('click', function(e) {
+    var b = e.target.closest && e.target.closest('#habitDiff button');
+    if (!b) return;
+    document.querySelectorAll('#habitDiff button').forEach(function(x) { x.classList.remove('on'); });
+    b.classList.add('on');
+    document.getElementById('hXp').value = b.dataset.x;
+    document.getElementById('hGold').value = b.dataset.g;
+  });
+})();
+
+// ── Heading font (pick in Hero → settings) ───────────
+var V2_FONTS = [['marcellus', 'Marcellus', "'Marcellus',serif"], ['cinzel', 'Cinzel', "'Cinzel',serif"], ['josefin', 'Josefin', "'Josefin Sans',sans-serif"]];
+function v2ApplyFont(name) {
+  if (!V2_FONTS.some(function(f) { return f[0] === name; })) name = 'marcellus';
+  document.body.classList.remove('hf-cinzel', 'hf-josefin');
+  if (name !== 'marcellus') document.body.classList.add('hf-' + name);
+  try { localStorage.setItem('tq_hfont', name); } catch (e) {}
+  var box = document.getElementById('fontOpts');
+  if (box) box.innerHTML = V2_FONTS.map(function(f) {
+    return '<button class="chipbtn' + (f[0] === name ? ' on' : '') + '" style="font-family:' + f[2] + '" onclick="v2ApplyFont(\'' + f[0] + '\')">' + f[1] + '</button>';
+  }).join('');
+  if (typeof drawBar === 'function') drawBar();
+}
+
+// ── Habits ───────────────────────────────────────────
+var V2_TIERS = [['#4caf7a', 'Bronze'], ['#4a9fd4', 'Silver'], ['#9b6dd6', 'Gold'], ['#d4903a', 'Mythic'], ['#cf4444', 'Legend']];
+var _v2PopHabit = null;
+function v2CheckHabit(id) { _v2PopHabit = id; checkHabit(id); }
+function v2HabitMenu(id) {
+  var h = allHabits.find(function(x) { return x.id === id; });
+  if (!h) return;
+  if (confirm('Delete "' + h.name + '"? Its streak will be lost.')) deleteHabit(id);
+}
+function v2HabitSummary() {
+  var n = allHabits.length, yest = new Date(); yest.setDate(yest.getDate() - 1);
+  var yStr = yest.toISOString().slice(0, 10);
+  var done = allHabits.filter(isCheckedToday);
+  var set = function(id, v) { var el = document.getElementById(id); if (el) el.textContent = v; };
+  set('habitRingTxt', done.length + '/' + n);
+  var arc = document.getElementById('habitRingArc');
+  if (arc) arc.style.strokeDashoffset = (226.2 * (1 - (n ? done.length / n : 0))).toFixed(1);
+  set('htXp', '+' + done.reduce(function(a, h) { return a + h.xpReward; }, 0));
+  set('htGold', '+' + done.reduce(function(a, h) { return a + h.goldReward; }, 0) + 'g');
+  set('htBest', allHabits.reduce(function(a, h) { return Math.max(a, h.streak || 0); }, 0));
+  set('htLive', allHabits.filter(function(h) { return h.streak > 0 && (isCheckedToday(h) || h.lastChecked === yStr); }).length);
+}
+
+// ── Class picker ─────────────────────────────────────
+var V2_CLASSES = {
+  warrior: { name: 'Warrior', desc: 'Sword and steel. Up close and swinging.', fg: '#f0a37a', bg: 'rgba(224,120,80,.12)', bd: 'rgba(224,120,80,.4)',
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 3.5H20v5.5L9 20l-5-5z"/><path d="M6.5 13.5l4 4M3 21l3-3"/></svg>' },
+  mage:    { name: 'Mage', desc: 'Staff and arcane orbs, cast from range.', fg: '#c3a6f2', bg: 'rgba(155,109,214,.13)', bd: 'rgba(155,109,214,.42)',
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 21L15 8"/><path d="M17 2l1.2 2.8L21 6l-2.8 1.2L17 10l-1.2-2.8L13 6l2.8-1.2z"/></svg>' },
+  ranger:  { name: 'Ranger', desc: 'Bow and arrow, sharp eyes, light feet.', fg: '#8cc8ef', bg: 'rgba(74,159,212,.12)', bd: 'rgba(74,159,212,.4)',
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3c7 3 7 15 0 18"/><path d="M5 3l14 9L5 21"/><path d="M12 12h9M18 9l3 3-3 3"/></svg>' }
+};
+function v2ClassStyle(el, c) {
+  el.style.setProperty('--cls-fg', c.fg); el.style.setProperty('--cls-bg', c.bg); el.style.setProperty('--cls-bd', c.bd);
+}
+function v2RenderClassBtn() {
+  var cls = (S.customization && S.customization.charClass) || 'warrior', c = V2_CLASSES[cls] || V2_CLASSES.warrior;
+  var b = document.getElementById('classBtn'); if (!b) return;
+  v2ClassStyle(b, c);
+  document.getElementById('classBtnIcon').innerHTML = c.icon;
+  document.getElementById('classBtnLbl').textContent = c.name;
+}
+function openClassSheet() {
+  var cur = (S.customization && S.customization.charClass) || 'warrior';
+  var box = document.getElementById('classOpts');
+  box.innerHTML = '';
+  Object.keys(V2_CLASSES).forEach(function(k) {
+    var c = V2_CLASSES[k], b = document.createElement('button');
+    b.className = 'class-opt' + (k === cur ? ' on' : '');
+    v2ClassStyle(b, c);
+    b.innerHTML = '<div class="ic">' + c.icon + '</div><div><b>' + c.name + '</b><span>' + c.desc + '</span></div><svg class="tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+    b.onclick = function() {
+      v2CloseSheets();
+      if (k !== cur) { setCustom('charClass', k); toast('Class changed to ' + c.name, 'success'); }
+    };
+    box.appendChild(b);
+  });
+  v2OpenSheet('classSheet');
+}
+
+// ── Hair colour swatches (sampled from the sprites themselves) ──
+var _v2HairCol = {};
+function v2HairColor(url, cb) {
+  if (_v2HairCol[url]) return cb(_v2HairCol[url]);
+  var img = new Image();
+  img.onload = function() {
+    try {
+      var c = document.createElement('canvas'); c.width = 80; c.height = 64;
+      var x = c.getContext('2d'); x.drawImage(img, 0, 0, 80, 64, 0, 0, 80, 64);
+      var d = x.getImageData(0, 0, 80, 64).data, px = [];
+      for (var i = 0; i < d.length; i += 4) if (d[i + 3] > 200) px.push([d[i], d[i + 1], d[i + 2]]);
+      px.sort(function(a, b) { return (a[0] + a[1] + a[2]) - (b[0] + b[1] + b[2]); });
+      var m = px[Math.floor(px.length * 0.7)] || [90, 70, 50];   // a mid-light tone reads truer than the average
+      _v2HairCol[url] = 'rgb(' + m.join(',') + ')';
+      cb(_v2HairCol[url]);
+    } catch (e) {}
+  };
+  img.src = url + '?v=' + SPRITE_VER;
+}
+
+// ── Loadout: per-slot carousels with a live try-on ───
+var V2_PREVIEW = null, _v2InPv = false;   // preview is off: swiping equips directly
+var V2_SLOTS = [
+  { slot: 'helmet', label: 'Head',   none: 'No headgear',    sub: 'Show your hair',
+    icon: '<path d="M5 14a7 7 0 0 1 14 0v3H5z"/><path d="M12 7V4M9 17v3M15 17v3"/>' },
+  { slot: 'shirt',  label: 'Chest',  none: 'No top',         sub: 'Unarmored',
+    icon: '<path d="M8 3l-4 3 2 4 2-1v12h8V9l2 1 2-4-4-3-2 2h-4z"/>' },
+  { slot: 'pants',  label: 'Legs',   none: 'No legwear',     sub: 'Unarmored',
+    icon: '<path d="M7 3h10l1 18h-4l-2-11-2 11H6z"/>' },
+  { slot: 'boots',  label: 'Feet',   none: 'No boots',       sub: 'Barefoot',
+    icon: '<path d="M7 3h5v10l7 3v4H6z"/>' },
+  { slot: 'weapon', label: 'Weapon', none: 'Starter weapon', sub: 'Your class default',
+    icon: '<path d="M14.5 3.5H20v5.5L9 20l-5-5z"/><path d="M6.5 13.5l4 4"/>' }
+];
+var V2_RAR = {
+  common:     ['#a7a39b', 'rgba(167,163,155,.10)', 'Common'],
+  uncommon:   ['#5cc48a', 'rgba(92,196,138,.12)',  'Uncommon'],
+  rare:       ['#55aee6', 'rgba(85,174,230,.14)',  'Rare'],
+  super_rare: ['#d070d8', 'rgba(208,112,216,.14)', 'Super rare'],
+  epic:       ['#a67ce6', 'rgba(166,124,230,.15)', 'Epic'],
+  legendary:  ['#eba844', 'rgba(235,168,68,.16)',  'Legendary']
+};
+function v2PreviewEq() {
+  var o = {}; Object.keys(V2_PREVIEW || {}).forEach(function(k) { if (V2_PREVIEW[k]) o[k] = V2_PREVIEW[k]; }); return o;
+}
+function v2WithPreview(fn) {
+  var saved = S.profile.equippedItems; _v2InPv = true;
+  S.profile.equippedItems = v2PreviewEq();
+  try { return fn(); } finally { S.profile.equippedItems = saved; _v2InPv = false; }
+}
+function refreshAvatarPreview() {
+  if (V2_PREVIEW && !_v2InPv) return v2WithPreview(_refreshAvatarPreviewRaw);
+  return _refreshAvatarPreviewRaw();
+}
+var _v2Imgs = {};
+function v2ItemCanvas(it, box) {
+  var c = document.createElement('canvas'), url = it.file.replace(/ /g, '%20') + '?v=' + SPRITE_VER;
+  function draw(img) {
+    var fw = Math.round(img.naturalWidth / 10), fh = Math.round(img.naturalHeight / 7);
+    var t = document.createElement('canvas'); t.width = fw; t.height = fh;
+    var tx = t.getContext('2d'); tx.drawImage(img, 0, 0, fw, fh, 0, 0, fw, fh);
+    var d = tx.getImageData(0, 0, fw, fh).data, x0 = fw, y0 = fh, x1 = -1, y1 = -1;
+    for (var y = 0; y < fh; y++) for (var x = 0; x < fw; x++) if (d[(y * fw + x) * 4 + 3] > 8) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+    if (x1 < 0) return;
+    var bw = x1 - x0 + 1, bh = y1 - y0 + 1, s = Math.max(1, Math.min(4, Math.floor(Math.min(box / bw, box / bh))));
+    c.width = bw * s; c.height = bh * s;
+    var cx = c.getContext('2d'); cx.imageSmoothingEnabled = false; cx.drawImage(t, x0, y0, bw, bh, 0, 0, bw * s, bh * s);
+  }
+  var img = _v2Imgs[url];
+  if (img && img.complete && img.naturalWidth) draw(img);
+  else {
+    if (!img) { img = new Image(); _v2Imgs[url] = img; img.src = url; }
+    img.addEventListener('load', function() { draw(img); });
+  }
+  return c;
+}
+function v2CenterOn(slot, id, instant) {
+  var tr = document.getElementById('tr-' + slot); if (!tr) return;
+  var card = tr.querySelector('[data-id="' + id + '"]') || tr.querySelector('[data-id="none"]');
+  if (!card) return;
+  tr.scrollTo({ left: card.offsetLeft - (tr.clientWidth - card.clientWidth) / 2, behavior: instant ? 'auto' : 'smooth' });
+}
+function v2StageLabel() {}
+// Equip as the carousel lands on a card. The character updates straight away;
+// the other scenes follow a beat later and the save is batched.
+var _v2SaveTimer = null, _v2SceneTimer = null;
+function v2SetSlot(slot, id) {
+  var eq = S.profile.equippedItems || {};
+  if ((eq[slot] || null) === (id || null)) return;
+  if (id) eq[slot] = id; else delete eq[slot];
+  S.profile.equippedItems = eq;
+  try { localStorage.setItem('tq_equipped', JSON.stringify(eq)); } catch (e) {}
+  refreshAvatarPreview();
+  v2RefreshCards();
+  clearTimeout(_v2SceneTimer);
+  _v2SceneTimer = setTimeout(function() { refreshSceneLayers(); refreshHomeLayers(); }, 150);
+  clearTimeout(_v2SaveTimer);
+  _v2SaveTimer = setTimeout(function() {
+    if (currentUser) sb.from('profiles').update({ equipped_items: S.profile.equippedItems }).eq('id', currentUser.id).then(function(){}).catch(function(){});
+  }, 800);
+}
+function v2Unequip(slot) { v2SetSlot(slot, null); }
+function v2RefreshCards() {
+  var eq = S.profile.equippedItems || {};
+  V2_SLOTS.forEach(function(s) {
+    document.querySelectorAll('#tr-' + s.slot + ' .item').forEach(function(c) {
+      var isEq = (eq[s.slot] || 'none') === c.dataset.id;
+      if (c.classList.contains('is-eq') === isEq && c.dataset.drawn) return;
+      c.dataset.drawn = '1';
+      c.classList.toggle('is-eq', isEq); c.classList.toggle('off', !isEq);
+      c.querySelector('.act').innerHTML = isEq ? '<span class="eq-badge">' + V2_CHECK + (c.dataset.id === 'none' ? 'Current' : 'Equipped') + '</span>' : '';
+    });
+  });
+}
+function renderInventory() {
+  var container = document.getElementById('invGrid');
+  if (!container) return;
+  var g = S.customization.gender || 'm', cls = S.customization.charClass || 'warrior';
+  var eq = S.profile.equippedItems || {};
+  function classOk(it) { return !it.classes || it.classes.length === 0 || it.classes.indexOf(cls) >= 0; }
+  var pool;
+  if (DEV_MODE) pool = LOOT_TABLE.filter(function(it) { return it.gender === g && classOk(it); });
+  else pool = (S.profile.inventory || []).map(function(id) { return LOOT_TABLE.find(function(x) { return x.id === id; }); })
+    .filter(function(it) { return it && it.gender === g && classOk(it); });
+
+  container.innerHTML = DEV_MODE ? '<div class="dev-note">Dev mode — showing every item</div>' : '';
+  V2_SLOTS.forEach(function(s) {
+    var items = pool.filter(function(it) { return it.slot === s.slot; })
+      .sort(function(a, b) { return (a.level || 0) - (b.level || 0); });
+    var sec = document.createElement('div'); sec.className = 'slot';
+    sec.innerHTML = '<div class="slot-hd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round">' + s.icon + '</svg><h3>' + s.label + '</h3><span class="cnt">' + items.length + ' owned</span></div><div class="track" id="tr-' + s.slot + '"></div>';
+    var tr = sec.querySelector('.track');
+    [{ id: 'none' }].concat(items).forEach(function(it) {
+      var card = document.createElement('div'); card.className = 'item'; card.dataset.id = it.id;
+      if (it.id === 'none') {
+        card.innerHTML = '<div class="pv"><span class="none">None</span></div><div class="info"><div class="nm">' + s.none + '</div><div class="lv">' + s.sub + '</div><div class="act"></div></div>';
+      } else {
+        var r = V2_RAR[it.rarity] || V2_RAR.common;
+        card.style.setProperty('--rc', r[0]);
+        card.innerHTML = '<div class="pv"></div><div class="info"><div class="rar" style="color:' + r[0] + '">' + r[2] + '</div><div class="nm">' + it.name + '</div><div class="lv">Level ' + (it.level || 1) + '</div><div class="act"></div></div>';
+        var pv = card.querySelector('.pv'); pv.style.setProperty('--rc-bg', r[1]); pv.appendChild(v2ItemCanvas(it, 84));
+      }
+      card.onclick = function() { v2CenterOn(s.slot, it.id, false); };
+      tr.appendChild(card);
+    });
+    // Equip whichever card sits in the middle, checked every frame while scrolling
+    var raf = 0;
+    tr.addEventListener('scroll', function() {
+      if (raf || !tr.dataset.ready) return;
+      raf = requestAnimationFrame(function() {
+        raf = 0;
+        var mid = tr.scrollLeft + tr.clientWidth / 2, best = null, bd = 1e9;
+        var cards = tr.children;
+        for (var k = 0; k < cards.length; k++) {
+          var c = cards[k], dd = Math.abs(c.offsetLeft + c.clientWidth / 2 - mid);
+          if (dd < bd) { bd = dd; best = c; }
+        }
+        if (!best || bd > best.clientWidth * 0.3) return;   // wait until a card is mostly centred
+        v2SetSlot(s.slot, best.dataset.id === 'none' ? null : best.dataset.id);
+      });
+    }, { passive: true });
+    container.appendChild(sec);
+  });
+  if (!DEV_MODE && !pool.length) {
+    var n = document.createElement('div'); n.className = 'inv-note';
+    n.textContent = (S.profile.inventory || []).length ? 'No gear for this body and class yet.' : 'No loot yet. Complete quests to find gear.';
+    container.insertBefore(n, container.firstChild);
+  }
+  v2RefreshCards();
+  requestAnimationFrame(function() {
+    V2_SLOTS.forEach(function(s) { v2CenterOn(s.slot, eq[s.slot] || 'none', true); });
+    setTimeout(function() { container.querySelectorAll('.track').forEach(function(t) { t.dataset.ready = '1'; }); }, 60);
+  });
+  refreshAvatarPreview();
+}
+// Idle animation for the loadout stage (only while the Hero page is showing)
+var _v2StageFrame = 0;
+setInterval(function() {
+  var page = document.getElementById('screen-profile');
+  if (!page || !page.classList.contains('active') || !document.getElementById('avSkin')) return;
+  _v2StageFrame = (_v2StageFrame + 1) % 5;
+  ['avSkin','avPants','avBoots','avShirt','avSword','avArm','avHair','avHelmet'].forEach(function(id) {
+    setLayerPos(document.getElementById(id), -_v2StageFrame * 80, 0);
+  });
+  applyHairClipToId('avHair');
+}, 1000 / 6);
+
+// ── Appearance ───────────────────────────────────────
+function renderCustomizeUI() {
+  var c = S.customization, g = c.gender || 'm', hs = c.hairStyle || 1;
+  var gm = document.getElementById('genderM'), gf = document.getElementById('genderF');
+  if (gm) gm.classList.toggle('on', g !== 'f');
+  if (gf) gf.classList.toggle('on', g === 'f');
+  v2PlaceSeg(document.getElementById('genderSeg'));
+
+  var skinEl = document.getElementById('skinOpts');
+  if (skinEl) skinEl.innerHTML = SKIN_COLORS.map(function(col, i) {
+    var n = i + 1;
+    return '<i class="sw' + ((c.skinNum || 1) === n ? ' on' : '') + '" onclick="setCustom(\'skinNum\',' + n + ')" style="background:' + col + '" title="Skin ' + n + '"></i>';
+  }).join('');
+
+  var hairEl = document.getElementById('hairColorOpts');
+  if (hairEl) {
+    var LABELS = ['Dark brown', 'Brown', 'Red', 'Blonde', 'Black'];
+    hairEl.innerHTML = [1, 2, 3, 4, 5].map(function(n) {
+      return '<i class="sw" id="hairSw' + n + '" title="' + LABELS[n - 1] + '" onclick="setCustom(\'hairNum\',' + n + ')" style="background:' + HAIR_COLORS[n - 1] + '"></i>';
+    }).join('');
+    [1, 2, 3, 4, 5].forEach(function(n) {
+      var sw = document.getElementById('hairSw' + n);
+      if ((c.hairNum || 1) === n) sw.classList.add('on');
+      v2HairColor('sprites/preview_assets/char/hair_' + g + ((hs - 1) * 5 + n) + '.png', function(col) { sw.style.background = col; });
+    });
+  }
+
+  var toggleEl = document.getElementById('hairStyleToggle');
+  if (toggleEl) {
+    var NAMES = g === 'f' ? ['Short', 'Long', 'Braid', 'Updo'] : ['Short', 'Long', 'Medium', 'Ponytail', 'Mohawk', 'Man-Bun'];
+    toggleEl.innerHTML = NAMES.map(function(nm, i) {
+      return '<button class="chipbtn' + (hs === i + 1 ? ' on' : '') + '" onclick="setCustom(\'hairStyle\',' + (i + 1) + ')">' + nm + '</button>';
+    }).join('');
+  }
+  v2RenderClassBtn();
+}
+
+// ── Compass (v2.1): tape + tracked quest, driven by the live heading ──
+var _v2Hdg = null, _v2HdgLoop = false;
+var V2_ARROW = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l6 18-6-4-6 4z"/></svg>';
+var V2_DIRS16 = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
+function v2FocusQuest() {
+  for (var i = 0; i < S.quests.length; i++) if (S.quests[i].id === S.focusedId && S.quests[i].status === 'active') return S.quests[i];
+  return null;
+}
+function v2GoldFor(xp) { return Math.max(10, Math.floor(xp * 0.3)); }
+function v2DistHTML(d) { return d < 1000 ? Math.round(d) + '<small>m</small>' : (d / 1000).toFixed(1) + '<small>km</small>'; }
+// Called by the orientation sensor, GPS and renders: refresh the numbers and make sure the tape is animating
+function drawBar() {
+  v2UpdateFocus();
+  if (!_v2HdgLoop) { _v2HdgLoop = true; requestAnimationFrame(v2CompassFrame); }
+}
+function v2CompassFrame() {
+  var page = document.getElementById('screen-compass');
+  if (!page || !page.classList.contains('active')) { _v2HdgLoop = false; return; }
+  var target = S.heading || 0;
+  if (_v2Hdg === null) _v2Hdg = target;
+  var diff = ((target - _v2Hdg + 540) % 360) - 180;
+  _v2Hdg = Math.abs(diff) < 0.1 ? target : (_v2Hdg + diff * 0.5 + 360) % 360;   // catches up in a few frames, smooths sensor jitter
+  v2DrawTape();
+  if (Math.abs(diff) < 0.1) { _v2HdgLoop = false; return; }
+  requestAnimationFrame(v2CompassFrame);
+}
+function v2DrawTape() {
+  var cv = document.getElementById('tape'); if (!cv) return;
+  var W = cv.clientWidth, H = cv.clientHeight, dpr = window.devicePixelRatio || 1;
+  if (!W || !H) return;
+  if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
+  var x = cv.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, W, H);
+  var hdg = _v2Hdg || 0, pxDeg = 3.2, CARD = { 0:'N', 45:'NE', 90:'E', 135:'SE', 180:'S', 225:'SW', 270:'W', 315:'NW' };
+  var font = (getComputedStyle(document.body).getPropertyValue('--hf') || 'serif').trim();
+  x.textAlign = 'center';
+  for (var d = Math.floor((hdg - W / 2 / pxDeg) / 5) * 5; d <= hdg + W / 2 / pxDeg; d += 5) {
+    var xx = W / 2 + (d - hdg) * pxDeg, dd = ((d % 360) + 360) % 360, major = dd % 15 === 0, card = CARD[dd] !== undefined;
+    x.strokeStyle = card ? 'rgba(236,208,133,.9)' : major ? 'rgba(255,255,255,.42)' : 'rgba(255,255,255,.16)';
+    x.lineWidth = card ? 2 : 1;
+    x.beginPath(); x.moveTo(xx, H - 8); x.lineTo(xx, H - 8 - (card ? 22 : major ? 15 : 8)); x.stroke();
+    if (major) {
+      x.font = (card ? '15px ' : '11px ') + font;
+      x.fillStyle = card ? '#ecd085' : 'rgba(255,255,255,.5)';
+      x.fillText(card ? CARD[dd] : dd, xx, card ? 20 : 22);
+    }
+  }
+  // Tracked quest marker (or an edge chevron when it is behind you)
+  var fq = v2FocusQuest(), off = null;
+  if (fq && S.lat !== null) {
+    off = ((bearingDeg(S.lat, S.lng, fq.latitude, fq.longitude) - hdg + 540) % 360) - 180;
+    var qx = W / 2 + off * pxDeg;
+    x.fillStyle = '#7fd6a5';
+    if (Math.abs(off) * pxDeg < W / 2 - 14) {
+      x.beginPath(); x.moveTo(qx, H - 36); x.lineTo(qx - 7, H - 48); x.lineTo(qx + 7, H - 48); x.closePath(); x.fill();
+      x.fillStyle = 'rgba(127,214,165,.2)'; x.fillRect(qx - 1, H - 34, 2, 26);
+    } else {
+      var ex = off < 0 ? 18 : W - 18;
+      x.beginPath(); x.moveTo(ex + (off < 0 ? -6 : 6), H / 2); x.lineTo(ex + (off < 0 ? 4 : -4), H / 2 - 8); x.lineTo(ex + (off < 0 ? 4 : -4), H / 2 + 8); x.closePath(); x.fill();
+    }
+  }
+  var hEl = document.getElementById('bHdg');
+  if (hEl) {
+    if (S.compassReady) { var hh = ((Math.round(hdg) % 360) + 360) % 360; hEl.innerHTML = hh + '°<small>' + V2_DIRS16[Math.round(hh / 22.5) % 16] + '</small>'; }
+    else hEl.textContent = '---';
+  }
+  var arrow = document.getElementById('fqArrow');
+  if (arrow) arrow.style.transform = off === null ? '' : 'rotate(' + off.toFixed(1) + 'deg)';
+  if (S.lat !== null) document.querySelectorAll('#cQList .dir svg').forEach(function(s) {
+    var b = bearingDeg(S.lat, S.lng, +s.dataset.lat, +s.dataset.lng);
+    s.style.transform = 'rotate(' + (((b - hdg + 540) % 360) - 180).toFixed(1) + 'deg)';
+  });
+}
+function v2UpdateFocus() {
+  var fq = v2FocusQuest(), cb = document.getElementById('completeBtn');
+  if (!fq) { if (cb) cb.disabled = true; return; }
+  var dist = document.getElementById('fqDist'), fill = document.getElementById('fqRange'), lbl = document.getElementById('fqRangeLbl');
+  if (S.lat === null) {
+    dist.textContent = '—'; fill.style.width = '0%'; fill.classList.remove('ok');
+    lbl.textContent = 'Waiting for GPS'; lbl.classList.remove('ok');
+    if (cb) { cb.disabled = true; cb.textContent = 'Waiting for GPS'; }
+    return;
+  }
+  var d = distM(S.lat, S.lng, fq.latitude, fq.longitude), r = fq.completionRadius, ok = d <= r;
+  // log scale: 5 km away reads empty, inside the radius reads full
+  var pct = ok ? 100 : Math.max(4, Math.min(96, 100 * (1 - Math.log(d / r) / Math.log(Math.max(5000 / r, 2)))));
+  dist.innerHTML = v2DistHTML(d);
+  fill.style.width = pct.toFixed(1) + '%'; fill.classList.toggle('ok', ok);
+  lbl.textContent = ok ? 'Within ' + r + ' m — ready' : 'Get within ' + r + ' m'; lbl.classList.toggle('ok', ok);
+  if (cb) { cb.disabled = !ok; cb.textContent = ok ? 'Complete Quest' : fmtD(d) + ' away'; }
+}
+function renderCompass() {
+  var active = S.quests.filter(function(q) { return q.status === 'active'; });
+  var listEl = document.getElementById('cQList'), card = document.getElementById('fqCard');
+  if (S.focusedId && !active.some(function(q) { return q.id === S.focusedId; })) S.focusedId = null;
+  if (!S.focusedId && active.length) {
+    var best = active[0];
+    if (S.lat !== null) { var bd = Infinity; active.forEach(function(q) { var d = distM(S.lat, S.lng, q.latitude, q.longitude); if (d < bd) { bd = d; best = q; } }); }
+    S.focusedId = best.id;
+  }
+  var fq = v2FocusQuest();
+  if (fq) {
+    card.style.display = '';
+    document.getElementById('fqTitle').textContent = fq.title;
+    document.getElementById('fqLoc').textContent = fq.locationName || (fq.latitude.toFixed(4) + ', ' + fq.longitude.toFixed(4));
+    document.getElementById('fqXp').textContent = '+' + fq.xpReward + ' XP';
+    document.getElementById('fqGold').textContent = '+' + v2GoldFor(fq.xpReward) + 'g';
+    document.getElementById('fqRad').textContent = fq.completionRadius + ' m radius';
+  } else card.style.display = 'none';
+  var cnt = document.getElementById('cQCount'); if (cnt) cnt.textContent = active.length ? active.length + ' active' : '';
+  if (!active.length) listEl.innerHTML = '<div class="empty"><p>No active quests.<br>Forge one to begin.</p></div>';
+  else listEl.innerHTML = active.map(function(q) {
+    var dist = S.lat !== null ? fmtD(distM(S.lat, S.lng, q.latitude, q.longitude)) : '—';
+    var loc = q.locationName || (q.latitude.toFixed(4) + ', ' + q.longitude.toFixed(4));
+    return '<div class="card qrow' + (q.id === S.focusedId ? ' sel' : '') + '" onclick="focusQ(\'' + q.id + '\')">' +
+      '<div class="dir">' + V2_ARROW.replace('<svg ', '<svg data-lat="' + q.latitude + '" data-lng="' + q.longitude + '" ') + '</div>' +
+      '<div class="body"><div class="t">' + escHtml(q.title) + '</div><div class="meta" style="margin-top:3px">' + V2_PIN + '<span>' + escHtml(loc) + '</span></div></div>' +
+      '<div class="right"><div class="d">' + dist + '</div><span class="xp-pill">' + q.xpReward + ' XP</span></div></div>';
+  }).join('');
+  _v2Hdg = _v2Hdg === null ? null : _v2Hdg;
+  drawBar();
+  v2DrawTape();
+}
+
+// ── Forge: pick from places you've used before ──
+var _v2Locs = [];
+function v2FillSavedLocs() {
+  var seen = {}, wrap = document.getElementById('savedLocWrap'), sel = document.getElementById('nSaved');
+  if (!wrap || !sel) return;
+  _v2Locs = [];
+  allQuests.slice().sort(function(a, b) { return new Date(b.createdAt || 0) - new Date(a.createdAt || 0); }).forEach(function(q) {
+    var n = (q.locationName || '').trim(); if (!n || q.latitude == null) return;
+    var k = n.toLowerCase(); if (seen[k]) return; seen[k] = 1;
+    _v2Locs.push({ name: n, lat: +q.latitude, lng: +q.longitude });
+  });
+  wrap.style.display = _v2Locs.length ? '' : 'none';
+  sel.innerHTML = '<option value="">Choose a saved place…</option>' + _v2Locs.map(function(l, i) {
+    return '<option value="' + i + '">' + escHtml(l.name) + (S.lat !== null ? '  ·  ' + fmtD(distM(S.lat, S.lng, l.lat, l.lng)) : '') + '</option>';
+  }).join('');
+}
+function v2PickSavedLoc(v) {
+  if (v === '' || !_v2Locs[+v]) return;
+  var l = _v2Locs[+v];
+  document.getElementById('nLocName').value = l.name;
+  document.getElementById('nCoords').value = l.lat.toFixed(6) + ', ' + l.lng.toFixed(6);
+  onCoordInput();
+}
+
 startGPS();
 startOrientation();
+v2InitPager();
+v2ApplyFont((function(){ try { return localStorage.getItem("tq_hfont"); } catch (e) { return null; } })());
+v2PlaceSeg(document.getElementById("qFilter"));
 window.addEventListener('resize', drawBar);
 
 // Check for existing session (handles page reload)
@@ -4001,7 +4488,7 @@ setInterval(function() {
     var level  = S.profile.level || 1;
     var el;
     el = document.getElementById('qsPillActive'); if(el) el.textContent = active+' Active';
-    el = document.getElementById('qsPillLevel');  if(el) el.textContent = 'Lv '+level+' Warrior';
+    el = document.getElementById('qsPillLevel');  if(el) el.textContent = 'Lv '+level+' '+(((V2_CLASSES[S.customization.charClass||'warrior'])||V2_CLASSES.warrior).name);
     el = document.getElementById('qsPillDone');   if(el) el.textContent = done+' Complete';
     // Switch animation state based on active quests
     // Enemy for the first active quest, at your current level
@@ -4028,7 +4515,7 @@ setInterval(function() {
   // Init scene when quests tab becomes active
   var _origShowScreen = window.showScreen;
   window.showScreen = function(id, btn) {
-    _origShowScreen(id, btn);
+    _origShowScreen.apply(this, arguments);
     if (id === 'quests') { qsInit(); refreshScenePills(); }
   };
 })();
