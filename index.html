@@ -596,6 +596,74 @@ header.top .xp-fill{height:100%;border-radius:99px;background:linear-gradient(90
 .qrow .right{text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:5px}
 .qrow .d{font-family:var(--hf);font-weight:var(--hw);font-size:15px;color:var(--text);white-space:nowrap}
 #screen-create select#nSaved{color:var(--text-bright)}
+
+/* ══════════ V3: stats, calendar, tour ══════════ */
+.stat-tag{display:inline-flex;align-items:center;height:18px;padding:0 6px;border-radius:6px;border:1px solid;font-family:var(--hf);font-size:9.5px;letter-spacing:.12em;margin-right:4px}
+.habit .tags{display:flex;flex-wrap:wrap;gap:0;margin-top:6px}
+.train-chips{display:flex;flex-wrap:wrap;gap:7px}
+.train-chip{display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 11px;border-radius:10px;cursor:pointer;
+  background:rgba(255,255,255,.035);border:1px solid var(--line2);color:var(--text-dim);font-family:var(--hf);font-size:12px;letter-spacing:.06em;transition:all .15s}
+.train-chip i{width:8px;height:8px;border-radius:50%;background:var(--sc);opacity:.45}
+.train-chip b{font-weight:400;font-size:11px;color:var(--sc);margin-left:2px}
+.train-chip.on{color:var(--text-bright);border-color:color-mix(in srgb,var(--sc) 55%,transparent);background:color-mix(in srgb,var(--sc) 14%,transparent)}
+.train-chip.on i{opacity:1;box-shadow:0 0 8px var(--sc)}
+.train-hint{font-size:14px;color:var(--faint);font-style:italic;margin-top:7px}
+
+/* calendar */
+.cal-card{padding:14px 14px 12px}
+.cal-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.cal-hd h3{font-family:var(--hf);font-weight:var(--hw);font-size:14px;letter-spacing:.12em;text-transform:uppercase;color:var(--text)}
+.cal-nav{width:34px;height:34px;border-radius:10px;border:1px solid var(--line2);background:rgba(255,255,255,.04);color:var(--text);font-size:20px;line-height:1;cursor:pointer}
+.cal-nav:disabled{opacity:.25;cursor:default}
+.cal-dow,.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal-dow span{text-align:center;font-family:var(--hf);font-size:10px;letter-spacing:.1em;color:var(--faint);padding-bottom:4px}
+.cal-cell{position:relative;aspect-ratio:1;border-radius:50%;border:none;background:none;cursor:pointer;display:grid;place-items:center;padding:0;color:var(--text-dim)}
+.cal-cell svg{position:absolute;inset:2px;width:calc(100% - 4px);height:calc(100% - 4px)}
+.cal-cell b{position:relative;font-family:var(--hf);font-weight:400;font-size:13px}
+.cal-cell.blank{cursor:default}
+.cal-cell.future{opacity:.3;cursor:default}
+.cal-cell.today{box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.35)}
+.cal-cell.full{background:linear-gradient(180deg,#f6dd96,#c9a84c);color:#1d1407;box-shadow:0 0 10px rgba(201,168,76,.35)}
+.cal-cell.full b{font-weight:600}
+.cal-cell.sel{outline:2px solid var(--gold2);outline-offset:1px}
+.cal-day{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:10px}
+.cal-day:empty{display:none}
+.cal-day>b{width:100%;font-family:var(--hf);font-weight:var(--hw);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);margin-bottom:2px}
+.cal-done{display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 9px;border-radius:8px;background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.28);color:var(--gold2);font-size:14.5px}
+.cal-done svg{width:11px;height:11px}
+.cal-none{font-size:15px;color:var(--faint);font-style:italic}
+.hd-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:2px 0 16px}
+.hd-stats div{padding:11px 6px;border-radius:13px;background:rgba(255,255,255,.035);border:1px solid var(--line);text-align:center}
+.hd-stats b{display:block;font-family:var(--hf);font-weight:var(--hw);font-size:20px;color:var(--text-bright)}
+.hd-stats span{display:block;font-family:var(--hf);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim);margin-top:2px}
+
+/* radar */
+.radar-card{padding:12px 14px 14px}
+.radar-svg{width:100%;max-width:340px;display:block;margin:0 auto}
+.radar-lbl{font-family:var(--hf);font-size:12px;letter-spacing:.12em}
+.radar-val{font-family:var(--hf);font-size:13px;fill:var(--text-bright)}
+.rs-list{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;margin-top:6px}
+.rs-row{display:grid;grid-template-columns:8px 1fr auto;align-items:center;gap:8px;font-size:15px;color:var(--text-dim)}
+.rs-row i{width:8px;height:8px;border-radius:50%}
+.rs-row b{font-family:var(--hf);font-weight:var(--hw);color:var(--text-bright);font-size:14px}
+.rs-row em{grid-column:2/4;font-style:normal;font-size:12.5px;color:#7fd6a5;margin-top:-4px}
+.rs-row em:empty{display:none}
+
+/* walkthrough */
+#tour{position:absolute;inset:0;z-index:80;display:none}
+#tour.on{display:block}
+#tourSpot{position:absolute;border-radius:18px;box-shadow:0 0 0 2px rgba(236,208,133,.65),0 0 0 9999px rgba(5,5,10,.74);transition:all .28s cubic-bezier(.3,.8,.2,1),opacity .2s;pointer-events:none}
+#tourSpot.none{left:50%!important;top:50%!important;width:0!important;height:0!important;box-shadow:0 0 0 9999px rgba(5,5,10,.8)}
+#tourCard{position:absolute;left:16px;right:16px;padding:18px 18px 14px;border-radius:20px;background:#17152a;border:1px solid rgba(201,168,76,.35);box-shadow:0 20px 50px rgba(0,0,0,.6);transition:opacity .2s}
+#tourCard h3{font-family:var(--hf);font-weight:var(--hw);font-size:20px;color:var(--text-bright);letter-spacing:.03em}
+#tourCard p{font-size:17px;color:var(--text);line-height:1.4;margin:6px 0 14px}
+.tour-foot{display:flex;align-items:center;gap:10px}
+.tour-dots{display:flex;gap:5px;flex:1}
+.tour-dots i{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.18)}
+.tour-dots i.on{background:var(--gold2);width:16px;border-radius:4px}
+#tourSkip{background:none;border:none;color:var(--text-dim);font-family:var(--hf);font-size:12px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;padding:8px}
+.sheet{visibility:hidden;transform:translateY(calc(100% + 40px));transition:transform .32s cubic-bezier(.3,.8,.2,1),visibility 0s linear .32s}
+.sheet.on{visibility:visible;transform:none;transition:transform .32s cubic-bezier(.3,.8,.2,1)}
 </style>
 <script src="sprite_spec.js"></script>
 </head>
@@ -742,6 +810,7 @@ header.top .xp-fill{height:100%;border-radius:99px;background:linear-gradient(90
       <div class="ts"><div class="v" id="htGold" style="color:var(--gold2)">+0g</div><div class="l">Gold today</div></div>
     </div>
   </div>
+  <div class="card cal-card" id="habitCal"></div>
   <div class="h-sec"><h2>Daily habits</h2><button class="btn btn-primary btn-sm" onclick="toggleHabitForm()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" style="width:14px;height:14px"><path d="M12 5v14M5 12h14"/></svg>New</button></div>
   <div id="habitList" class="qlist"></div>
 </div></section>
@@ -801,6 +870,9 @@ header.top .xp-fill{height:100%;border-radius:99px;background:linear-gradient(90
     <div class="stat"><div class="v" id="sGold" style="color:var(--gold2)">0</div><div class="l">Gold</div></div>
   </div>
 
+  <div class="h-sec"><h2>Attributes</h2><span class="aux">Trained by habits</span></div>
+  <div class="card radar-card" id="statRadar"></div>
+
   <div class="h-sec"><h2>Loadout</h2><span class="aux">Swipe to equip</span></div>
   <div class="loadout">
     <div class="stage" id="stage">
@@ -822,6 +894,7 @@ header.top .xp-fill{height:100%;border-radius:99px;background:linear-gradient(90
   <div class="card settings">
     <div class="opt-row"><div class="lbl">Heading font</div><div class="chips" id="fontOpts"></div></div>
     <button class="btn btn-ghost" id="devModeBtn" onclick="toggleDevMode()">Dev mode: off</button>
+    <button class="btn btn-ghost" onclick="v3StartTour()">Replay walkthrough</button>
     <button class="btn btn-ghost" onclick="doLogout()">Sign out</button>
     <button class="btn btn-danger" onclick="resetData()">Reset all data</button>
   </div>
@@ -881,8 +954,9 @@ header.top .xp-fill{height:100%;border-radius:99px;background:linear-gradient(90
 <div class="sheet" id="habitSheet">
   <div class="grab"></div>
   <h3>New habit</h3>
-  <div class="field"><label>Name</label><input id="hName" placeholder="Morning run, read 20 minutes…" maxlength="60"></div>
-  <div class="field"><label>Description (optional)</label><input id="hDesc" placeholder="Keep it brief"></div>
+  <div class="field"><label>Name</label><input id="hName" oninput="v3SheetRefresh()" placeholder="Morning run, read 20 minutes…" maxlength="60"></div>
+  <div class="field"><label>Description (optional)</label><input id="hDesc" oninput="v3SheetRefresh()" placeholder="Keep it brief"></div>
+  <div class="field"><label>Trains</label><div class="train-chips" id="hTrains"></div><div class="train-hint" id="hTrainsHint"></div></div>
   <div class="field"><label>Difficulty</label>
     <div class="diff" id="habitDiff">
       <button data-x="5" data-g="3"><b>Easy</b><span>5 XP · 3g</span></button>
@@ -893,6 +967,11 @@ header.top .xp-fill{height:100%;border-radius:99px;background:linear-gradient(90
   <input type="hidden" id="hXp" value="10"><input type="hidden" id="hGold" value="5">
   <button class="btn btn-primary" style="margin-top:6px" onclick="createHabit()">Add habit</button>
 </div>
+<div class="sheet" id="habitDetail">
+  <div class="grab"></div>
+  <div id="habitDetailBody"></div>
+</div>
+<div id="tour"><div id="tourSpot"></div><div id="tourCard"><h3 id="tourTitle"></h3><p id="tourText"></p><div class="tour-foot"><div class="tour-dots" id="tourDots"></div><button id="tourSkip" onclick="v3EndTour()">Skip</button><button class="btn btn-primary btn-sm" id="tourNext" onclick="v3TourNext()">Next</button></div></div></div>
 <div class="sheet" id="classSheet">
   <div class="grab"></div>
   <h3>Choose your class</h3>
@@ -1137,6 +1216,8 @@ function onAuthed() {
   refreshCompassQuests();
   updateHeader();
   renderCompass();
+  v3LoadCheckins().then(function() { v3RenderRadar(); v3RenderMonthCard(); });
+  v3MaybeTour();
 }
 
 // ═══════════════════════════════════════════════════
@@ -1663,29 +1744,37 @@ var habitFormOpen = false;
 
 function loadHabits() {
   if (!currentUser) return;
-  sb.from('habits')
-    .select('*')
-    .eq('user_id', currentUser.id)
-    .order('created_at', { ascending: true })
-    .then(function(res) {
-      if (res.error) return;
-      allHabits = (res.data || []).map(function(h) {
-        return {
-          id:          h.id,
-          name:        h.name,
-          description: h.description || '',
-          xpReward:    h.xp_reward   || 10,
-          goldReward:  h.gold_reward || 5,
-          streak:      h.streak      || 0,
-          lastChecked: h.last_checked_at || null,
-        };
-      });
-      renderHabits();
+  Promise.all([
+    sb.from('habits').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: true }),
+    v3LoadCheckins()
+  ]).then(function(rs) {
+    var res = rs[0];
+    if (!res || res.error) return;
+    var local = v3LocalGet('habit_stats', {});
+    allHabits = (res.data || []).map(function(h) {
+      return {
+        id:          h.id,
+        name:        h.name,
+        description: h.description || '',
+        xpReward:    h.xp_reward   || 10,
+        goldReward:  h.gold_reward || 5,
+        streak:      h.streak      || 0,
+        lastChecked: h.last_checked_at || null,
+        stats:       (h.stats && Object.keys(h.stats).length ? h.stats : local[h.id]) || null,
+      };
     });
+    // Stat picks saved on this device before the column existed: copy them up
+    if (V3_DB.habitStats) allHabits.forEach(function(h, i) {
+      var row = res.data[i];
+      if (local[h.id] && !(row.stats && Object.keys(row.stats).length)) sb.from('habits').update({ stats: local[h.id] }).eq('id', h.id).then(function(){});
+    });
+    renderHabits();
+    v3RenderRadar();
+  });
 }
 
 function todayStr() {
-  return new Date().toISOString().slice(0, 10); // 'YYYY-MM-DD'
+  return localDayStr(); // local 'YYYY-MM-DD' (UTC rolled the day over in the evening)
 }
 
 function isCheckedToday(h) {
@@ -1708,6 +1797,7 @@ function renderHabits() {
   var list = document.getElementById('habitList');
   if (!list) return;
   v2HabitSummary();
+  v3RenderMonthCard();
   if (!allHabits.length) {
     list.innerHTML = '<div class="empty"><p>No habits yet.<br>Add one to start building your streak.</p></div>';
     return;
@@ -1730,6 +1820,7 @@ function renderHabits() {
         '<button class="check' + (pop === h.id ? ' pop' : '') + '" aria-label="Check in" ' + (done ? 'disabled' : 'onclick="v2CheckHabit(\'' + h.id + '\')"') + '>' + V2_CHECK + '</button>' +
         '<div style="min-width:0;flex:1"><div class="nm">' + escHtml(h.name) + '</div>' +
           (h.description ? '<div class="desc">' + escHtml(h.description) + '</div>' : '') +
+          '<div class="tags">' + v3StatTags(v3HabitWeights(h)) + '</div>' +
           '<div class="streak" style="color:' + (h.streak ? col : 'var(--faint)') + '">' + V2_FLAME + streak + '</div></div>' +
         '<button class="more" aria-label="More" onclick="v2HabitMenu(\'' + h.id + '\')">' + V2_DOTS + '</button>' +
       '</div>' +
@@ -1746,6 +1837,7 @@ function escHtml(s) {
 function toggleHabitForm() {
   habitFormOpen = !habitFormOpen;
   if (habitFormOpen) {
+    v3ResetSheet();
     v2OpenSheet('habitSheet');
     var n = document.getElementById('hName');
     if (n) setTimeout(function() { n.focus(); }, 320);
@@ -1760,6 +1852,7 @@ function createHabit() {
   var desc  = (document.getElementById('hDesc').value || '').trim();
   var xp    = parseInt(document.getElementById('hXp').value)   || 10;
   var gold  = parseInt(document.getElementById('hGold').value) || 5;
+  var stats = V3_SHEET.w;
 
   sb.from('habits').insert({
     user_id:        currentUser.id,
@@ -1773,12 +1866,13 @@ function createHabit() {
   .then(function(res) {
     if (res.error) { toast('Error: ' + res.error.message, 'error'); return; }
     var h = res.data;
-    allHabits.push({
+    var hb = {
       id: h.id, name: h.name, description: h.description || '',
       xpReward: h.xp_reward, goldReward: h.gold_reward,
-      streak: 0, lastChecked: null,
-    });
-    // Reset form
+      streak: 0, lastChecked: null, stats: stats || null,
+    };
+    allHabits.push(hb);
+    if (stats) v3SaveHabitStats(hb);
     document.getElementById('hName').value = '';
     document.getElementById('hDesc').value = '';
     toggleHabitForm();
@@ -1796,7 +1890,7 @@ function checkHabit(id) {
   // Calculate new streak
   var yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
-  var yStr = yesterday.toISOString().slice(0, 10);
+  var yStr = localDayStr(yesterday);
   var newStreak = (h.lastChecked === yStr) ? h.streak + 1 : 1;
 
   // Update Supabase
@@ -1807,6 +1901,9 @@ function checkHabit(id) {
       if (res.error) { toast('Error: ' + res.error.message, 'error'); return; }
       h.lastChecked = today;
       h.streak = newStreak;
+      var statPts = v3CheckinPoints(h, newStreak);
+      v3SaveCheckin({ habitId: h.id, habitName: h.name, day: today, xp: h.xpReward, gold: h.goldReward, stats: statPts });
+      var statTxt = Object.keys(statPts).map(function(k) { return v3Stat(k).short; }).join(' ');
 
       // Base daily reward
       var xpGain   = h.xpReward;
@@ -1821,7 +1918,7 @@ function checkHabit(id) {
         xpGain   += xpBonus;
         goldGain += gBonus;
         var tierLabel = TIER_LABELS[Math.min(bonusTier - 1, TIER_LABELS.length - 1)];
-        milestoneMsg = ' 🏆 ' + newStreak + '-day milestone! +' + xpBonus + ' XP +' + gBonus + 'g bonus';
+        milestoneMsg = newStreak + '-day milestone! +' + xpBonus + ' XP +' + gBonus + 'g bonus';
       }
 
       S.profile.totalXp += xpGain;
@@ -1834,9 +1931,8 @@ function checkHabit(id) {
         .then(function(){}).catch(function(){});
       updateHeader();
       renderHabits();
-      var baseMsg = newStreak > 1
-        ? '🔥 ' + newStreak + ' day streak! +' + h.xpReward + ' XP +' + h.goldReward + 'g'
-        : '✓ Checked in! +' + h.xpReward + ' XP +' + h.goldReward + 'g';
+      v3RenderRadar();
+      var baseMsg = (newStreak > 1 ? newStreak + '-day streak' : 'Checked in') + ' · +' + h.xpReward + ' XP +' + h.goldReward + 'g' + (statTxt ? ' · ' + statTxt : '');
       toast(milestoneMsg || baseMsg, milestoneMsg ? 'success' : 'success');
     });
 }
@@ -2994,6 +3090,7 @@ function renderProfile() {
   renderHomeScene();
   renderCustomizeUI();
   renderInventory();
+  v3RenderRadar();
 
   updateHeaderAvatar();
 }
@@ -3002,6 +3099,8 @@ function resetData() {
   if (!currentUser) return;
   if (!confirm('Reset ALL data? This will delete your quests, clear your level, gold, and inventory. This cannot be undone.')) return;
   var uid = currentUser.id;
+  if (V3_DB.checkins) sb.from('habit_checkins').delete().eq('user_id', uid).then(function(){});
+  V3_CHECKINS = []; v3LocalSet('checkins', []);
   // Delete all quests
   sb.from('quests').delete().eq('creator_id', uid).then(function(res) {
     if (res.error) { toast('Error resetting quests', 'error'); return; }
@@ -3860,14 +3959,9 @@ function v2ApplyFont(name) {
 var V2_TIERS = [['#4caf7a', 'Bronze'], ['#4a9fd4', 'Silver'], ['#9b6dd6', 'Gold'], ['#d4903a', 'Mythic'], ['#cf4444', 'Legend']];
 var _v2PopHabit = null;
 function v2CheckHabit(id) { _v2PopHabit = id; checkHabit(id); }
-function v2HabitMenu(id) {
-  var h = allHabits.find(function(x) { return x.id === id; });
-  if (!h) return;
-  if (confirm('Delete "' + h.name + '"? Its streak will be lost.')) deleteHabit(id);
-}
 function v2HabitSummary() {
   var n = allHabits.length, yest = new Date(); yest.setDate(yest.getDate() - 1);
-  var yStr = yest.toISOString().slice(0, 10);
+  var yStr = localDayStr(yest);
   var done = allHabits.filter(isCheckedToday);
   var set = function(id, v) { var el = document.getElementById(id); if (el) el.textContent = v; };
   set('habitRingTxt', done.length + '/' + n);
@@ -4285,6 +4379,322 @@ function v2PickSavedLoc(v) {
   document.getElementById('nLocName').value = l.name;
   document.getElementById('nCoords').value = l.lat.toFixed(6) + ', ' + l.lng.toFixed(6);
   onCoordInput();
+}
+
+
+// ═══════════════════════════════════════════════════
+//  V3 — stats, check-in history, calendar, walkthrough
+// ═══════════════════════════════════════════════════
+// Local calendar day (the old code used UTC, which rolled over at ~7pm in Central time)
+function localDayStr(d) {
+  d = d || new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+function v3DayAdd(dayStr, n) { var p = dayStr.split('-'); var d = new Date(+p[0], +p[1] - 1, +p[2] + n); return localDayStr(d); }
+
+// ── Stats ────────────────────────────────────────────
+var V3_STATS = [
+  { k: 'str', name: 'Strength',     short: 'STR', col: '#e0785a' },
+  { k: 'end', name: 'Endurance',    short: 'END', col: '#e8b04a' },
+  { k: 'vit', name: 'Vitality',     short: 'VIT', col: '#5cc48a' },
+  { k: 'cha', name: 'Charisma',     short: 'CHA', col: '#e07ab8' },
+  { k: 'wis', name: 'Wisdom',       short: 'WIS', col: '#9b8cf0' },
+  { k: 'int', name: 'Intelligence', short: 'INT', col: '#55aee6' }
+];
+function v3Stat(k) { return V3_STATS.find(function(s) { return s.k === k; }); }
+// Ordered most-specific first. Each match is cut out of the text so a phrase
+// like "read bible" isn't counted again by the plain "read" rule.
+var V3_RULES = [
+  [/\b(read(ing)?\s+(the\s+|my\s+)?bible|bible\s+(study|reading)|scripture|devotional?s?|sunday school)\b/, { int: .4, wis: .6 }],
+  [/\b(gym|work\s?out|workouts|exercise|crossfit|bootcamp|hiit|circuit|f45|orange\s?theory)\b/, { str: .5, end: .5 }],
+  [/\b(lift(ing)?|weights?|weight\s?training|bench(ing)?|squats?|deadlifts?|strength|push-?\s?ups?|pull-?\s?ups?|chin-?\s?ups?|calisthenics|kettlebells?|dumbbells?|planks?|core|abs|sit-?\s?ups?|climb(ing)?|bouldering)\b/, { str: 1 }],
+  [/\b(run(ning)?|jog(ging)?|miles?|5k|10k|half\s?marathon|marathon|cardio|bik(e|ing)|cycl(e|ing)|spin(ning)?|swim(ming)?|walk(ing)?|steps|hik(e|ing)|row(ing)?|treadmill|elliptical|stairs?|jump\s?rope|sprints?)\b/, { end: 1 }],
+  [/\b(yoga|stretch(ing)?|mobility|pilates|foam\s?roll(ing)?)\b/, { vit: .6, wis: .4 }],
+  [/\b(sports?|basketball|soccer|football|tennis|pickleball|volleyball|golf|martial arts|boxing|jiu\s?jitsu|bjj|karate|dance|dancing)\b/, { str: .3, end: .4, cha: .3 }],
+  [/\b(meditat(e|ion|ing)|mindful(ness)?|breath(e|ing|work)|gratitude|journal(ing)?|reflect(ion)?|pray(er|ing)?|quiet time|therapy)\b/, { wis: 1 }],
+  [/\b(stud(y|ying)|homework|class(es)?|course|lecture|learn(ing)?|lessons?|duolingo|spanish|french|german|japanese|language|cod(e|ing)|program(ming)?|math|research|flashcards?|exam|practice\s+(piano|guitar|drums|violin)|piano|guitar|instrument|chess|puzzles?|podcast)\b/, { int: 1 }],
+  [/\b(read(ing)?|books?|chapters?|pages?|audiobooks?|kindle|writ(e|ing)|blog|essay)\b/, { int: 1 }],
+  [/\b(water|hydrat(e|ion)|sleep|bed\s?(time|by)|nap|vegetables?|veggies|fruits?|salad|eat(ing)?|meals?|meal\s?prep|cook(ing)?|diet|calories|protein|vitamins?|supplements?|no\s+(sugar|soda|alcohol|drinking|junk|fast\s?food|caffeine)|sober|fast(ing)?|skin\s?care|floss(ing)?|brush|shower|sunscreen|doctor|dentist|medicine|meds)\b/, { vit: 1 }],
+  [/\b(call|text|message|friends?|family|mom|dad|mother|father|parents?|grandma|grandpa|kids?|wife|husband|partner|date\s?night|network(ing)?|volunteer(ing)?|church|social|meet\s?up|compliment|kindness|community|mentor(ing)?|outreach|small group|hang\s?out|visit)\b/, { cha: 1 }],
+  [/\b(clean(ing)?|tidy|chores?|laundry|dishes|declutter|organi[sz]e|budget|save money|invest(ing)?|plan(ning)?|to-?do|inbox|emails?)\b/, { wis: .5, vit: .5 }]
+];
+function v3GuessStats(text) {
+  var t = ' ' + String(text || '').toLowerCase() + ' ', sum = {}, any = false;
+  V3_RULES.forEach(function(r) {
+    var re = new RegExp(r[0].source, 'g');
+    if (!re.test(t)) return;
+    t = t.replace(new RegExp(r[0].source, 'g'), ' ');
+    Object.keys(r[1]).forEach(function(k) { sum[k] = (sum[k] || 0) + r[1][k]; });
+    any = true;
+  });
+  return any ? v3Normalize(sum) : null;
+}
+function v3Normalize(w) {
+  var tot = 0; Object.keys(w).forEach(function(k) { tot += w[k]; });
+  if (!tot) return null;
+  var o = {}; Object.keys(w).forEach(function(k) { if (w[k] > 0) o[k] = Math.round(w[k] / tot * 100) / 100; });
+  return o;
+}
+function v3HabitWeights(h) { return (h && h.stats && Object.keys(h.stats).length) ? h.stats : v3GuessStats(h ? h.name + ' ' + (h.description || '') : ''); }
+// Points for one check-in: by difficulty, with up to +50% for a long streak
+function v3CheckinPoints(h, streak) {
+  var base = h.xpReward <= 5 ? 1 : h.xpReward <= 10 ? 2 : 3;
+  var mult = 1 + Math.min(streak || 1, 30) / 60;
+  var w = v3HabitWeights(h) || {}, o = {};
+  Object.keys(w).forEach(function(k) { o[k] = Math.round(base * mult * w[k] * 100) / 100; });
+  return o;
+}
+function v3StatLevel(points) { return 1 + Math.floor(Math.sqrt((points || 0) / 2)); }
+function v3StatTotals(beforeDay) {
+  var o = {}; V3_STATS.forEach(function(s) { o[s.k] = 0; });
+  V3_CHECKINS.forEach(function(c) {
+    if (beforeDay && c.day >= beforeDay) return;
+    var st = c.stats || {};
+    Object.keys(st).forEach(function(k) { if (o[k] !== undefined) o[k] += +st[k] || 0; });
+  });
+  return o;
+}
+function v3StatTags(w, cls) {
+  if (!w) return '';
+  return Object.keys(w).sort(function(a, b) { return w[b] - w[a]; }).map(function(k) {
+    var s = v3Stat(k); if (!s) return '';
+    return '<span class="stat-tag ' + (cls || '') + '" style="color:' + s.col + ';background:' + s.col + '1a;border-color:' + s.col + '40">' + s.short + '</span>';
+  }).join('');
+}
+
+// ── Storage: Supabase tables when they exist, this device otherwise ──
+var V3_CHECKINS = [];            // { habitId, habitName, day, xp, gold, stats }
+var V3_DB = { checkins: null, habitStats: null };   // null = not probed yet
+function v3LocalKey(n) { return 'tq_' + n + '_' + (currentUser ? currentUser.id : 'anon'); }
+function v3LocalGet(n, dflt) { try { var v = localStorage.getItem(v3LocalKey(n)); return v ? JSON.parse(v) : dflt; } catch (e) { return dflt; } }
+function v3LocalSet(n, v) { try { localStorage.setItem(v3LocalKey(n), JSON.stringify(v)); } catch (e) {} }
+function v3Probe() {
+  if (V3_DB.checkins !== null) return Promise.resolve();
+  return Promise.all([
+    sb.from('habit_checkins').select('id').limit(1).then(function(r) { V3_DB.checkins = !r.error; }),
+    sb.from('habits').select('stats').limit(1).then(function(r) { V3_DB.habitStats = !r.error; })
+  ]).catch(function() { V3_DB.checkins = false; V3_DB.habitStats = false; });
+}
+function v3LoadCheckins() {
+  return v3Probe().then(function() {
+    if (!V3_DB.checkins) { V3_CHECKINS = v3LocalGet('checkins', []); return; }
+    // History kept on this device before the table existed: move it up once
+    var pending = v3LocalGet('checkins', []);
+    var up = pending.length ? sb.from('habit_checkins').upsert(pending.map(function(c) {
+      return { user_id: currentUser.id, habit_id: c.habitId, habit_name: c.habitName, day: c.day, xp: c.xp, gold: c.gold, stats: c.stats };
+    }), { onConflict: 'habit_id,day', ignoreDuplicates: true }).then(function(r) { if (!r.error) v3LocalSet('checkins', []); }) : Promise.resolve();
+    return up.then(function() { return sb.from('habit_checkins').select('habit_id,habit_name,day,xp,gold,stats').eq('user_id', currentUser.id).order('day', { ascending: true }).limit(5000)
+      .then(function(r) {
+        if (r.error) { V3_CHECKINS = v3LocalGet('checkins', []); return; }
+        V3_CHECKINS = (r.data || []).map(function(c) { return { habitId: c.habit_id, habitName: c.habit_name, day: c.day, xp: c.xp, gold: c.gold, stats: c.stats || {} }; });
+      }); });
+  });
+}
+function v3SaveCheckin(c) {
+  V3_CHECKINS.push(c);
+  if (V3_DB.checkins) {
+    sb.from('habit_checkins').insert({ user_id: currentUser.id, habit_id: c.habitId, habit_name: c.habitName, day: c.day, xp: c.xp, gold: c.gold, stats: c.stats })
+      .then(function(r) { if (r.error) console.warn('checkin save:', r.error.message); });
+  } else v3LocalSet('checkins', V3_CHECKINS);
+}
+function v3SaveHabitStats(h) {
+  if (V3_DB.habitStats) sb.from('habits').update({ stats: h.stats }).eq('id', h.id).then(function(){});
+  var m = v3LocalGet('habit_stats', {}); m[h.id] = h.stats; v3LocalSet('habit_stats', m);
+}
+// Days with a check-in for this habit, plus its last check-in from before history was kept
+function v3HabitDays(h) {
+  var set = {};
+  V3_CHECKINS.forEach(function(c) { if (c.habitId === h.id) set[c.day] = true; });
+  if (h.lastChecked) set[h.lastChecked] = true;
+  return set;
+}
+function v3BestStreak(days) {
+  var list = Object.keys(days).sort(), best = 0, run = 0, prev = null;
+  list.forEach(function(d) { run = (prev && v3DayAdd(prev, 1) === d) ? run + 1 : 1; best = Math.max(best, run); prev = d; });
+  return best;
+}
+
+// ── Habit sheet: "Trains" chips ──────────────────────
+var V3_SHEET = { auto: true, w: null };
+function v3RenderTrainChips(boxId, w, onTap) {
+  var box = document.getElementById(boxId); if (!box) return;
+  box.innerHTML = V3_STATS.map(function(s) {
+    var on = w && w[s.k];
+    return '<button type="button" class="train-chip' + (on ? ' on' : '') + '" data-k="' + s.k + '" style="--sc:' + s.col + '">' +
+      '<i></i>' + s.name + (on ? '<b>' + Math.round(w[s.k] * 100) + '%</b>' : '') + '</button>';
+  }).join('');
+  box.querySelectorAll('.train-chip').forEach(function(b) { b.onclick = function() { onTap(b.dataset.k); }; });
+}
+function v3ToggleWeight(w, k) {
+  var keys = Object.keys(w || {}).filter(function(x) { return w[x] > 0; });
+  var i = keys.indexOf(k);
+  if (i >= 0) keys.splice(i, 1); else keys.push(k);
+  if (!keys.length) return null;
+  var o = {}; keys.forEach(function(x) { o[x] = Math.round(100 / keys.length) / 100; });
+  return o;
+}
+function v3SheetRefresh() {
+  if (V3_SHEET.auto) V3_SHEET.w = v3GuessStats((document.getElementById('hName').value || '') + ' ' + (document.getElementById('hDesc').value || ''));
+  v3RenderTrainChips('hTrains', V3_SHEET.w, function(k) { V3_SHEET.auto = false; V3_SHEET.w = v3ToggleWeight(V3_SHEET.w, k); v3SheetRefresh(); });
+  var hint = document.getElementById('hTrainsHint');
+  if (hint) hint.textContent = V3_SHEET.auto ? (V3_SHEET.w ? 'Picked from the name — tap to change' : 'Type a name, or tap the stats it trains') : 'Tap to change';
+}
+function v3ResetSheet() { V3_SHEET = { auto: true, w: null }; v3SheetRefresh(); }
+
+// ── Calendar ─────────────────────────────────────────
+var V3_CAL = { month: null, sel: null };
+var V3_MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+// mode 'all': rings show the share of habits done that day; mode 'one': filled days for one habit
+function v3CalendarHTML(year, month, dayInfo, selDay) {
+  var first = new Date(year, month, 1), start = first.getDay(), days = new Date(year, month + 1, 0).getDate(), today = localDayStr();
+  var h = '<div class="cal-dow">' + ['S','M','T','W','T','F','S'].map(function(d) { return '<span>' + d + '</span>'; }).join('') + '</div><div class="cal-grid">';
+  for (var i = 0; i < start; i++) h += '<span class="cal-cell blank"></span>';
+  for (var d = 1; d <= days; d++) {
+    var ds = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+    var f = dayInfo(ds), cls = 'cal-cell' + (ds === today ? ' today' : '') + (ds > today ? ' future' : '') + (ds === selDay ? ' sel' : '') + (f >= 1 ? ' full' : '');
+    var ring = '';
+    if (f > 0 && f < 1) ring = '<svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="15.5" fill="none" stroke="rgba(236,208,133,.9)" stroke-width="3" stroke-linecap="round" stroke-dasharray="' + (97.4 * f).toFixed(1) + ' 97.4" transform="rotate(-90 18 18)"/></svg>';
+    h += '<button class="' + cls + '" data-day="' + ds + '">' + ring + '<b>' + d + '</b></button>';
+  }
+  return h + '</div>';
+}
+function v3RenderMonthCard() {
+  var box = document.getElementById('habitCal'); if (!box) return;
+  var now = new Date();
+  if (!V3_CAL.month) V3_CAL.month = [now.getFullYear(), now.getMonth()];
+  var y = V3_CAL.month[0], m = V3_CAL.month[1];
+  var byDay = {};
+  V3_CHECKINS.forEach(function(c) { (byDay[c.day] = byDay[c.day] || {})[c.habitId || c.habitName] = c.habitName || ''; });
+  allHabits.forEach(function(h) { if (h.lastChecked) (byDay[h.lastChecked] = byDay[h.lastChecked] || {})[h.id] = h.name; });
+  var n = Math.max(1, allHabits.length);
+  var isNow = y === now.getFullYear() && m === now.getMonth();
+  box.innerHTML = '<div class="cal-hd"><button class="cal-nav" data-d="-1" aria-label="Previous month">‹</button><h3>' + V3_MONTHS[m] + ' ' + y + '</h3><button class="cal-nav" data-d="1" ' + (isNow ? 'disabled' : '') + ' aria-label="Next month">›</button></div>' +
+    v3CalendarHTML(y, m, function(ds) { return byDay[ds] ? Math.min(1, Object.keys(byDay[ds]).length / n) : 0; }, V3_CAL.sel) +
+    '<div class="cal-day" id="calDayInfo"></div>';
+  box.querySelectorAll('.cal-nav').forEach(function(b) { b.onclick = function() {
+    var d = new Date(y, m + +b.dataset.d, 1); V3_CAL.month = [d.getFullYear(), d.getMonth()]; V3_CAL.sel = null; v3RenderMonthCard(); }; });
+  box.querySelectorAll('.cal-cell[data-day]').forEach(function(b) { b.onclick = function() {
+    if (b.classList.contains('future')) return; V3_CAL.sel = V3_CAL.sel === b.dataset.day ? null : b.dataset.day; v3RenderMonthCard(); }; });
+  var info = document.getElementById('calDayInfo');
+  if (V3_CAL.sel) {
+    var names = byDay[V3_CAL.sel] ? Object.keys(byDay[V3_CAL.sel]).map(function(k) {
+      var hb = allHabits.find(function(x) { return x.id === k; });
+      return hb ? hb.name : (byDay[V3_CAL.sel][k] || 'Removed habit');
+    }) : [];
+    var p = V3_CAL.sel.split('-'), lbl = new Date(+p[0], +p[1] - 1, +p[2]).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+    info.innerHTML = '<b>' + lbl + '</b>' + (names.length ? names.map(function(nm) { return '<span class="cal-done">' + V2_CHECK + escHtml(nm) + '</span>'; }).join('') : '<span class="cal-none">Nothing checked in</span>');
+  }
+}
+
+// ── Habit detail sheet (history, stats, delete) ──────
+var _v3DetailId = null, _v3DetailMonth = null;
+function v2HabitMenu(id) { _v3DetailId = id; var n = new Date(); _v3DetailMonth = [n.getFullYear(), n.getMonth()]; v3RenderDetail(); v2OpenSheet('habitDetail'); }
+function v3RenderDetail() {
+  var h = allHabits.find(function(x) { return x.id === _v3DetailId; }); if (!h) return;
+  var days = v3HabitDays(h), y = _v3DetailMonth[0], m = _v3DetailMonth[1], now = new Date();
+  var isNow = y === now.getFullYear() && m === now.getMonth();
+  var box = document.getElementById('habitDetailBody');
+  box.innerHTML = '<h3>' + escHtml(h.name) + '</h3>' +
+    '<div class="hd-stats"><div><b>' + (h.streak || 0) + '</b><span>Current streak</span></div><div><b>' + v3BestStreak(days) + '</b><span>Best streak</span></div><div><b>' + Object.keys(days).length + '</b><span>Check-ins</span></div></div>' +
+    '<div class="cal-hd"><button class="cal-nav" data-d="-1">‹</button><h3>' + V3_MONTHS[m] + ' ' + y + '</h3><button class="cal-nav" data-d="1" ' + (isNow ? 'disabled' : '') + '>›</button></div>' +
+    v3CalendarHTML(y, m, function(ds) { return days[ds] ? 1 : 0; }, null) +
+    '<div class="field" style="margin-top:16px"><label>Trains</label><div class="train-chips" id="hdTrains"></div><div class="train-hint">' + (h.stats ? 'Tap to change' : 'Picked from the name — tap to change') + '</div></div>' +
+    '<button class="btn btn-danger" style="margin-top:4px" id="hdDelete">Delete habit</button>';
+  box.querySelectorAll('.cal-nav').forEach(function(b) { b.onclick = function() {
+    var d = new Date(y, m + +b.dataset.d, 1); _v3DetailMonth = [d.getFullYear(), d.getMonth()]; v3RenderDetail(); }; });
+  v3RenderTrainChips('hdTrains', v3HabitWeights(h), function(k) {
+    h.stats = v3ToggleWeight(v3HabitWeights(h), k) || {}; v3SaveHabitStats(h); v3RenderDetail(); renderHabits(); });
+  document.getElementById('hdDelete').onclick = function() {
+    if (!confirm('Delete "' + h.name + '"? Its streak will be lost. Stats it already earned stay.')) return;
+    v2CloseSheets(); deleteHabit(h.id);
+  };
+}
+
+// ── Radar chart (Hero tab) ───────────────────────────
+function v3RenderRadar() {
+  var box = document.getElementById('statRadar'); if (!box) return;
+  var now = v3StatTotals(), weekAgo = v3StatTotals(v3DayAdd(localDayStr(), -6));
+  var lv = {}, lv0 = {}, maxLv = 1;
+  V3_STATS.forEach(function(s) { lv[s.k] = v3StatLevel(now[s.k]); lv0[s.k] = v3StatLevel(weekAgo[s.k]); maxLv = Math.max(maxLv, lv[s.k]); });
+  var scale = Math.max(10, Math.ceil(maxLv / 5) * 5), cx = 150, cy = 128, R = 92;
+  function pt(i, v) { var a = -Math.PI / 2 + i * Math.PI / 3, r = R * Math.max(0.06, v / scale); return [cx + r * Math.cos(a), cy + r * Math.sin(a)]; }
+  function poly(vals) { return V3_STATS.map(function(s, i) { return pt(i, vals[s.k]).map(function(n) { return n.toFixed(1); }).join(','); }).join(' '); }
+  var svg = '<svg viewBox="0 0 300 256" class="radar-svg">';
+  [0.25, 0.5, 0.75, 1].forEach(function(f) {
+    svg += '<polygon points="' + V3_STATS.map(function(s, i) { var a = -Math.PI / 2 + i * Math.PI / 3; return (cx + R * f * Math.cos(a)).toFixed(1) + ',' + (cy + R * f * Math.sin(a)).toFixed(1); }).join(' ') + '" fill="none" stroke="rgba(255,255,255,' + (f === 1 ? .14 : .06) + ')"/>';
+  });
+  V3_STATS.forEach(function(s, i) { var a = -Math.PI / 2 + i * Math.PI / 3; svg += '<line x1="' + cx + '" y1="' + cy + '" x2="' + (cx + R * Math.cos(a)).toFixed(1) + '" y2="' + (cy + R * Math.sin(a)).toFixed(1) + '" stroke="rgba(255,255,255,.06)"/>'; });
+  svg += '<polygon points="' + poly(lv0) + '" fill="none" stroke="rgba(255,255,255,.28)" stroke-dasharray="3 3"/>';
+  svg += '<polygon points="' + poly(lv) + '" fill="url(#radarFill)" stroke="#ecd085" stroke-width="2" stroke-linejoin="round"/>';
+  V3_STATS.forEach(function(s, i) { var p = pt(i, lv[s.k]); svg += '<circle cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="3.5" fill="' + s.col + '" stroke="#12111c" stroke-width="1.5"/>'; });
+  V3_STATS.forEach(function(s, i) {
+    var a = -Math.PI / 2 + i * Math.PI / 3, lx = cx + (R + 24) * Math.cos(a), ly = cy + (R + 24) * Math.sin(a);
+    var anchor = Math.abs(Math.cos(a)) < 0.2 ? 'middle' : (Math.cos(a) > 0 ? 'start' : 'end');
+    svg += '<text x="' + lx.toFixed(1) + '" y="' + (ly - 2).toFixed(1) + '" text-anchor="' + anchor + '" class="radar-lbl" fill="' + s.col + '">' + s.short + '</text>' +
+           '<text x="' + lx.toFixed(1) + '" y="' + (ly + 13).toFixed(1) + '" text-anchor="' + anchor + '" class="radar-val">' + lv[s.k] + '</text>';
+  });
+  svg += '<defs><radialGradient id="radarFill"><stop offset="0" stop-color="rgba(236,208,133,.10)"/><stop offset="1" stop-color="rgba(236,208,133,.32)"/></radialGradient></defs></svg>';
+  var rows = V3_STATS.map(function(s) {
+    var gain = Math.round((now[s.k] - weekAgo[s.k]) * 10) / 10;
+    return '<div class="rs-row"><i style="background:' + s.col + '"></i><span>' + s.name + '</span><b>' + lv[s.k] + '</b><em>' + (gain > 0 ? '+' + gain + ' pts this week' : '') + '</em></div>';
+  }).join('');
+  box.innerHTML = svg + '<div class="rs-list">' + rows + '</div>' + (V3_CHECKINS.length ? '' : '<div class="inv-note" style="text-align:center">Check off habits to start training your stats.</div>');
+}
+
+// ── Walkthrough ──────────────────────────────────────
+var V3_TOUR = [
+  { page: 'compass', sel: null, title: 'Welcome, adventurer', text: 'TaskQuest turns real-world errands and daily habits into an RPG. Here is a quick look around.' },
+  { page: 'compass', sel: '.card.dial', title: 'Your compass', text: 'Turn your phone and the strip turns with you. The green marker shows which way your tracked quest is.' },
+  { page: 'compass', sel: '#screen-compass .btn-secondary', title: 'Forge a quest', text: 'Pick any real place — the gym, the library, a friend\'s house. Walk there and complete it for XP, gold and loot.' },
+  { page: 'quests', sel: '.qs-wrap', title: 'Face your enemies', text: 'Every active quest summons an enemy. They grow bigger and meaner as you level up.' },
+  { page: 'habits', sel: '#habitCal', title: 'Show up every day', text: 'Habits are your daily grind. The calendar fills in every day you check in.' },
+  { page: 'habits', sel: '#screen-habits .h-sec .btn-primary', title: 'Add a habit', text: 'Name it and it is sorted into the stats it trains — "gym" trains strength and endurance, "meditate" trains wisdom.' },
+  { page: 'profile', sel: '#statRadar', title: 'Your attributes', text: 'Every check-in raises your stats. The dashed line shows where you were a week ago.' },
+  { page: 'profile', sel: '.loadout', title: 'Gear up', text: 'Loot from quests lands in your loadout. Swipe a carousel to equip it.' },
+  { page: 'compass', sel: null, title: 'You\'re ready', text: 'Forge your first quest and start walking.', last: true }
+];
+var _v3TourStep = -1;
+function v3StartTour() { _v3TourStep = 0; document.getElementById('tour').classList.add('on'); v3TourShow(); }
+function v3EndTour() {
+  document.getElementById('tour').classList.remove('on'); _v3TourStep = -1;
+  try { localStorage.setItem('tq_tour_done', '1'); } catch (e) {}
+  showScreen('compass', null);
+}
+function v3TourShow() {
+  var st = V3_TOUR[_v3TourStep]; if (!st) return v3EndTour();
+  var tour = document.getElementById('tour'), spot = document.getElementById('tourSpot'), card = document.getElementById('tourCard');
+  showScreen(st.page, null);
+  document.getElementById('tourTitle').textContent = st.title;
+  document.getElementById('tourText').textContent = st.text;
+  document.getElementById('tourDots').innerHTML = V3_TOUR.map(function(_, i) { return '<i' + (i === _v3TourStep ? ' class="on"' : '') + '></i>'; }).join('');
+  document.getElementById('tourNext').textContent = st.last ? 'Let\'s go' : 'Next';
+  document.getElementById('tourSkip').style.visibility = st.last ? 'hidden' : '';
+  spot.style.opacity = '0'; card.style.opacity = '0';
+  setTimeout(function() {
+    var el = st.sel ? document.querySelector(st.sel) : null;
+    if (el) el.scrollIntoView({ block: 'center', behavior: 'instant' });
+    setTimeout(function() {
+      var app = document.getElementById('app').getBoundingClientRect();
+      if (el) {
+        var r = el.getBoundingClientRect(), pad = 8;
+        spot.style.left = (r.left - app.left - pad) + 'px'; spot.style.top = (r.top - app.top - pad) + 'px';
+        spot.style.width = (r.width + pad * 2) + 'px'; spot.style.height = (r.height + pad * 2) + 'px';
+        spot.classList.remove('none');
+        var below = r.bottom - app.top + 18, above = r.top - app.top - 18;
+        if (below + 190 < app.height) { card.style.top = below + 'px'; card.style.bottom = ''; }
+        else { card.style.top = ''; card.style.bottom = (app.height - above) + 'px'; }
+      } else {
+        spot.classList.add('none');
+        card.style.top = ''; card.style.bottom = (app.height / 2 - 90) + 'px';
+      }
+      spot.style.opacity = '1'; card.style.opacity = '1';
+    }, 120);
+  }, 460);
+}
+function v3TourNext() { _v3TourStep++; if (_v3TourStep >= V3_TOUR.length) v3EndTour(); else v3TourShow(); }
+function v3MaybeTour() {
+  var done = false; try { done = !!localStorage.getItem('tq_tour_done'); } catch (e) {}
+  if (!done) setTimeout(v3StartTour, 900);
 }
 
 startGPS();
