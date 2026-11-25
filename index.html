@@ -742,6 +742,7 @@ body.theme-day .tour-dots i{background:rgba(70,50,20,.2)}
 body.theme-day .tour-dots i.on{background:#9a7424}
 
 /* ══════════ V5 ══════════ */
+.hs-smoke{position:absolute;bottom:22px;z-index:9;pointer-events:none;image-rendering:pixelated;background-repeat:no-repeat}
 .hs-fx{position:absolute;inset:0;width:100%;height:100%;z-index:9;pointer-events:none;image-rendering:pixelated}
 @keyframes hsShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-2px)}40%{transform:translateX(2px)}60%{transform:translateX(-1px)}80%{transform:translateX(1px)}}
 .hs-shake{animation:hsShake .18s linear infinite}
@@ -2062,7 +2063,6 @@ var HOME_TIERS = [
     fire: false,
     props: [
       { src:'sprites/preview_assets/home/tree_pine.png',     left: -8,  bottom:32, height:160, z:5 },
-      { src:'sprites/preview_assets/home/prop_logpile.png',  right:142, bottom:32, height:42,  z:7 },   // 2x, same pixel size as the hero
     ],
     cost: 150
   },
@@ -2074,7 +2074,6 @@ var HOME_TIERS = [
     props: [
       { src:'sprites/preview_assets/home/tree_oak.png',      left: -10, bottom:32, height:130, z:5 },
       { src:'sprites/preview_assets/home/tree_birch.png',    left:  95, bottom:32, height:90,  z:5 },
-      { src:'sprites/preview_assets/home/prop_logpile.png',  right:150, bottom:32, height:42,  z:7 },
       { src:'sprites/preview_assets/home/prop_barrel.png',   right: 10, bottom:32, height:48,  z:7 },   // against the cottage's right wall
     ],
     cost: 500
@@ -4792,76 +4791,76 @@ function v4TapeCol(name) {
 // ═══════════════════════════════════════════════════
 // Puff of pixel smoke and a burst of sparks over the home; the new home is
 // swapped in while the smoke is thickest, so it appears out of the cloud.
+// PixelLab smoke cloud: 21 frames (puff grows into a full cloud by frame 7, then dissolves into wisps)
+var V6_SMOKE = { src: 'sprites/preview_assets/fx/upgrade_smoke.png', w: 176, frames: 21, full: 7, scale: 1.5 };
+var _v6HomeImgs = {};
+(function() {
+  var i = new Image(); i.src = V6_SMOKE.src + '?v=' + SPRITE_VER;
+  HOME_TIERS.forEach(function(t) { var h = new Image(); h.src = t.home; _v6HomeImgs[t.home] = h; });   // natural sizes for the smoke cover
+})();   // warm the cache so the first upgrade isn't blank
+function v6Sparks(scene, el) {
+  var sr = scene.getBoundingClientRect(), r = el.getBoundingClientRect(), PX = 3;
+  if (!r.width) return;
+  var cv = document.createElement('canvas'); cv.className = 'hs-fx';
+  cv.width = Math.ceil(sr.width / PX); cv.height = Math.ceil(sr.height / PX); scene.appendChild(cv);
+  var ctx = cv.getContext('2d'), t0 = performance.now(), ps = [];
+  var cx = (r.left + r.width / 2 - sr.left) / PX, cy = (r.top + r.height * 0.55 - sr.top) / PX;
+  for (var i = 0; i < 28; i++) {
+    var a = Math.random() * Math.PI * 2, sp = 16 + Math.random() * 34;
+    ps.push({ x: cx + (Math.random() - .5) * 14, y: cy + (Math.random() - .5) * 14, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 20,
+      life: 600 + Math.random() * 500, sz: Math.random() < .35 ? 2 : 1, c: ['#fff3c4', '#ffd36b', '#ffb43a', '#ff8a2a'][i % 4] });
+  }
+  (function frame(now) {
+    var t = now - t0, s = t / 1000, alive = false;
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    ps.forEach(function(p) {
+      var k = t / p.life; if (k >= 1) return; alive = true;
+      ctx.globalAlpha = 1 - k * k; ctx.fillStyle = p.c;
+      ctx.fillRect(Math.round(p.x + p.vx * s), Math.round(p.y + p.vy * s + 40 * s * s), p.sz, p.sz);
+    });
+    if (alive) requestAnimationFrame(frame); else cv.remove();
+  })(t0);
+}
 function v5HomeUpgradeFx(swap) {
   var scene = document.getElementById('homeScene'), home = document.getElementById('hsHome');
   if (!scene || !home || !scene.getBoundingClientRect().width) { swap(); return; }
-  var PX = 3;                                            // one smoke "pixel" = 3 screen px
-  var sr = scene.getBoundingClientRect();
-  var cv = document.createElement('canvas');
-  cv.className = 'hs-fx';
-  cv.width = Math.ceil(sr.width / PX); cv.height = Math.ceil(sr.height / PX);
-  scene.appendChild(cv);
-  var ctx = cv.getContext('2d'), parts = [], t0 = performance.now(), swapped = false;
-  function areaOf(el) {
-    var r = el.getBoundingClientRect();
-    if (!r.width) r = { left: sr.right - 150, right: sr.right - 16, top: sr.bottom - 160, bottom: sr.bottom - 32, width: 134, height: 128 };
-    return { x0: (r.left - sr.left) / PX, x1: (r.right - sr.left) / PX, y0: (r.top - sr.top) / PX, y1: (r.bottom - sr.top) / PX };
+  var SM = V6_SMOKE, size = Math.round(SM.w * SM.scale), sr = scene.getBoundingClientRect(), hr = home.getBoundingClientRect();
+  if (!hr.width) hr = { left: sr.right - 150, width: 134 };
+  // cover the new home too (the estate is much wider than the cottage)
+  var t = HOME_TIERS[S.profile.homeTier || 0], im = _v6HomeImgs[t.home];
+  if (im && im.naturalWidth) {
+    var nh = t.homeHeight || Math.min(im.naturalHeight, S.profile.homeTier === 1 ? 128 : 100), nw = nh * im.naturalWidth / im.naturalHeight;
+    var right = sr.right - (t.homeRight != null ? t.homeRight : 16), left = Math.min(hr.left, right - nw);
+    hr = { left: left, width: Math.max(hr.left + hr.width, right) - left };
   }
-  function puffs(a, n, delay) {
-    for (var i = 0; i < n; i++) {
-      var x = a.x0 + Math.random() * (a.x1 - a.x0), y = a.y0 + (0.25 + Math.random() * 0.75) * (a.y1 - a.y0);
-      parts.push({ k: 's', x: x, y: y, vx: (Math.random() - .5) * 6, vy: -3 - Math.random() * 6, r0: 2 + Math.random() * 3,
-        r1: 5 + Math.random() * 6, born: delay + Math.random() * 180, life: 900 + Math.random() * 500, c: ['#efe9dd', '#d9d2c4', '#bdb5a6', '#fffaf0'][i % 4] });
-    }
+  // one cloud per ~150px of home, so the wide estate gets two
+  var n = Math.max(1, Math.round(hr.width / 150)), clouds = [];
+  for (var i = 0; i < n; i++) {
+    var cx = hr.left - sr.left + hr.width * (i + 0.5) / n, d = document.createElement('div');
+    d.className = 'hs-smoke'; d.dataset.lag = i * 2;
+    d.style.width = size + 'px'; d.style.height = size + 'px'; d.style.left = Math.round(cx - size / 2) + 'px';
+    d.style.backgroundImage = "url('" + SM.src + "?v=" + SPRITE_VER + "')";
+    d.style.backgroundSize = (size * SM.frames) + 'px ' + size + 'px';
+    d.style.backgroundPosition = size + 'px 0';   // blank until its first frame
+    scene.appendChild(d); clouds.push(d);
   }
-  function sparks(a, n, delay) {
-    var cx = (a.x0 + a.x1) / 2, cy = a.y0 + (a.y1 - a.y0) * 0.55;
-    for (var i = 0; i < n; i++) {
-      var ang = Math.random() * Math.PI * 2, sp = 18 + Math.random() * 38;
-      parts.push({ k: 'p', x: cx + (Math.random() - .5) * 10, y: cy + (Math.random() - .5) * 10, vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp - 22,
-        born: delay + Math.random() * 120, life: 600 + Math.random() * 500, sz: Math.random() < .35 ? 2 : 1, c: ['#fff3c4', '#ffd36b', '#ffb43a', '#ff8a2a'][i % 4] });
-    }
-  }
-  var a0 = areaOf(home);
   home.classList.add('hs-shake');
-  puffs(a0, 26, 0); sparks(a0, 14, 120);
-  function frame(now) {
-    var t = now - t0;
-    if (!swapped && t > 380) {
+  var f = 0, swapped = false, last = SM.frames - 1 + 2 * (n - 1);
+  (function tick() {
+    clouds.forEach(function(d) {
+      var k = f - (+d.dataset.lag);
+      d.style.backgroundPosition = (k < 0 ? size : -Math.min(SM.frames - 1, k) * size) + 'px 0';
+    });
+    if (!swapped && f >= SM.full + 2 * (n - 1)) {
       swapped = true; home.classList.remove('hs-shake');
       swap();
       var nh = document.getElementById('hsHome');
-      if (nh) {
-        nh.classList.remove('hs-reveal'); void nh.offsetWidth; nh.classList.add('hs-reveal');
-        nh.addEventListener('load', function once() { nh.removeEventListener('load', once); var a1 = areaOf(nh); puffs(a1, 10, t); }, { once: true });
-        var a1 = areaOf(nh); puffs(a1, 14, t); sparks(a1, 26, t + 40);
-      }
-      // the new tier's trees and props fade in rather than popping
+      if (nh) { nh.classList.remove('hs-reveal'); void nh.offsetWidth; nh.classList.add('hs-reveal'); v6Sparks(scene, nh); }
       scene.querySelectorAll('.hs-prop').forEach(function(pe) { if (pe.style.display !== 'none') { pe.classList.remove('hs-fadein'); void pe.offsetWidth; pe.classList.add('hs-fadein'); } });
     }
-    ctx.clearRect(0, 0, cv.width, cv.height);
-    var alive = false;
-    parts.forEach(function(p) {
-      var age = t - p.born; if (age < 0) { alive = true; return; }
-      var k = age / p.life; if (k >= 1) return;
-      alive = true;
-      var s = age / 1000;
-      if (p.k === 's') {
-        var r = p.r0 + (p.r1 - p.r0) * Math.min(1, k * 1.6), x = p.x + p.vx * s, y = p.y + p.vy * s;
-        ctx.globalAlpha = k < .55 ? .95 : .95 * (1 - (k - .55) / .45);
-        ctx.fillStyle = p.c; ctx.beginPath(); ctx.arc(Math.round(x), Math.round(y), Math.round(r), 0, Math.PI * 2); ctx.fill();
-      } else {
-        var x2 = p.x + p.vx * s, y2 = p.y + p.vy * s + 40 * s * s;
-        ctx.globalAlpha = 1 - k * k;
-        ctx.fillStyle = p.c; ctx.fillRect(Math.round(x2), Math.round(y2), p.sz, p.sz);
-        if (k < .5) ctx.fillRect(Math.round(x2 - p.vx * .015), Math.round(y2 - p.vy * .015), 1, 1);
-      }
-    });
-    ctx.globalAlpha = 1;
-    if (alive || t < 450) requestAnimationFrame(frame);
-    else cv.remove();
-  }
-  requestAnimationFrame(frame);
+    if (++f > last) { clouds.forEach(function(d) { d.remove(); }); return; }
+    setTimeout(tick, f <= SM.full ? 60 : 85);
+  })();
 }
 
 // ── Walkthrough placement ─────────────────────────────
