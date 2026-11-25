@@ -740,6 +740,21 @@ body.theme-day #tourCard{background:#fffaf0;border-color:rgba(154,116,36,.4);box
 body.theme-day #tourSpot{box-shadow:0 0 0 2px rgba(154,116,36,.8),0 0 0 9999px rgba(30,22,10,.55)}
 body.theme-day .tour-dots i{background:rgba(70,50,20,.2)}
 body.theme-day .tour-dots i.on{background:#9a7424}
+
+/* ══════════ V5 ══════════ */
+.hs-fx{position:absolute;inset:0;width:100%;height:100%;z-index:9;pointer-events:none;image-rendering:pixelated}
+@keyframes hsShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-2px)}40%{transform:translateX(2px)}60%{transform:translateX(-1px)}80%{transform:translateX(1px)}}
+.hs-shake{animation:hsShake .18s linear infinite}
+@keyframes hsReveal{0%{opacity:0;transform:translateY(6px) scale(.94)}60%{opacity:1}100%{opacity:1;transform:none}}
+.hs-reveal{animation:hsReveal .65s cubic-bezier(.25,.9,.3,1.15) both;transform-origin:bottom center}
+/* calendar: completed days get a check under the date */
+.cal-cell .cal-ck{position:absolute;left:50%;bottom:17%;width:10px;height:10px;margin-left:-5px;display:block}
+.cal-cell .cal-ck svg{position:static;width:10px;height:10px;inset:auto}
+.cal-cell.full b{transform:translateY(-4px);font-size:12px}
+.cal-cell.full .cal-ck{color:#1d1407}
+#tourCard{transition:opacity .2s,top .28s cubic-bezier(.3,.8,.2,1)}
+@keyframes hsFade{from{opacity:0}to{opacity:1}}
+.hs-fadein{animation:hsFade .6s ease .15s both}
 </style>
 <script src="sprite_spec.js"></script>
 </head>
@@ -2034,10 +2049,9 @@ var HOME_TIERS = [
     home: 'sprites/preview_assets/home/home_t0_tent.png',
     fire: false,
     props: [
-      // Trees on the left, behind the character
-      { src:'sprites/preview_assets/home/tree_birch.png',    left:  0,  bottom:32, height:95,  z:5 },
-      { src:'sprites/preview_assets/home/tree_pine_tall.png',left: 95,  bottom:32, height:78,  z:5 },
-      // Small bonsai near the tent for character's right side
+      // Tall pine behind the hero, birch between the hero and the tent
+      { src:'sprites/preview_assets/home/tree_pine.png',     left: -8,  bottom:32, height:160, z:5 },
+      { src:'sprites/preview_assets/home/tree_birch.png',    left:178,  bottom:32, height:96,  z:5 },
       { src:'sprites/preview_assets/home/tree_bonsai.png',   right:100, bottom:32, height:40,  z:7 },
     ],
     cost: 0
@@ -2046,7 +2060,10 @@ var HOME_TIERS = [
     name: "Ranger's Outpost",
     home: 'sprites/preview_assets/home/home_t1_ranger_outpost.png',
     fire: false,
-    props: [],
+    props: [
+      { src:'sprites/preview_assets/home/tree_pine.png',     left: -8,  bottom:32, height:160, z:5 },
+      { src:'sprites/preview_assets/home/prop_logpile.png',  right:142, bottom:32, height:42,  z:7 },   // 2x, same pixel size as the hero
+    ],
     cost: 150
   },
   {
@@ -2055,10 +2072,10 @@ var HOME_TIERS = [
     homeHeight: 141,   // 113x122 sprite at ~1.16x, same pixel density as the estate
     fire: false,
     props: [
-      { src:'sprites/preview_assets/home/tree_oak.png',     left: -10, bottom:32, height:130, z:5 },
-      { src:'sprites/preview_assets/home/tree_birch.png',   left:  95, bottom:32, height:90,  z:5 },
-      { src:'sprites/preview_assets/home/prop_barrel.png',  right:185, bottom:32, height:28,  z:7 },
-      { src:'sprites/preview_assets/home/prop_logs.png',    right:158, bottom:32, height:30,  z:7 },
+      { src:'sprites/preview_assets/home/tree_oak.png',      left: -10, bottom:32, height:130, z:5 },
+      { src:'sprites/preview_assets/home/tree_birch.png',    left:  95, bottom:32, height:90,  z:5 },
+      { src:'sprites/preview_assets/home/prop_logpile.png',  right:150, bottom:32, height:42,  z:7 },
+      { src:'sprites/preview_assets/home/prop_barrel.png',   right: 10, bottom:32, height:48,  z:7 },   // against the cottage's right wall
     ],
     cost: 500
   },
@@ -2069,9 +2086,8 @@ var HOME_TIERS = [
     homeRight: 0,      // wide facade runs off the right edge of the scene on purpose
     fire: false,
     props: [
-      { src:'sprites/preview_assets/home/tree_willow.png',      left: -20, bottom:32, height:140, z:5 },
-      { src:'sprites/preview_assets/home/tree_oak.png',         left:  85, bottom:32, height:110, z:5 },
-      { src:'sprites/preview_assets/home/prop_tall_tree.png',   right:190, bottom:32, height:90,  z:6 },
+      { src:'sprites/preview_assets/home/tree_willow.png',   left: -20, bottom:32, height:140, z:5 },
+      { src:'sprites/preview_assets/home/tree_oak.png',      left:  85, bottom:32, height:110, z:5 },
     ],
     cost: 1500
   }
@@ -2243,7 +2259,7 @@ function upgradeHome() {
     S.profile.homeTier = 0;
     localStorage.setItem('tq_home_tier', 0);
     if (currentUser) sb.from('profiles').update({ home_tier: 0 }).eq('id', currentUser.id).then(function(){}).catch(function(){});
-    renderHomeScene();
+    v5HomeUpgradeFx(renderHomeScene);
     toast('🛠 Home reset to ' + HOME_TIERS[0].name, 'success');
     return;
   }
@@ -2265,7 +2281,7 @@ function upgradeHome() {
       .then(function(){}).catch(function(){});
   }
   updateHeader();
-  renderHomeScene();
+  v5HomeUpgradeFx(renderHomeScene);
   toast('🏠 Upgraded to ' + HOME_TIERS[S.profile.homeTier].name + '!', 'success');
 }
 
@@ -4632,7 +4648,7 @@ function v3CalendarHTML(year, month, dayInfo, selDay) {
     var f = dayInfo(ds), cls = 'cal-cell' + (ds === today ? ' today' : '') + (ds > today ? ' future' : '') + (ds === selDay ? ' sel' : '') + (f >= 1 ? ' full' : '');
     var ring = '';
     if (f > 0 && f < 1) ring = '<svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="15.5" fill="none" stroke="rgba(236,208,133,.9)" stroke-width="3" stroke-linecap="round" stroke-dasharray="' + (97.4 * f).toFixed(1) + ' 97.4" transform="rotate(-90 18 18)"/></svg>';
-    h += '<button class="' + cls + '" data-day="' + ds + '">' + ring + '<b>' + d + '</b></button>';
+    h += '<button class="' + cls + '" data-day="' + ds + '">' + ring + '<b>' + d + '</b>' + (f >= 1 ? '<i class="cal-ck">' + V2_CHECK + '</i>' : '') + '</button>';
   }
   return h + '</div>';
 }
@@ -4727,7 +4743,7 @@ var V3_TOUR = [
   { page: 'quests', sel: '.qs-wrap', title: 'Face your enemies', text: 'Every active quest summons an enemy. They grow bigger and meaner as you level up.' },
   { page: 'habits', sel: '#habitCal', title: 'Show up every day', text: 'Habits are your daily grind. The calendar fills in every day you check in.' },
   { page: 'habits', sel: '#screen-habits .h-sec .btn-primary', title: 'Add a habit', text: 'Name it and it is sorted into the stats it trains — "gym" trains strength and endurance, "meditate" trains wisdom.' },
-  { page: 'profile', sel: '#statRadar', title: 'Your attributes', text: 'Every check-in raises your stats. The dashed line shows where you were a week ago.' },
+  { page: 'profile', sel: '#statRadar .radar-svg', title: 'Your attributes', text: 'Every check-in raises your stats. The dashed line shows where you were a week ago.' },
   { page: 'profile', sel: '.loadout', title: 'Gear up', text: 'Loot from quests lands in your loadout. Swipe a carousel to equip it.' },
   { page: 'compass', sel: null, title: 'You\'re ready', text: 'Forge your first quest and start walking.', last: true }
 ];
@@ -4737,37 +4753,6 @@ function v3EndTour() {
   document.getElementById('tour').classList.remove('on'); _v3TourStep = -1;
   try { localStorage.setItem('tq_tour_done', '1'); } catch (e) {}
   showScreen('compass', null);
-}
-function v3TourShow() {
-  var st = V3_TOUR[_v3TourStep]; if (!st) return v3EndTour();
-  var tour = document.getElementById('tour'), spot = document.getElementById('tourSpot'), card = document.getElementById('tourCard');
-  showScreen(st.page, null);
-  document.getElementById('tourTitle').textContent = st.title;
-  document.getElementById('tourText').textContent = st.text;
-  document.getElementById('tourDots').innerHTML = V3_TOUR.map(function(_, i) { return '<i' + (i === _v3TourStep ? ' class="on"' : '') + '></i>'; }).join('');
-  document.getElementById('tourNext').textContent = st.last ? 'Let\'s go' : 'Next';
-  document.getElementById('tourSkip').style.visibility = st.last ? 'hidden' : '';
-  spot.style.opacity = '0'; card.style.opacity = '0';
-  setTimeout(function() {
-    var el = st.sel ? document.querySelector(st.sel) : null;
-    if (el) el.scrollIntoView({ block: 'center', behavior: 'instant' });
-    setTimeout(function() {
-      var app = document.getElementById('app').getBoundingClientRect();
-      if (el) {
-        var r = el.getBoundingClientRect(), pad = 8;
-        spot.style.left = (r.left - app.left - pad) + 'px'; spot.style.top = (r.top - app.top - pad) + 'px';
-        spot.style.width = (r.width + pad * 2) + 'px'; spot.style.height = (r.height + pad * 2) + 'px';
-        spot.classList.remove('none');
-        var below = r.bottom - app.top + 18, above = r.top - app.top - 18;
-        if (below + 190 < app.height) { card.style.top = below + 'px'; card.style.bottom = ''; }
-        else { card.style.top = ''; card.style.bottom = (app.height - above) + 'px'; }
-      } else {
-        spot.classList.add('none');
-        card.style.top = ''; card.style.bottom = (app.height / 2 - 90) + 'px';
-      }
-      spot.style.opacity = '1'; card.style.opacity = '1';
-    }, 120);
-  }, 460);
 }
 function v3TourNext() { _v3TourStep++; if (_v3TourStep >= V3_TOUR.length) v3EndTour(); else v3TourShow(); }
 function v3MaybeTour() {
@@ -4800,6 +4785,152 @@ function v4TapeCol(name) {
     lb:     day ? 'rgba(70,50,20,.55)'   : 'rgba(255,255,255,.5)'
   })[name];
 }
+
+
+// ═══════════════════════════════════════════════════
+//  V5 — home upgrade effect, walkthrough placement
+// ═══════════════════════════════════════════════════
+// Puff of pixel smoke and a burst of sparks over the home; the new home is
+// swapped in while the smoke is thickest, so it appears out of the cloud.
+function v5HomeUpgradeFx(swap) {
+  var scene = document.getElementById('homeScene'), home = document.getElementById('hsHome');
+  if (!scene || !home || !scene.getBoundingClientRect().width) { swap(); return; }
+  var PX = 3;                                            // one smoke "pixel" = 3 screen px
+  var sr = scene.getBoundingClientRect();
+  var cv = document.createElement('canvas');
+  cv.className = 'hs-fx';
+  cv.width = Math.ceil(sr.width / PX); cv.height = Math.ceil(sr.height / PX);
+  scene.appendChild(cv);
+  var ctx = cv.getContext('2d'), parts = [], t0 = performance.now(), swapped = false;
+  function areaOf(el) {
+    var r = el.getBoundingClientRect();
+    if (!r.width) r = { left: sr.right - 150, right: sr.right - 16, top: sr.bottom - 160, bottom: sr.bottom - 32, width: 134, height: 128 };
+    return { x0: (r.left - sr.left) / PX, x1: (r.right - sr.left) / PX, y0: (r.top - sr.top) / PX, y1: (r.bottom - sr.top) / PX };
+  }
+  function puffs(a, n, delay) {
+    for (var i = 0; i < n; i++) {
+      var x = a.x0 + Math.random() * (a.x1 - a.x0), y = a.y0 + (0.25 + Math.random() * 0.75) * (a.y1 - a.y0);
+      parts.push({ k: 's', x: x, y: y, vx: (Math.random() - .5) * 6, vy: -3 - Math.random() * 6, r0: 2 + Math.random() * 3,
+        r1: 5 + Math.random() * 6, born: delay + Math.random() * 180, life: 900 + Math.random() * 500, c: ['#efe9dd', '#d9d2c4', '#bdb5a6', '#fffaf0'][i % 4] });
+    }
+  }
+  function sparks(a, n, delay) {
+    var cx = (a.x0 + a.x1) / 2, cy = a.y0 + (a.y1 - a.y0) * 0.55;
+    for (var i = 0; i < n; i++) {
+      var ang = Math.random() * Math.PI * 2, sp = 18 + Math.random() * 38;
+      parts.push({ k: 'p', x: cx + (Math.random() - .5) * 10, y: cy + (Math.random() - .5) * 10, vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp - 22,
+        born: delay + Math.random() * 120, life: 600 + Math.random() * 500, sz: Math.random() < .35 ? 2 : 1, c: ['#fff3c4', '#ffd36b', '#ffb43a', '#ff8a2a'][i % 4] });
+    }
+  }
+  var a0 = areaOf(home);
+  home.classList.add('hs-shake');
+  puffs(a0, 26, 0); sparks(a0, 14, 120);
+  function frame(now) {
+    var t = now - t0;
+    if (!swapped && t > 380) {
+      swapped = true; home.classList.remove('hs-shake');
+      swap();
+      var nh = document.getElementById('hsHome');
+      if (nh) {
+        nh.classList.remove('hs-reveal'); void nh.offsetWidth; nh.classList.add('hs-reveal');
+        nh.addEventListener('load', function once() { nh.removeEventListener('load', once); var a1 = areaOf(nh); puffs(a1, 10, t); }, { once: true });
+        var a1 = areaOf(nh); puffs(a1, 14, t); sparks(a1, 26, t + 40);
+      }
+      // the new tier's trees and props fade in rather than popping
+      scene.querySelectorAll('.hs-prop').forEach(function(pe) { if (pe.style.display !== 'none') { pe.classList.remove('hs-fadein'); void pe.offsetWidth; pe.classList.add('hs-fadein'); } });
+    }
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    var alive = false;
+    parts.forEach(function(p) {
+      var age = t - p.born; if (age < 0) { alive = true; return; }
+      var k = age / p.life; if (k >= 1) return;
+      alive = true;
+      var s = age / 1000;
+      if (p.k === 's') {
+        var r = p.r0 + (p.r1 - p.r0) * Math.min(1, k * 1.6), x = p.x + p.vx * s, y = p.y + p.vy * s;
+        ctx.globalAlpha = k < .55 ? .95 : .95 * (1 - (k - .55) / .45);
+        ctx.fillStyle = p.c; ctx.beginPath(); ctx.arc(Math.round(x), Math.round(y), Math.round(r), 0, Math.PI * 2); ctx.fill();
+      } else {
+        var x2 = p.x + p.vx * s, y2 = p.y + p.vy * s + 40 * s * s;
+        ctx.globalAlpha = 1 - k * k;
+        ctx.fillStyle = p.c; ctx.fillRect(Math.round(x2), Math.round(y2), p.sz, p.sz);
+        if (k < .5) ctx.fillRect(Math.round(x2 - p.vx * .015), Math.round(y2 - p.vy * .015), 1, 1);
+      }
+    });
+    ctx.globalAlpha = 1;
+    if (alive || t < 450) requestAnimationFrame(frame);
+    else cv.remove();
+  }
+  requestAnimationFrame(frame);
+}
+
+// ── Walkthrough placement ─────────────────────────────
+// Waits for the pager to settle on the page, scrolls that page (never the
+// document) so the target and the card both fit between the header and the
+// tab bar, then lines the spotlight up with the target's measured box.
+function v5PagerSettled(pageId, cb) {
+  var pager = document.getElementById('pager'), idx = V2_PAGES.indexOf(pageId), last = -1, still = 0, t0 = performance.now();
+  (function poll() {
+    var w = pager.clientWidth, x = pager.scrollLeft;
+    still = Math.abs(x - last) < 0.5 ? still + 1 : 0; last = x;
+    if ((Math.abs(x - idx * w) < 1 && still >= 3) || performance.now() - t0 > 1500) cb();
+    else requestAnimationFrame(poll);
+  })();
+}
+function v5TourBand() {
+  var app = document.getElementById('app').getBoundingClientRect();
+  var hd = document.querySelector('header.top').getBoundingClientRect(), tb = document.getElementById('tabbar').getBoundingClientRect();
+  return { app: app, top: hd.bottom - app.top + 6, bot: tb.top - app.top - 10 };
+}
+function v5TourPlace(scrollFirst) {
+  var st = V3_TOUR[_v3TourStep]; if (!st) return;
+  var spot = document.getElementById('tourSpot'), card = document.getElementById('tourCard');
+  var el = st.sel ? document.querySelector(st.sel) : null, PAD = 8, GAP = 12;
+  window.scrollTo(0, 0); document.documentElement.scrollTop = 0; document.body.scrollTop = 0;
+  var appEl = document.getElementById('app'); appEl.scrollTop = 0;
+  var b = v5TourBand(), cardH = card.offsetHeight;
+  if (el && scrollFirst) {
+    var page = document.getElementById('screen-' + st.page), pr = page.getBoundingClientRect(), r0 = el.getBoundingClientRect();
+    var need = r0.height + PAD * 2 + GAP + cardH, room = b.bot - b.top;
+    var want = need <= room ? b.top + (room - need) / 2 + PAD : b.top + PAD;          // where the target's top should land
+    page.scrollTop = Math.max(0, page.scrollTop + (r0.top - b.app.top) - want);
+  }
+  if (el) {
+    var r = el.getBoundingClientRect(), L = r.left - b.app.left - PAD, T = r.top - b.app.top - PAD, W = r.width + PAD * 2, H = r.height + PAD * 2;
+    // keep the ring inside the screen and above the tab bar
+    var Lc = Math.max(4, L), Rc = Math.min(b.app.width - 4, L + W), Tc = Math.max(b.top - PAD, T), Bc = Math.min(b.bot + 6, T + H);
+    spot.style.left = Lc + 'px'; spot.style.top = Tc + 'px'; spot.style.width = (Rc - Lc) + 'px'; spot.style.height = Math.max(0, Bc - Tc) + 'px';
+    spot.classList.remove('none');
+    var top;
+    if (Bc + GAP + cardH <= b.bot) top = Bc + GAP;                 // below the target
+    else if (Tc - GAP - cardH >= b.top) top = Tc - GAP - cardH;    // above it
+    else top = b.bot - cardH;                                      // no room: sit over its lower edge
+    card.style.top = Math.round(top) + 'px'; card.style.bottom = '';
+  } else {
+    spot.classList.add('none');
+    card.style.top = Math.round(b.top + (b.bot - b.top - cardH) / 2) + 'px'; card.style.bottom = '';
+  }
+}
+function v3TourShow() {
+  var st = V3_TOUR[_v3TourStep]; if (!st) return v3EndTour();
+  var spot = document.getElementById('tourSpot'), card = document.getElementById('tourCard');
+  showScreen(st.page, null);
+  document.getElementById('tourTitle').textContent = st.title;
+  document.getElementById('tourText').textContent = st.text;
+  document.getElementById('tourDots').innerHTML = V3_TOUR.map(function(_, i) { return '<i' + (i === _v3TourStep ? ' class="on"' : '') + '></i>'; }).join('');
+  document.getElementById('tourNext').textContent = st.last ? 'Let\'s go' : 'Next';
+  document.getElementById('tourSkip').style.visibility = st.last ? 'hidden' : '';
+  spot.style.opacity = '0'; card.style.opacity = '0';
+  var step = _v3TourStep;
+  v5PagerSettled(st.page, function() {
+    if (step !== _v3TourStep) return;
+    v5TourPlace(true);
+    spot.style.opacity = '1'; card.style.opacity = '1';
+    // pages can re-render as their data arrives; re-measure without scrolling
+    [250, 700, 1400].forEach(function(ms) { setTimeout(function() { if (step === _v3TourStep) v5TourPlace(false); }, ms); });
+  });
+}
+window.addEventListener('resize', function() { if (_v3TourStep >= 0) v5TourPlace(true); });
 
 startGPS();
 startOrientation();
